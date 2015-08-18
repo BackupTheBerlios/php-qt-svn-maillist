@@ -1,0 +1,4163 @@
+From thomas.moenicke at kdemail.net  Mon Nov  6 19:03:07 2006
+From: thomas.moenicke at kdemail.net (Thomas Moenicke)
+Date: Mon, 6 Nov 2006 19:03:07 +0100
+Subject: [Php-qt-svn] r277 - in trunk: . examples/calculator kalyptus qt
+	tutorials/t2 tutorials/t4 tutorials/t5 tutorials/t6 tutorials/t7
+Message-ID: <200611061903.07273.thomas.moenicke@kdemail.net>
+
+Author: tm243
+Date: 2006-11-05 21:14:53 +0100 (Sun, 05 Nov 2006)
+New Revision: 277
+
+Removed:
+   trunk/qt/ag_extern_zend_class_entry.inc
+   trunk/qt/ag_php_qt_cpp.inc
+   trunk/qt/ag_qt_minit.inc
+   trunk/qt/ag_zend_class_entry.inc
+   trunk/qt/ag_zend_php_qt.inc
+   trunk/qt/classes/
+   trunk/qt/defined.h
+   trunk/qt/event/
+   trunk/qt/inheritance.cpp
+   trunk/qt/object_model/
+   trunk/qt/text_related/
+   trunk/qt/zend_php_qt.h
+Modified:
+   trunk/COPYING
+   trunk/ChangeLog
+   trunk/config.m4
+   trunk/examples/calculator/button.php
+   trunk/examples/calculator/calculator.php
+   trunk/kalyptus/kalyptusCxxToSmoke.pm
+   trunk/qt/php_qt.cpp
+   trunk/qt/php_qt.h
+   trunk/tutorials/t2/main.php
+   trunk/tutorials/t4/main.php
+   trunk/tutorials/t5/main.php
+   trunk/tutorials/t6/main.php
+   trunk/tutorials/t7/main.php
+Log:
+code rewritten and ported to kdebindings Smoke
+
+Modified: trunk/COPYING
+===================================================================
+--- trunk/COPYING	2006-08-18 03:08:32 UTC (rev 276)
++++ trunk/COPYING	2006-11-05 20:14:53 UTC (rev 277)
+@@ -3,7 +3,7 @@
+ About licensing
+ ===============
+ 
+-PHP-Qt is licensed under the terms of the GNU Lesser General Public License.
++PHP-Qt is licensed under the terms of the GNU General Public License.
+ Qt is dual licensed software. Please note that PHP-Qt is dynamically linked 
+ against the Qt library, Qt header files are neccessary for building PHP-Qt.
+ 
+
+Modified: trunk/ChangeLog
+===================================================================
+--- trunk/ChangeLog	2006-08-18 03:08:32 UTC (rev 276)
++++ trunk/ChangeLog	2006-11-05 20:14:53 UTC (rev 277)
+@@ -1,3 +1,12 @@
++2006-011-5  Thomas Moenicke &lt;thomas.moenicke at kdemail.net&gt;
++
++		* Code rewritten and ported to kdebindings::Smoke
++		* all classes and methods are supported with basic argument types and 
+classes
++		* enum values are like eg Qt::Horizontal instead of QT_ALIGNMENT_HORIZONTAL
++		* License: GPL
++		* PHP-Qt objects are casted automatically
++		* QMetaObjects are created in class constructor and related pointers are 
+stored in a hash table
++
+ 2006-06-08  Thomas Moenicke &lt;tm at ippfp.org&gt;  (v.0.0.3) &quot;Lilli&quot;
+ 
+ 		* tutorial 7 and an example application
+
+
+-- 
+Thomas
+
+
+
+From tm243 at mail.berlios.de  Tue Nov  7 16:47:15 2006
+From: tm243 at mail.berlios.de (tm243 at mail.berlios.de)
+Date: Tue, 7 Nov 2006 16:47:15 +0100
+Subject: [Php-qt-svn] r278 - in trunk: . qt
+Message-ID: <200611071547.kA7FlFc3022233@sheep.berlios.de>
+
+Author: tm243
+Date: 2006-11-07 16:47:13 +0100 (Tue, 07 Nov 2006)
+New Revision: 278
+
+Modified:
+   trunk/ChangeLog
+   trunk/config.m4
+   trunk/qt/php_qt.cpp
+   trunk/qt/php_qt.h
+Log:
+new function tr(), function implementation moved to functions.cpp
+
+Modified: trunk/ChangeLog
+===================================================================
+--- trunk/ChangeLog	2006-11-05 20:14:53 UTC (rev 277)
++++ trunk/ChangeLog	2006-11-07 15:47:13 UTC (rev 278)
+@@ -1,3 +1,7 @@
++2006-011-7  Thomas Moenicke <thomas.moenicke at kdemail.net>
++
++		* function tr() implemented
++
+ 2006-011-5  Thomas Moenicke <thomas.moenicke at kdemail.net>
+ 
+ 		* Code rewritten and ported to kdebindings::Smoke
+
+Modified: trunk/config.m4
+===================================================================
+--- trunk/config.m4	2006-11-05 20:14:53 UTC (rev 277)
++++ trunk/config.m4	2006-11-07 15:47:13 UTC (rev 278)
+@@ -145,7 +145,7 @@
+     x_16.cpp x_17.cpp x_18.cpp x_19.cpp x_20.cpp \
+     smokedata.cpp,,shared_objects_php_qt,yes)
+ 
+-  PHP_NEW_EXTENSION(php_qt, qt/smokephp.cpp qt/php_qt.cpp ,$ext_shared,cli)
++  PHP_NEW_EXTENSION(php_qt, qt/smokephp.cpp qt/php_qt.cpp qt/functions.cpp,$ext_shared,cli)
+   PHP_ADD_BUILD_DIR($ext_builddir/qt)
+ 
+ fi
+
+Modified: trunk/qt/php_qt.cpp
+===================================================================
+--- trunk/qt/php_qt.cpp	2006-11-05 20:14:53 UTC (rev 277)
++++ trunk/qt/php_qt.cpp	2006-11-07 15:47:13 UTC (rev 278)
+@@ -30,9 +30,6 @@
+ 
+ #include "ext/standard/php_string.h"
+ 
+-#include <iostream>
+-using namespace std;
+-
+ extern Smoke *qt_Smoke;
+ extern void init_qt_Smoke();
+ 
+@@ -58,7 +55,8 @@
+ 	PHP_FE(confirm_php_qt_compiled,	NULL)		/* For testing, remove later. */
+ 	PHP_FE(SIGNAL,	NULL)
+ 	PHP_FE(SLOT,	NULL)	
+-	PHP_FE(qobject_cast,	NULL)	
++	PHP_FE(qobject_cast,	NULL)
++	PHP_FE(tr,	NULL)
+ 	{NULL, NULL, NULL}	/* Must be the last line in php_qt_functions[] */
+ };
+ 
+@@ -90,10 +88,11 @@
+ QStack<QString*> methodNameStack;
+ 
+ // cached
+-static Smoke::Index qbool;
+-static Smoke::Index qstring;
+-static Smoke::Index qobject;
++Smoke::Index qbool;
++Smoke::Index qstring;
++Smoke::Index qobject;
+ zend_class_entry* qobject_ce;
++zend_class_entry* qstring_ce;
+ 
+ /**
+  *	proxy handler
+@@ -339,7 +338,8 @@
+ // TODO		QObject Nummer suchen, nachher vergleichen
+ 	smokephp_findConnect();
+ 
+-	Smoke::Index qobject_tmp = smokephp_getClassId("QObject");
++	Smoke::Index qobject = smokephp_getClassId("QObject");
++	Smoke::Index qstring = smokephp_getClassId("QString");
+ 
+     php_qt_static_methods = (zend_function_entry***) safe_emalloc((qt_Smoke->numClasses), sizeof(zend_function_entry **), 0);
+ 
+@@ -406,10 +406,14 @@
+ 	    INIT_CLASS_ENTRY(ce, qt_Smoke->classes[i].className, p);
+ 	    ce.name_length = strlen(qt_Smoke->classes[i].className);
+ 	    zend_class_entry* ce_ptr = zend_register_internal_class(&ce TSRMLS_CC);
+-		if(qobject_tmp == i){
++		if(qobject == i){
+ 			qobject_ce = ce_ptr;
+ 		}
++		else if(qstring == i){
++			qstring_ce = ce_ptr;
++		}
+ 
++
+         // register enums
+ 		if(!strcmp(qt_Smoke->classes[i].className, "Qt")){
+ 			zend_declare_class_constant_long(ce_ptr, "Horizontal", strlen("Horizontal"), Qt::Horizontal);
+@@ -469,103 +473,7 @@
+ 	*/
+ }
+ 
+-/* Every user-visible function in PHP should document itself in the source */
+-/* proto string confirm_php_qt_compiled(string arg)
+-   Return a string to confirm that the module is compiled in */
+-PHP_FUNCTION(confirm_php_qt_compiled)
+-{
+-	char *arg = NULL;
+-	int arg_len, len;
+-	char string[256];
+-
+-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &arg, &arg_len) == FAILURE) {
+-		return;
+-	}
+-
+-  	len = sprintf(string, "Congratulations! You have successfully modified ext/%.78s/config.m4. Module %.78s is now compiled into PHP.", "php_qt", arg);
+-	RETURN_STRINGL(string, len, 1);
+-
+-}
+-
+ /*!
+- *	PHP userspace functions
+- */
+-
+-/*!
+- *  emulates the Qt SIGNAL() macro
+- */
+-
+-PHP_FUNCTION(SIGNAL)
+-{
+-    const char* string;
+-    int string_len;
+-    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,"s",&string,&string_len)) {
+-        return;
+-    }
+-
+-    char* tmp = (char*) emalloc((int) string_len + 2);
+-    strcpy(tmp,"2");
+-
+-    strncat(tmp, string, (int) string_len);
+-
+-    ZVAL_STRING(return_value,tmp,1);
+-
+-    efree(tmp);
+-
+-    return;
+-}
+-
+-/*!
+- *  emulates the Qt SLOT() macro
+- */
+-
+-PHP_FUNCTION(SLOT)
+-{
+-    const char* string;
+-    int string_len;
+-    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,"s",&string,&string_len)) {
+-        return;
+-    }
+-
+-    char* tmp = (char*) emalloc((int) string_len + 2);
+-    strcpy(tmp,"1");
+-
+-    strncat(tmp, string, (int) string_len);
+-
+-    ZVAL_STRING(return_value,tmp,1);
+-
+-    efree(tmp);
+-
+-    return;
+-}
+-
+-/**
+- *	simply returns the first parameter because objects are casted automatically in smokephp_convertReturn(...)
+- *
+- */
+-
+-PHP_FUNCTION(qobject_cast){
+-
+-    zval *obj;
+-    zval *cast_type;
+-
+-    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,"zz|", &obj, &cast_type) == FAILURE) {
+-        php_error(E_WARNING,"error while casting object, wrong parameters");
+-        return; 
+-    }
+-
+-	ZVAL_ZVAL(return_value, obj, 0, 0);
+-    return;
+-
+-}
+-
+-/*!
+- *	tr()
+- */
+-
+-// TODO: implement!
+-
+-/*!
+  *	PHP-Qt internal functions
+  */
+ 
+
+Modified: trunk/qt/php_qt.h
+===================================================================
+--- trunk/qt/php_qt.h	2006-11-05 20:14:53 UTC (rev 277)
++++ trunk/qt/php_qt.h	2006-11-07 15:47:13 UTC (rev 278)
+@@ -87,6 +87,7 @@
+ PHP_FUNCTION(SIGNAL);
+ PHP_FUNCTION(SLOT);
+ PHP_FUNCTION(qobject_cast);
++PHP_FUNCTION(tr);
+ 
+ struct smokephp_object {
+     bool allocated;
+
+
+
+From tm243 at mail.berlios.de  Tue Nov  7 16:47:27 2006
+From: tm243 at mail.berlios.de (tm243 at mail.berlios.de)
+Date: Tue, 7 Nov 2006 16:47:27 +0100
+Subject: [Php-qt-svn] r279 - trunk/qt
+Message-ID: <200611071547.kA7FlROn022264@sheep.berlios.de>
+
+Author: tm243
+Date: 2006-11-07 16:47:26 +0100 (Tue, 07 Nov 2006)
+New Revision: 279
+
+Added:
+   trunk/qt/functions.cpp
+Log:
+new function tr(), function implementation moved to functions.cpp
+
+Added: trunk/qt/functions.cpp
+===================================================================
+--- trunk/qt/functions.cpp	2006-11-07 15:47:13 UTC (rev 278)
++++ trunk/qt/functions.cpp	2006-11-07 15:47:26 UTC (rev 279)
+@@ -0,0 +1,146 @@
++/*!
++ * PHP-Qt - The PHP language bindings for Qt
++ *
++ * Copyright (C) 2006 
++ * Thomas Moenicke <thomas.moenicke at kdemail.net>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++ *
++ */
++
++#include "php_qt.h"
++
++extern Smoke *qt_Smoke;
++extern Smoke::Index qstring;
++extern zend_class_entry* qstring_ce;
++extern Smoke::Index qobject;
++extern zend_class_entry* qobject_ce;
++
++/* Every user-visible function in PHP should document itself in the source */
++/* proto string confirm_php_qt_compiled(string arg)
++   Return a string to confirm that the module is compiled in */
++PHP_FUNCTION(confirm_php_qt_compiled)
++{
++	char *arg = NULL;
++	int arg_len, len;
++	char string[256];
++
++	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &arg, &arg_len) == FAILURE) {
++		return;
++	}
++
++  	len = sprintf(string, "Congratulations! Module PHP-Qt is now compiled into PHP.", arg);
++	RETURN_STRINGL(string, len, 1);
++
++}
++
++/*!
++ *	PHP userspace functions
++ */
++
++/*!
++ *  emulates the Qt SIGNAL() macro
++ */
++
++PHP_FUNCTION(SIGNAL)
++{
++    const char* string;
++    int string_len;
++    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,"s",&string,&string_len)) {
++        return;
++    }
++
++    char* tmp = (char*) emalloc((int) string_len + 2);
++    strcpy(tmp,"2");
++
++    strncat(tmp, string, (int) string_len);
++
++    ZVAL_STRING(return_value,tmp,1);
++
++    efree(tmp);
++
++    return;
++}
++
++/*!
++ *  emulates the Qt SLOT() macro
++ */
++
++PHP_FUNCTION(SLOT)
++{
++    const char* string;
++    int string_len;
++    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,"s",&string,&string_len)) {
++        return;
++    }
++
++    char* tmp = (char*) emalloc((int) string_len + 2);
++    strcpy(tmp,"1");
++
++    strncat(tmp, string, (int) string_len);
++
++    ZVAL_STRING(return_value,tmp,1);
++
++    efree(tmp);
++
++    return;
++}
++
++/**
++ *	simply returns the first parameter because objects are casted automatically in smokephp_convertReturn(...)
++ *
++ */
++
++PHP_FUNCTION(qobject_cast){
++
++    zval *obj;
++    zval *cast_type;
++
++    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,"zz|", &obj, &cast_type) == FAILURE) {
++        php_error(E_WARNING,"error while casting object, wrong parameters");
++        return; 
++    }
++
++	ZVAL_ZVAL(return_value, obj, 0, 0);
++    return;
++
++}
++
++/*!
++ *	tr() returns QObject::tr()
++ *
++ */
++
++PHP_FUNCTION(tr)
++{
++    const char* string;
++    int string_len;
++    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,"s",&string,&string_len)) {
++        return;
++    }
++
++	smokephp_object* o = (smokephp_object*) emalloc(sizeof(smokephp_object));
++	o->ptr = new QString(QObject::tr(string));
++	o->smoke = qt_Smoke;
++	o->classId = qstring;
++	o->ce_ptr = qstring_ce;
++
++	object_init_ex(return_value, qstring_ce);
++	zend_rsrc_list_entry le;
++	le.ptr = o;
++	phpqt_register(return_value, le);
++    return;
++}
++
+
+
+
+From tm243 at mail.berlios.de  Thu Nov  9 12:02:24 2006
+From: tm243 at mail.berlios.de (tm243 at mail.berlios.de)
+Date: Thu, 9 Nov 2006 12:02:24 +0100
+Subject: [Php-qt-svn] r280 - trunk/kalyptus
+Message-ID: <200611091102.kA9B2Op0021982@sheep.berlios.de>
+
+Author: tm243
+Date: 2006-11-09 12:02:22 +0100 (Thu, 09 Nov 2006)
+New Revision: 280
+
+Modified:
+   trunk/kalyptus/kalyptus
+   trunk/kalyptus/kalyptusCxxToSmoke.pm
+Log:
+kalyptus synced with KDE svn.
+
+Modified: trunk/kalyptus/kalyptus
+===================================================================
+--- trunk/kalyptus/kalyptus	2006-11-07 15:47:26 UTC (rev 279)
++++ trunk/kalyptus/kalyptus	2006-11-09 11:02:22 UTC (rev 280)
+@@ -2,7 +2,7 @@
+ 
+ # KDOC -- C++ and CORBA IDL interface documentation tool.
+ # Sirtaj Singh Kang <taj at kde.org>, Jan 1999.
+-# $Id: kalyptus 558420 2006-07-05 11:43:10Z rdale $
++# $Id: kalyptus 596521 2006-10-17 19:47:11Z rdale $
+ 
+ # All files in this project are distributed under the GNU General
+ # Public License. This is Free Software.
+@@ -469,13 +469,14 @@
+ 		$p =~ s/QT_MOC_COMPAT//;
+ 		$p =~ s/Q_EXPORT_CODECS_BIG5//;
+ 		$p =~ s/Q_DECL_DEPRECATED//;
++		$p =~ s/Q_SCRIPTABLE//;
+ 		$p =~ s/QT_COMPAT / /;
+ 		$p =~ s/Q_DISABLE_COPY\((\w+)\)/$1(const $1 &);\n$1 &operator=(const $1 &);/;
+ 		$p =~ s/QWIDGETSIZE_MAX/32767/; # Qt/E uses this #define as an enum value - yuck!
+ 		$p =~ s/Q_SIGNALS/signals/;
+ 		$p =~ s/ASYNC/void/;
+-		$p =~ s/[A-Z_]*_EXPORT_DEPRECATED//;
+-		$p =~ s/[A-Z_]*_EXPORT\s/ /;
++		$p =~ s/[A-Z_0-9]*_EXPORT_DEPRECATED//;
++		$p =~ s/[A-Z_0-9]*_EXPORT\s/ /;
+ 		$p =~ s/EXPORT_DOCKCLASS//;
+ 		$p =~ s/DLL_IMP_EXP_KMDICLASS//;
+ 		$p =~ s/KSVG_GET/KJS::Value get();/;
+@@ -496,6 +497,8 @@
+ 		$p =~ s/KDOM_FORWARDPUT/bool putforward();/;
+ 		$p =~ s/KDOM_BASECLASS/virtual KJS::Value cache();/;
+ 		$p =~ s/KDOM_CAST/KJS::Value cast();/;
++		$p =~ s/Q_DECLARE_BUILTIN_METATYPE[^\)]*\)//;
++		$p =~ s/Q_[A-Z]+_EXPORT_INLINE//;
+ 		if ( $p =~ m/KDOM_DEFINE_PROTOTYPE\((\w+)\)/ ) {
+ 			push @inputqueue, split('\n',"namespace KDOM {\nclass $1 {\n};\n};");
+ 		}
+@@ -574,6 +577,7 @@
+ 				     $p =~ m/^#\s*ifdef\s+Q_MOC_RUN/ or
+ 				     $p =~ m/^#\s*if\s+defined\s*\(QT3_SUPPORT/ or
+ 				     $p =~ m/^#\s*if\s+defined\s*\(qdoc/ or
++				     $p =~ m/^#\s*ifdef\s+qdoc/ or
+ 				     $p =~ m/^#\s*ifndef\s+QT_NO_MEMBER_TEMPLATES/ or
+ 				     $p =~ m/^#if\s*!defined\(Q_NO_USING_KEYWORD\)/ or
+ 				     $p =~ m/^#if\s*defined\(Q_INTERNAL_QAPP_SRC\)/ or
+@@ -706,7 +710,16 @@
+ 		return $l;
+ 	}
+ 	elsif ( $l =~ /Q_PROPERTY/ ) {	# property
+-		return $l;
++		do {
++			$decl .= $l;
++	
++			if ( $l =~ /[)]/ ) {
++				$decl =~ s/\n/ /gs;
++				return $decl;
++			}
++			return undef if !defined ($l = readCxxLine());
++	
++		} while ( 1 );
+ 	}
+ 
+ 	do {
+
+Modified: trunk/kalyptus/kalyptusCxxToSmoke.pm
+===================================================================
+--- trunk/kalyptus/kalyptusCxxToSmoke.pm	2006-11-07 15:47:26 UTC (rev 279)
++++ trunk/kalyptus/kalyptusCxxToSmoke.pm	2006-11-09 11:02:22 UTC (rev 280)
+@@ -229,9 +229,35 @@
+    'QDockWidget::DockWidgetFeatures' => 'int',
+    'QStyle::SubControls' => 'int',
+    'RegisterOptions' => 'int',
++   'BindMode' => 'int',
++   'ButtonFeatures' => 'int',
++   'CacheMode' => 'int',
++   'CheckType' => 'int',
++   'CornerWidgets' => 'int',
++   'DockWidgetFeatures' => 'int',
++   'FileFlags' => 'int',
++   'FontFilters' => 'int',
++   'FrameFeatures' => 'int',
++   'GraphicsItemFlags' => 'int',
++   'InterfaceFlags' => 'int',
++   'IteratorFlags' => 'int',
++   'MenuItemType' => 'int',
++   'NumberOptions' => 'int',
++   'PageBreakFlags' => 'int',
++   'Qt::TextInteractionFlags' => 'int',
++   'Relation' => 'int',
++   'SectionPosition' => 'int',
++   'SelectedPosition' => 'int',
++   'StandardButtons' => 'int',
++   'State' => 'int',
++   'TabPosition' => 'int',
++   'ToolBarFeatures' => 'int',
++   'ToolBarPosition' => 'int',
++   'ToolButtonFeatures' => 'int',
++   'ViewItemFeatures' => 'int',
+ );
+ 
+-$headerSubdirectories = "kio/|kdevelop/|kinterfacedesigner/|kontact/|kate/|kparts/|dom/|kabc/|ksettings/|kjs/|ktexteditor/|kdeprint/|kdesu/|knewstuff|dbus-1.0/dbus/"
++$headerSubdirectories = "kio/|dnssd/|solid/|solid/ifaces/|phonon/|sonnet/|kdevelop/|kinterfacedesigner/|kontact/|kate/|kparts/|dom/|kabc/|ksettings/|kjs/|ktexteditor/|kdeprint/|kdesu/|knewstuff|dbus-1.0/dbus/"
+ 
+ }
+ 
+@@ -416,11 +442,16 @@
+ 	    $className eq 'KURL::List' ||
+ 	    $className eq 'KWin::Info' ||
+ 	    $className eq 'TerminalInterface' ||
++	    $className eq 'QAccessibleBridgePlugin' || # Qt4
+ 	    $className eq 'QForeachContainerBase' || # Qt4
+ 	    $className eq 'QInputMethodEvent::Attribute' || # Qt4
++	    $className eq 'QAbstractUndoItem' || # Qt4
+ 	    $className eq 'QAbstractTextDocumentLayout::PaintContext' || # Qt4
+ 	    $className eq 'QAbstractTextDocumentLayout::Selection' || # Qt4
+ 	    $className eq 'QBrushData' || # Qt4
++	    $className eq 'QDBusObjectPath' || # Qt4
++	    $className eq 'QDBusSignature' || # Qt4
++	    $className eq 'QDBusVariant' || # Qt4
+ 	    $className eq 'QIPv6Address' || # Qt4
+ 	    $className eq 'QImageTextKeyLang' || # Qt4
+ 	    $className eq 'QMap' || # Qt4
+@@ -428,6 +459,7 @@
+ 	    $className eq 'QMap::iterator' || # Qt4
+ 	    $className eq 'QMapData' || # Qt4
+ 	    $className eq 'QMapData::Node' || # Qt4
++	    $className eq 'QObjectData' || # Qt4
+ 	    $className eq 'QProxyModel' || # Obsolete Qt4
+ 	    $className eq 'QSharedData' || # Qt4
+ 	    $className eq 'QPainterPath::Element' || # Qt4
+@@ -615,6 +647,10 @@
+ 			|| ($classNode->{astNodeName} eq 'QwtThermo' and $name eq 'setAlarmColor')
+ 			|| ($classNode->{astNodeName} eq 'QwtThermo' and $name eq 'alarmColor')
+ 			|| ($classNode->{astNodeName} eq 'QwtWheel' and $name eq 'getScrollMode')
++			|| ($classNode->{astNodeName} eq 'QwtSpline' and $name eq 'points')
++			|| ($classNode->{astNodeName} eq 'QwtPlot' and $name eq 'drawItems')
++			|| ($classNode->{astNodeName} eq 'QwtPlot' and $name eq 'printCanvas')
++			|| ($classNode->{astNodeName} eq 'QwtPlot' and $name eq 'drawItems')
+ 			|| ($classNode->{astNodeName} eq 'QwtPlot' and $name eq 'setCanvasBackground')
+ 			|| ($classNode->{astNodeName} eq 'QwtPlot' and $name eq 'canvasBackground')
+ 			|| ($classNode->{astNodeName} eq 'QwtPlotLayout' and $name eq 'expandLineBreaks')
+@@ -663,6 +699,8 @@
+ 			|| ($main::qt4
+ 				&& ( ($classNode->{astNodeName} eq 'QWidgetListItem' and $name eq 'operator=')
+ 				|| ($classNode->{astNodeName} eq 'QColormap' and $name eq 'operator=')
++				|| ($classNode->{astNodeName} eq 'QGraphicsLineItem' and $name eq 'QGraphicsLineItem' and $#{$m->{ParamList}} == 5)
++				|| ($classNode->{astNodeName} eq 'QGraphicsEllipseItem' and $name eq 'QGraphicsEllipseItem' and $#{$m->{ParamList}} == 5)
+ 				|| ($classNode->{astNodeName} eq 'QListWidget' and $name eq 'setItemPosition')
+ 				|| ($classNode->{astNodeName} eq 'QFontMetricsF' and $name eq 'operator=')
+ 				|| ($classNode->{astNodeName} eq 'QFontMetricsF' and $name eq 'QFontMetricsF' 
+@@ -686,6 +724,8 @@
+ 					$m->{ReturnType} =~ /</ )
+ 				|| ($classNode->{astNodeName} eq 'QDBusBusService' and $name eq 'RequestName')
+ 				|| ($classNode->{astNodeName} eq 'QDBusBusService' and $name eq 'requestName')
++				|| ($classNode->{astNodeName} eq 'QGLFormat' and $name eq 'openGLVersionFlags')
++				|| ($classNode->{astNodeName} eq 'QAbstractUndoItem' and $name eq '~QAbstractUndoItem')
+ 				|| ($name eq 'qDBusMetaTypeId')
+ 				|| ($m->{ReturnType} =~ /QT3_SUPPORT/) ) )
+ 
+@@ -980,13 +1020,6 @@
+ 	    die if $incl eq '';
+ 	    print $fh "#include <$incl>\n";
+ 	}	
+-	if (	$main::qt4
+-			and (	defined $includes{"qtreewidget.h"} 
+-					or defined $includes{"qlistwidget.h"} 
+-					or defined $includes{"qtablewidget.h"} ) ) 
+-	{
+-	    print $fh "#include \"qwidgetitemdata_p.h\"\n";
+-	}
+ 	print $fh "\n";
+         for my $c( 0..$#code )
+         {
+@@ -2594,7 +2627,7 @@
+ 		die "arglist for $t not found" unless defined $arglist;
+ 		if ( $m->{Flags} =~ "p" ) {
+ 		    # Pure virtuals don't have a {case} number, that's normal
+-		    die if defined $case;
++		    die "pure virtual $className\::$methName has a case number for sig=$sig" if defined $case;
+ 		    $case = -1; # This remains -1, not 0 !
+ 		} else {
+ 		    die "$className\::$methName has no case number for sig=$sig" unless defined $case;
+
+
+
+From tm243 at mail.berlios.de  Thu Nov  9 12:18:06 2006
+From: tm243 at mail.berlios.de (tm243 at mail.berlios.de)
+Date: Thu, 9 Nov 2006 12:18:06 +0100
+Subject: [Php-qt-svn] r281 - trunk/qt
+Message-ID: <200611091118.kA9BI6pq024350@sheep.berlios.de>
+
+Author: tm243
+Date: 2006-11-09 12:18:04 +0100 (Thu, 09 Nov 2006)
+New Revision: 281
+
+Added:
+   trunk/qt/smokephp.cpp
+Log:
+file added.
+
+Added: trunk/qt/smokephp.cpp
+===================================================================
+--- trunk/qt/smokephp.cpp	2006-11-09 11:02:22 UTC (rev 280)
++++ trunk/qt/smokephp.cpp	2006-11-09 11:18:04 UTC (rev 281)
+@@ -0,0 +1,482 @@
++/*!
++ * PHP-Qt - The PHP language bindings for Qt
++ *
++ * Copyright (C) 2006 
++ * Thomas Moenicke <thomas.moenicke at kdemail.net>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++ *
++ */
++
++#include "php_qt.h"
++#include "smoke.h"
++#include <QMetaMethod>
++#include <QHash>
++#include <QCoreApplication>
++#include <QApplication>
++
++extern Smoke *qt_Smoke;
++extern void init_qt_Smoke();
++
++Smoke::Index connect1;
++Smoke::Index connect2;
++Smoke::Index connect3;
++Smoke::Index connect4;
++Smoke::Index connect5;
++
++class PHPQtSmokeBinding : public SmokeBinding {
++
++public:
++    PHPQtSmokeBinding(Smoke *s) : SmokeBinding(s) {}
++
++    virtual void deleted(Smoke::Index, void*) {
++            // ignore object deletion
++    }
++    virtual bool callMethod(Smoke::Index method, void* ptr, Smoke::Stack args, bool /*isAbstract*/) {
++
++		smokephp_object *o = (smokephp_object*) phpqt_getSmokePHPObject(ptr);
++
++		if(!o){
++			// no related smokephp_object
++			return false;
++		}
++
++		const char *methodName = qt_Smoke->methodNames[smoke->methods[method].name];
++
++		// metaobjects
++		if(!strcmp(methodName, "metaObject")){
++			args[0].s_class = o->meta;
++			return true;
++		}
++
++		if(!strcmp(methodName, "qt_metacall")){
++			phpqt_metacall(o, args, (QMetaObject::Call) args[1].s_enum, args[2].s_int, (void**) args[3].s_voidp);
++			return true;
++		}
++		return false;
++
++    }
++
++    virtual char *className(Smoke::Index classId) {
++	// return a new[] copy of the language-specific name of this Smoke class
++	// poorly designed function, but oh well. Sorry.
++
++	const char *className = smoke->className(classId);
++	char *buf = new char[strlen(className) + 1];
++	strcpy(buf, className);
++	return buf;
++    }
++    virtual ~PHPQtSmokeBinding() {}
++};
++
++/**
++ * 	call init function
++ *
++ *	@param	-
++ *	@return	-
++ */
++
++void 
++smokephp_init() {
++
++    if (qt_Smoke != 0L) {
++	php_error(E_ERROR,"could not initialize smoke");
++    }
++
++    init_qt_Smoke();
++
++    if(qt_Smoke->numClasses <= 0){
++		php_error(E_ERROR,"could not initialize smoke");
++    }
++
++    qt_Smoke->binding = new PHPQtSmokeBinding(qt_Smoke);
++
++}
++
++/*!
++ *  @param  const char*     c   class-name 
++ *  @param  const char*     m   mangled function-name
++ *  @return Smoke::Index        unambiguous method ID
++ */
++Smoke::Index 
++smokephp_getMethod(Smoke *smoke, const char* c, const char* m, Smoke::StackItem** qargs, int argc, zval*** args) {
++
++    Smoke::Index method = smoke->findMethod(c, m);	// qt_Smoke->methods
++    Smoke::Index i = smoke->methodMaps[method].method;
++
++    if(i <= 0) {
++	    i = -i;		// turn into ambiguousMethodList index
++	    while(qt_Smoke->ambiguousMethodList[i]) {
++
++	    	Smoke::Method &methodRef = qt_Smoke->methods[qt_Smoke->ambiguousMethodList[i]];
++
++			if ((methodRef.flags & Smoke::mf_internal) == 0) {
++				// try to compare smoke types with the php ones
++				bool right = false;
++				for(int k=0;k < argc;k++){
++					uint type = ((int) ((zval) **args[k]).type);
++					switch((qt_Smoke->types[qt_Smoke->argumentList[qt_Smoke->methods[qt_Smoke->ambiguousMethodList[i]].args+k]].flags & Smoke::tf_elem)){
++						case Smoke::t_voidp:
++							if(type == IS_ARRAY)
++								right = true;
++							if(type == IS_STRING)
++								right = true;
++							break;
++						case Smoke::t_bool:
++							if(type == IS_BOOL)
++								right = true;
++							break;
++						case Smoke::t_char:
++						case Smoke::t_uchar:
++						case Smoke::t_short:
++						case Smoke::t_ushort:
++						case Smoke::t_int:
++						case Smoke::t_uint:
++						case Smoke::t_long:
++						case Smoke::t_ulong:
++							if(type == IS_LONG)
++								right = true;
++							break;
++						case Smoke::t_float:
++						case Smoke::t_double: 
++							if(type == IS_DOUBLE)
++								right = true;
++							break;
++						case Smoke::t_enum:
++							php_error(E_WARNING,"type enum not yet implemented\n");
++							break;
++						case Smoke::t_class:
++							if(type == IS_OBJECT)
++								right = true;
++							break;
++						default:
++							php_error(E_ERROR, "unknown argument type");
++							break;
++					}
++				}
++				if(right){
++#ifdef DEBUG
++					php_error(E_NOTICE, "Ambiguous Method %s::%s => %d, %d", c, m, qt_Smoke->ambiguousMethodList[i], i);
++#endif
++					return qt_Smoke->ambiguousMethodList[i];
++				}
++			}
++			
++			i++;
++    	}
++    }
++
++    return i;
++}
++
++/*!
++ *  @param  void*           obj
++ *  @param  Smoke::Index    method
++ *  @param  Smoke::Stack    qargs
++ *  @return void
++ */
++void
++smokephp_callMethod(Smoke *smoke, void *obj, Smoke::Index method, Smoke::Stack qargs) {
++    Smoke::Method *m = smoke->methods + method;
++    Smoke::ClassFn fn = smoke->classes[m->classId].classFn;
++    fn(m->method, obj, qargs);
++}
++
++/*!
++ * cast argument pointer to the correct type for the specified method argument
++ * args[i].s_class = (void*)(typeof(args[i]))(className*)obj
++ *
++ *  @param  Smoke::Index        method
++ *  @param  Smoke::Stack        qargs
++ *  @param  Smoke::Index        i
++ *  @param  void*               obj
++ *  @param  const char*         className
++ */
++void 
++smokephp_smokeCast(Smoke *smoke, Smoke::Index method, Smoke::Stack qargs, Smoke::Index i, void *obj, const char *className) {
++    // cast obj from className to the desired type of args[i]
++    Smoke::Index arg = smoke->argumentList[
++        smoke->methods[method].args + i - 1
++    ];
++    // cast(obj, from_type, to_type)
++    qargs[i].s_class = smoke->cast(obj, smoke->idClass(className), smoke->types[arg].classId);
++}
++
++/*!
++ *  cast obj to the required type of this, which, dur to multiple-inheritance, could change the pointer-address
++ *  from the one returned by new. Puts the pointer in args[0].s_class, even though smoke doesn't do it that way
++ *
++ *  @param  Smoke::Index        method
++ *  @param  Smoke::Stack        qargs
++ *  @param  const char*         className
++ */
++void 
++smokephp_smokeCastThis(Smoke *smoke, Smoke::Index method, Smoke::Stack qargs, void *obj, const char *className) {
++    qargs[0].s_class = smoke->cast(obj, smoke->idClass(className), smoke->methods[method].classId);
++}
++
++/*!
++ *  The munging works this way:
++ *  $ is a plain scalar
++ *  # is an object
++ *  ? is a non-scalar (reference to array or hash, undef)
++ *
++ * data types
++ * #define IS_NULL		0
++ * #define IS_LONG		1
++ * #define IS_DOUBLE	2
++ * #define IS_BOOL		3
++ * #define IS_ARRAY		4
++ * #define IS_OBJECT	5
++ * #define IS_STRING	6
++ * #define IS_RESOURCE	7
++ * #define IS_CONSTANT	8
++ * #define IS_CONSTANT_ARRAY	9
++ * 
++ *  @param  zval***                 args
++ *	@param	int						argc
++ *  @param  Smoke::StackItem*       qargs
++ */
++
++void 
++smokephp_convertArgsZendToCxx(zval*** args, int argc, Smoke::StackItem* qargs, QStack<QString*> &methodNameStack) {
++
++    for(int i=0;i<argc;i++){
++	    uint type = ((int) ((zval) **args[i]).type);
++	    if (type == IS_RESOURCE){
++	    } else if (type == IS_ARRAY){
++	        // convert array
++      	    char** c = new char*[1];
++      	    c[0] = "";
++      	    qargs[i+1].s_voidp = (void*) c;
++			methodNameStack.top()->append("?");
++	    } else if (type == IS_BOOL){
++    	    qargs[i+1].s_bool = Z_BVAL_PP(args[i]);
++            methodNameStack.top()->append("$");
++	    } else if (type == IS_LONG){
++    	    qargs[i+1].s_short = Z_LVAL_PP(args[i]);
++    	    qargs[i+1].s_ushort = Z_LVAL_PP(args[i]);
++    	    qargs[i+1].s_int = Z_LVAL_PP(args[i]);
++    	    qargs[i+1].s_uint = Z_LVAL_PP(args[i]);
++    	    qargs[i+1].s_long = Z_LVAL_PP(args[i]);
++    	    qargs[i+1].s_ulong = Z_LVAL_PP(args[i]);
++    	    methodNameStack.top()->append("$");
++	    } else if (type == IS_DOUBLE){
++    	    qargs[i+1].s_double = Z_DVAL_PP(args[i]);
++            methodNameStack.top()->append("$");
++	    } else if (type == IS_STRING){
++    	    qargs[i+1].s_class = emalloc(sizeof(QString)+strlen(Z_STRVAL_PP(args[i]))); // important
++    	    qargs[i+1].s_class = new QString(Z_STRVAL_PP(args[i]));
++            methodNameStack.top()->append("$");
++	    } else if (type == IS_OBJECT){
++			smokephp_object *o = phpqt_fetch(((zval*) *args[i]));
++            qargs[i+1].s_class = o->ptr;
++            // as default QString is not supported in Smoke
++            if(!strcmp(Z_OBJCE_P(((zval*) *args[i]))->name, "QString")){
++            	qargs[i+1].s_class = new QString(((QString*) o->ptr)->toAscii().constData());
++            	methodNameStack.top()->append("$");
++            } else {
++            	methodNameStack.top()->append("#");
++            }
++	    } else {
++	        php_error(E_ERROR,"Unknown argument or unsupported argument type %d, type %d, exit\n", i, type);
++	        exit(FAILURE);
++	    }
++    }
++
++}
++
++void 
++smokephp_convertReturn(Smoke::StackItem *ret_val, const Smoke::Type type, const Smoke::Index ret, zval* return_value){
++
++    smokephp_object* o = (smokephp_object*) emalloc(sizeof(smokephp_object));
++
++    switch((type.flags & Smoke::tf_elem)){
++        case Smoke::t_voidp:
++            RETVAL_NULL();
++            break;
++        case Smoke::t_bool:
++            RETVAL_BOOL(ret_val->s_bool);
++            break;
++        case Smoke::t_char:
++            RETVAL_STRING((char*)ret_val->s_char, 1);
++            break;
++        case Smoke::t_uchar:
++            RETVAL_STRING((char*)ret_val->s_char, 1);
++            break;
++        case Smoke::t_short:
++            RETVAL_LONG(ret_val->s_short);
++            break;
++        case Smoke::t_ushort:
++            RETVAL_LONG(ret_val->s_ushort);
++            break;
++        case Smoke::t_int:
++            RETVAL_LONG(ret_val->s_int);
++            break;
++        case Smoke::t_uint:
++            RETVAL_LONG(ret_val->s_uint);
++            break;
++        case Smoke::t_long:
++            RETVAL_LONG(ret_val->s_long);
++            break;
++        case Smoke::t_ulong:
++            RETVAL_LONG(ret_val->s_ulong);
++            break;
++        case Smoke::t_float:
++            RETVAL_DOUBLE(ret_val->s_float);
++            break;
++        case Smoke::t_double:
++            RETVAL_DOUBLE(ret_val->s_double);
++            break;
++        case Smoke::t_enum:
++            php_error(E_WARNING,"type enum not implemented\n");
++            break;
++        case Smoke::t_class:
++
++			// zval already exists
++//			if(zval_x_qt.find(o) != zval_x_qt.end()){
++			if(phpqt_zval2qtIsEnd(o)){
++				return_value = phpqt_fetch_zend_ptr((QObject*) o->ptr);
++			// create a new one
++			} else {
++				
++				o->ptr = ret_val->s_class;
++				o->smoke = qt_Smoke;
++
++				if(!strcmp((char*) qt_Smoke->classes[qt_Smoke->types[ret].classId].className, "QObject")){
++					// cast from, to
++					o->ptr = o->smoke->cast(o->ptr, qt_Smoke->idClass("QObject"), qt_Smoke->types[ret].classId);
++					object_init_ex(return_value, 
++									zend_fetch_class((char*)((QObject*) o->ptr)->metaObject()->className(),
++									strlen(((QObject*) o->ptr)->metaObject()->className()), 
++									ZEND_FETCH_CLASS_AUTO TSRMLS_DC));
++				//
++				} else if (!strcmp((char*) qt_Smoke->classes[qt_Smoke->types[ret].classId].className, "QBool")) {
++            		RETVAL_BOOL(*((QBool*) ret_val->s_class));
++            		return;
++				// fallback, already with correct type
++				} else {
++					object_init_ex(return_value, 
++									zend_fetch_class((char*) qt_Smoke->classes[qt_Smoke->types[ret].classId].className,
++									strlen(qt_Smoke->classes[qt_Smoke->types[ret].classId].className), 
++									ZEND_FETCH_CLASS_AUTO TSRMLS_DC));
++				}
++
++				o->zval_ptr = return_value;
++				o->ce_ptr = Z_OBJCE_P(return_value);
++				o->classId = qt_Smoke->types[ret].classId;
++// FIXME:	segfaults here:
++//				SmokeToPtr.insert(o->ptr, (long int) o);
++
++				zend_rsrc_list_entry le;
++				le.ptr = o;
++				phpqt_register(return_value, le);
++
++			}
++
++            return;
++        default:
++            php_error(E_ERROR,"unknown return type\n");
++            return;
++    }
++    return;
++}
++
++void 
++smokephp_prepareConnect(zval*** args, int argc, Smoke::StackItem* qargs, const Smoke::Index method){
++
++    int j;
++
++    // second loop: we dont have the method-Id before the first call
++    for(j = 0; j < argc; j++){
++ 	    uint type = ((int) ((zval) **args[j]).type);    // als Macro!
++        if (type == IS_STRING) {
++        	qargs[j+1].s_voidp = args[j][0]->value.str.val;
++        }
++    }
++
++}
++
++Smoke::Index
++smokephp_findConnect(){
++
++	for(int i=0;i<10000;i++){
++		if(qt_Smoke->methodMaps[i].name == qt_Smoke->idMethodName("connect#$#$")){
++			connect1 = qt_Smoke->methodMaps[i].method;
++		}
++		if(qt_Smoke->methodMaps[i].name == qt_Smoke->idMethodName("connect#$#$$")){
++			connect2 = qt_Smoke->methodMaps[i].method;
++		}
++		if(qt_Smoke->methodMaps[i].name == qt_Smoke->idMethodName("connect")){
++			connect3 = qt_Smoke->methodMaps[i].method;
++		}
++		// these are ambiguous methods
++		if(qt_Smoke->methodMaps[i].name == qt_Smoke->idMethodName("connect#$$")){
++			connect4 = qt_Smoke->methodMaps[i].method;
++		}
++		if(qt_Smoke->methodMaps[i].name == qt_Smoke->idMethodName("connect#$$$")){
++			connect5 = qt_Smoke->methodMaps[i].method;
++		}
++	}
++}
++
++/**
++ *	returns the related classId
++ *	@todo	caching, SmokeType
++ *	@param	char*	classname
++ *	@return Smoke::Index
++ */
++
++Smoke::Index 
++smokephp_getClassId(const char* classname){
++
++	Smoke::Index classId = 0;
++	Smoke::Class *p = qt_Smoke->classes;
++	while(p++ != qt_Smoke->classes+qt_Smoke->numClasses){
++		classId++;
++		if(!strcmp(p->className,classname)){
++			return classId;
++		}
++	}
++	// should never happen
++	php_error(E_ERROR,"fatal: QObject not found\n");
++	return 0;
++
++}
++
++bool 
++smokephp_isQObject(Smoke *smoke, Smoke::Index classId) {
++	if(strcmp(smoke->classes[classId].className, "QObject") == 0)
++		return true;
++	
++	for(Smoke::Index *p = smoke->inheritanceList + smoke->classes[classId].parents;	*p;	p++) {
++		if(smokephp_isQObject(smoke, *p))
++			return true;
++    }
++    return false;
++}
++
++bool
++smokephp_isConnect(Smoke::Index method){
++
++	if(
++		method == connect1
++		|| method == connect2
++		|| method == connect3
++		|| method == connect4
++		|| method == connect5
++	) return true; else return false;
++
++}
+
+
+
+From tm243 at mail.berlios.de  Thu Nov  9 18:38:07 2006
+From: tm243 at mail.berlios.de (tm243 at mail.berlios.de)
+Date: Thu, 9 Nov 2006 18:38:07 +0100
+Subject: [Php-qt-svn] r282 - trunk/qt
+Message-ID: <200611091738.kA9Hc7PU020440@sheep.berlios.de>
+
+Author: tm243
+Date: 2006-11-09 18:37:59 +0100 (Thu, 09 Nov 2006)
+New Revision: 282
+
+Modified:
+   trunk/qt/php_qt.cpp
+   trunk/qt/php_qt.h
+Log:
+ZEND_MN macro for php-5.2.0 support
+
+Modified: trunk/qt/php_qt.cpp
+===================================================================
+--- trunk/qt/php_qt.cpp	2006-11-09 11:18:04 UTC (rev 281)
++++ trunk/qt/php_qt.cpp	2006-11-09 17:37:59 UTC (rev 282)
+@@ -383,7 +383,7 @@
+ 								tmpMethodList[qt_Smoke->methodNames[qt_Smoke->methods[j].name]] = true;
+ 								t->fname = (char*) emalloc(strlen(qt_Smoke->methodNames[qt_Smoke->methods[j].name])+1);
+ 								t->fname = (char*) qt_Smoke->methodNames[qt_Smoke->methods[j].name];
+-								t->handler = ZEND_FN(php_qt_generic_class_proxyMethod);
++								t->handler = ZEND_MN(php_qt_generic_class_proxyMethod);
+ 								t->arg_info = NULL;
+ 								t->flags = ZEND_ACC_PUBLIC|ZEND_ACC_STATIC;
+ 								t++;
+
+Modified: trunk/qt/php_qt.h
+===================================================================
+--- trunk/qt/php_qt.h	2006-11-09 11:18:04 UTC (rev 281)
++++ trunk/qt/php_qt.h	2006-11-09 17:37:59 UTC (rev 282)
+@@ -39,6 +39,10 @@
+ #include <QCoreApplication>
+ #include <QApplication>
+ 
++// for older php versions
++#ifndef ZEND_MN
++#define ZEND_MN ZEND_FN
++#endif
+ 
+ #define QOUT()                                              \
+     extern QTextStream qout(stdout, QIODevice::WriteOnly);  \
+@@ -64,7 +68,7 @@
+     t->flags = flags_; \
+     t++;
+ 
+-#define PHP_QT_ME(classname, name, arg_info, flags)	PHP_QT_FENTRY(name, ZEND_FN(classname##_##name), arg_info, flags)
++#define PHP_QT_ME(classname, name, arg_info, flags)	PHP_QT_FENTRY(name, ZEND_MN(classname##_##name), arg_info, flags)
+ 
+ 
+ #ifdef HAVE_CONFIG_H
+
+
+
+From tm243 at mail.berlios.de  Thu Nov  9 18:43:14 2006
+From: tm243 at mail.berlios.de (tm243 at mail.berlios.de)
+Date: Thu, 9 Nov 2006 18:43:14 +0100
+Subject: [Php-qt-svn] r283 - in trunk/smoke: . qt
+Message-ID: <200611091743.kA9HhEdx026063@sheep.berlios.de>
+
+Author: tm243
+Date: 2006-11-09 18:43:08 +0100 (Thu, 09 Nov 2006)
+New Revision: 283
+
+Modified:
+   trunk/smoke/Makefile.in
+   trunk/smoke/qt/Makefile.in
+Log:
+new Makefile.in files
+
+Modified: trunk/smoke/Makefile.in
+===================================================================
+--- trunk/smoke/Makefile.in	2006-11-09 17:37:59 UTC (rev 282)
++++ trunk/smoke/Makefile.in	2006-11-09 17:43:08 UTC (rev 283)
+@@ -1,45 +1,576 @@
+-# Makefile.in generated by unsermake
+-####################################
++# Makefile.in generated by automake 1.7.9 from Makefile.am.
++# @configure_input@
+ 
++# Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003
++# Free Software Foundation, Inc.
++# This Makefile.in is free software; the Free Software Foundation
++# gives unlimited permission to copy and/or distribute it,
++# with or without modifications, as long as this notice is preserved.
++
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
++# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
++# PARTICULAR PURPOSE.
++
++ at SET_MAKE@
++
++srcdir = @srcdir@
++top_srcdir = @top_srcdir@
++VPATH = @srcdir@
++pkgdatadir = $(datadir)/@PACKAGE@
++pkglibdir = $(libdir)/@PACKAGE@
++pkgincludedir = $(includedir)/@PACKAGE@
+ top_builddir = ..
+-top_srcdir = @top_srcdir@
+-srcdir = @srcdir@
+-.FORWARDS: all install install-data install-exec clean check force-reedit
+ 
+-all:
+-	@echo 'WARNING: use unsermake instead of make or use a wrapper script, e.g. makeobj!!!'
+-	/home/moni/Documents/projekte/php_qt/unsermake/unsermake all
++am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
++INSTALL = @INSTALL@
++install_sh_DATA = $(install_sh) -c -m 644
++install_sh_PROGRAM = $(install_sh) -c
++install_sh_SCRIPT = $(install_sh) -c
++INSTALL_HEADER = $(INSTALL_DATA)
++transform = $(program_transform_name)
++NORMAL_INSTALL = :
++PRE_INSTALL = :
++POST_INSTALL = :
++NORMAL_UNINSTALL = :
++PRE_UNINSTALL = :
++POST_UNINSTALL = :
++build_triplet = @build@
++host_triplet = @host@
++target_triplet = @target@
++ACLOCAL = @ACLOCAL@
++AMDEP_FALSE = @AMDEP_FALSE@
++AMDEP_TRUE = @AMDEP_TRUE@
++AMTAR = @AMTAR@
++AR = @AR@
++AUTOCONF = @AUTOCONF@
++AUTOHEADER = @AUTOHEADER@
++AUTOMAKE = @AUTOMAKE@
++AWK = @AWK@
++CC = @CC@
++CCDEPMODE = @CCDEPMODE@
++CFLAGS = @CFLAGS@
++CPP = @CPP@
++CPPFLAGS = @CPPFLAGS@
++CXX = @CXX@
++CXXCPP = @CXXCPP@
++CXXDEPMODE = @CXXDEPMODE@
++CXXFLAGS = @CXXFLAGS@
++CYGPATH_W = @CYGPATH_W@
++DEFS = @DEFS@
++DEPDIR = @DEPDIR@
++ECHO = @ECHO@
++ECHO_C = @ECHO_C@
++ECHO_N = @ECHO_N@
++ECHO_T = @ECHO_T@
++EGREP = @EGREP@
++ENABLE_PERMISSIVE_FLAG = @ENABLE_PERMISSIVE_FLAG@
++EXEEXT = @EXEEXT@
++FRAMEWORK_COREAUDIO = @FRAMEWORK_COREAUDIO@
++GLINC = @GLINC@
++GLLIB = @GLLIB@
++HAVE_GCC_VISIBILITY = @HAVE_GCC_VISIBILITY@
++INSTALL_DATA = @INSTALL_DATA@
++INSTALL_PROGRAM = @INSTALL_PROGRAM@
++INSTALL_SCRIPT = @INSTALL_SCRIPT@
++INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
++KDE_HAVE_GL = @KDE_HAVE_GL@
++KDE_MT_LDFLAGS = @KDE_MT_LDFLAGS@
++KDE_MT_LIBS = @KDE_MT_LIBS@
++KDE_NO_UNDEFINED = @KDE_NO_UNDEFINED@
++KDE_PLUGIN = @KDE_PLUGIN@
++KDE_USE_CLOSURE_FALSE = @KDE_USE_CLOSURE_FALSE@
++KDE_USE_CLOSURE_TRUE = @KDE_USE_CLOSURE_TRUE@
++KDE_USE_FINAL_FALSE = @KDE_USE_FINAL_FALSE@
++KDE_USE_FINAL_TRUE = @KDE_USE_FINAL_TRUE@
++KDE_USE_FPIE = @KDE_USE_FPIE@
++KDE_USE_NMCHECK_FALSE = @KDE_USE_NMCHECK_FALSE@
++KDE_USE_NMCHECK_TRUE = @KDE_USE_NMCHECK_TRUE@
++KDE_USE_PIE = @KDE_USE_PIE@
++LDFLAGS = @LDFLAGS@
++LDFLAGS_AS_NEEDED = @LDFLAGS_AS_NEEDED@
++LDFLAGS_NEW_DTAGS = @LDFLAGS_NEW_DTAGS@
++LIBCOMPAT = @LIBCOMPAT@
++LIBCRYPT = @LIBCRYPT@
++LIBDL = @LIBDL@
++LIBJPEG = @LIBJPEG@
++LIBOBJS = @LIBOBJS@
++LIBPNG = @LIBPNG@
++LIBPTHREAD = @LIBPTHREAD@
++LIBQSCINTILLA = @LIBQSCINTILLA@
++LIBQTDBUS = @LIBQTDBUS@
++LIBQWT = @LIBQWT@
++LIBRESOLV = @LIBRESOLV@
++LIBS = @LIBS@
++LIBSM = @LIBSM@
++LIBSOCKET = @LIBSOCKET@
++LIBTOOL = @LIBTOOL@
++LIBUCB = @LIBUCB@
++LIBUTIL = @LIBUTIL@
++LIBZ = @LIBZ@
++LIB_KAB = @LIB_KAB@
++LIB_KABC = @LIB_KABC@
++LIB_KDE3SUPPORT = @LIB_KDE3SUPPORT@
++LIB_KDECORE = @LIB_KDECORE@
++LIB_KDED = @LIB_KDED@
++LIB_KDEPIM = @LIB_KDEPIM@
++LIB_KDEPRINT = @LIB_KDEPRINT@
++LIB_KDEUI = @LIB_KDEUI@
++LIB_KDNSSD = @LIB_KDNSSD@
++LIB_KFILE = @LIB_KFILE@
++LIB_KHTML = @LIB_KHTML@
++LIB_KIMPROXY = @LIB_KIMPROXY@
++LIB_KIO = @LIB_KIO@
++LIB_KJS = @LIB_KJS@
++LIB_KNEWSTUFF = @LIB_KNEWSTUFF@
++LIB_KPARTS = @LIB_KPARTS@
++LIB_KSPELL = @LIB_KSPELL@
++LIB_KSPELL2 = @LIB_KSPELL2@
++LIB_KSYCOCA = @LIB_KSYCOCA@
++LIB_KUTILS = @LIB_KUTILS@
++LIB_POLL = @LIB_POLL@
++LIB_QPE = @LIB_QPE@
++LIB_QT = @LIB_QT@
++LIB_QT3SUPPORT = @LIB_QT3SUPPORT@
++LIB_QTCORE = @LIB_QTCORE@
++LIB_QTDESIGNER = @LIB_QTDESIGNER@
++LIB_QTGUI = @LIB_QTGUI@
++LIB_QTNETWORK = @LIB_QTNETWORK@
++LIB_QTOPENGL = @LIB_QTOPENGL@
++LIB_QTSQL = @LIB_QTSQL@
++LIB_QTTESTLIB = @LIB_QTTESTLIB@
++LIB_QTXML = @LIB_QTXML@
++LIB_SMB = @LIB_SMB@
++LIB_X11 = @LIB_X11@
++LIB_XEXT = @LIB_XEXT@
++LIB_XRENDER = @LIB_XRENDER@
++LN_S = @LN_S@
++LTLIBOBJS = @LTLIBOBJS@
++MAKEINFO = @MAKEINFO@
++MOC = @MOC@
++NOOPT_CFLAGS = @NOOPT_CFLAGS@
++NOOPT_CXXFLAGS = @NOOPT_CXXFLAGS@
++OBJEXT = @OBJEXT@
++PACKAGE = @PACKAGE@
++PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
++PACKAGE_NAME = @PACKAGE_NAME@
++PACKAGE_STRING = @PACKAGE_STRING@
++PACKAGE_TARNAME = @PACKAGE_TARNAME@
++PACKAGE_VERSION = @PACKAGE_VERSION@
++PATH_SEPARATOR = @PATH_SEPARATOR@
++PERL = @PERL@
++QTE_NORTTI = @QTE_NORTTI@
++QT_INCLUDES = @QT_INCLUDES@
++QT_LDFLAGS = @QT_LDFLAGS@
++RANLIB = @RANLIB@
++RCC = @RCC@
++RUBY = @RUBY@
++RUBY_ARCHDIR = @RUBY_ARCHDIR@
++RUBY_LIBDIR = @RUBY_LIBDIR@
++RUBY_LIBRUBYARG = @RUBY_LIBRUBYARG@
++RUBY_SITEARCHDIR = @RUBY_SITEARCHDIR@
++RUBY_SITEDIR = @RUBY_SITEDIR@
++SET_MAKE = @SET_MAKE@
++SHELL = @SHELL@
++STRIP = @STRIP@
++TOPSUBDIRS = @TOPSUBDIRS@
++UIC = @UIC@
++UIC3_PATH = @UIC3_PATH@
++UIC_TR = @UIC_TR@
++USER_INCLUDES = @USER_INCLUDES@
++USER_LDFLAGS = @USER_LDFLAGS@
++USE_EXCEPTIONS = @USE_EXCEPTIONS@
++USE_RTTI = @USE_RTTI@
++USE_THREADS = @USE_THREADS@
++VERSION = @VERSION@
++WOVERLOADED_VIRTUAL = @WOVERLOADED_VIRTUAL@
++X_EXTRA_LIBS = @X_EXTRA_LIBS@
++X_INCLUDES = @X_INCLUDES@
++X_LDFLAGS = @X_LDFLAGS@
++X_PRE_LIBS = @X_PRE_LIBS@
++ac_ct_AR = @ac_ct_AR@
++ac_ct_CC = @ac_ct_CC@
++ac_ct_CXX = @ac_ct_CXX@
++ac_ct_RANLIB = @ac_ct_RANLIB@
++ac_ct_STRIP = @ac_ct_STRIP@
++all_includes = @all_includes@
++all_libraries = @all_libraries@
++am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
++am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
++am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
++am__fastdepCXX_TRUE = @am__fastdepCXX_TRUE@
++am__include = @am__include@
++am__leading_dot = @am__leading_dot@
++am__quote = @am__quote@
++bindir = @bindir@
++build = @build@
++build_alias = @build_alias@
++build_cpu = @build_cpu@
++build_os = @build_os@
++build_vendor = @build_vendor@
++datadir = @datadir@
++exec_prefix = @exec_prefix@
++host = @host@
++host_alias = @host_alias@
++host_cpu = @host_cpu@
++host_os = @host_os@
++host_vendor = @host_vendor@
++include_x11_FALSE = @include_x11_FALSE@
++include_x11_TRUE = @include_x11_TRUE@
++includedir = @includedir@
++infodir = @infodir@
++install_sh = @install_sh@
++kde_build_libsmoke = @kde_build_libsmoke@
++kde_qtver = @kde_qtver@
++libdir = @libdir@
++libexecdir = @libexecdir@
++localstatedir = @localstatedir@
++mandir = @mandir@
++oldincludedir = @oldincludedir@
++prefix = @prefix@
++program_transform_name = @program_transform_name@
++qt_includes = @qt_includes@
++qt_libraries = @qt_libraries@
++qt_test_threshold = @qt_test_threshold@
++qtdbus = @qtdbus@
++qtextscintilla = @qtextscintilla@
++qtruby_SUBDIR_included_FALSE = @qtruby_SUBDIR_included_FALSE@
++qtruby_SUBDIR_included_TRUE = @qtruby_SUBDIR_included_TRUE@
++qwt = @qwt@
++sbindir = @sbindir@
++sharedstatedir = @sharedstatedir@
++smoke_SUBDIR_included_FALSE = @smoke_SUBDIR_included_FALSE@
++smoke_SUBDIR_included_TRUE = @smoke_SUBDIR_included_TRUE@
++sysconfdir = @sysconfdir@
++target = @target@
++target_alias = @target_alias@
++target_cpu = @target_cpu@
++target_os = @target_os@
++target_vendor = @target_vendor@
++unsermake_enable_pch_FALSE = @unsermake_enable_pch_FALSE@
++unsermake_enable_pch_TRUE = @unsermake_enable_pch_TRUE@
++x_includes = @x_includes@
++x_libraries = @x_libraries@
++SUBDIRS = $(kde_build_libsmoke)
+ 
+-install:
+-	@echo 'WARNING: use unsermake instead of make or use a wrapper script, e.g. makeobj!!!'
+-	/home/moni/Documents/projekte/php_qt/unsermake/unsermake install
++include_HEADERS = smoke.h
++subdir = smoke
++ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
++mkinstalldirs = $(SHELL) $(top_srcdir)/admin/mkinstalldirs
++CONFIG_HEADER = $(top_builddir)/config.h
++CONFIG_CLEAN_FILES =
++DIST_SOURCES =
++HEADERS = $(include_HEADERS)
+ 
+-install-data:
+-	@echo 'WARNING: use unsermake instead of make or use a wrapper script, e.g. makeobj!!!'
+-	/home/moni/Documents/projekte/php_qt/unsermake/unsermake install-data
+ 
+-install-exec:
+-	@echo 'WARNING: use unsermake instead of make or use a wrapper script, e.g. makeobj!!!'
+-	/home/moni/Documents/projekte/php_qt/unsermake/unsermake install-exec
++RECURSIVE_TARGETS = info-recursive dvi-recursive pdf-recursive \
++	ps-recursive install-info-recursive uninstall-info-recursive \
++	all-recursive install-data-recursive install-exec-recursive \
++	installdirs-recursive install-recursive uninstall-recursive \
++	check-recursive installcheck-recursive
++DIST_COMMON = README $(include_HEADERS) $(srcdir)/Makefile.in \
++	Makefile.am
++DIST_SUBDIRS = $(SUBDIRS)
++all: all-recursive
+ 
+-clean:
+-	@echo 'WARNING: use unsermake instead of make or use a wrapper script, e.g. makeobj!!!'
+-	/home/moni/Documents/projekte/php_qt/unsermake/unsermake clean
++.SUFFIXES:
++$(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
++	cd $(top_srcdir) && \
++	  $(AUTOMAKE) --gnu  smoke/Makefile
++Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
++	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)
+ 
+-check:
+-	@echo 'WARNING: use unsermake instead of make or use a wrapper script, e.g. makeobj!!!'
+-	/home/moni/Documents/projekte/php_qt/unsermake/unsermake check
++mostlyclean-libtool:
++	-rm -f *.lo
+ 
+-force-reedit:
+-	@echo 'WARNING: use unsermake instead of make or use a wrapper script, e.g. makeobj!!!'
+-	/home/moni/Documents/projekte/php_qt/unsermake/unsermake force-reedit
++clean-libtool:
++	-rm -rf .libs _libs
+ 
+-$(top_builddir)/smoke/Makefile: $(top_builddir)/config.status $(top_srcdir)/smoke/Makefile.in
+-	cd $(top_builddir) && $(SHELL) ./config.status smoke/Makefile
++distclean-libtool:
++	-rm -f libtool
++uninstall-info-am:
++includeHEADERS_INSTALL = $(INSTALL_HEADER)
++install-includeHEADERS: $(include_HEADERS)
++	@$(NORMAL_INSTALL)
++	$(mkinstalldirs) $(DESTDIR)$(includedir)
++	@list='$(include_HEADERS)'; for p in $$list; do \
++	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
++	  f="`echo $$p | sed -e 's|^.*/||'`"; \
++	  echo " $(includeHEADERS_INSTALL) $$d$$p $(DESTDIR)$(includedir)/$$f"; \
++	  $(includeHEADERS_INSTALL) $$d$$p $(DESTDIR)$(includedir)/$$f; \
++	done
+ 
+-all: $(top_builddir)/smoke/Makefile
+-final: 
+-	@echo no programs available to recreate as final. Call in subdirs
++uninstall-includeHEADERS:
++	@$(NORMAL_UNINSTALL)
++	@list='$(include_HEADERS)'; for p in $$list; do \
++	  f="`echo $$p | sed -e 's|^.*/||'`"; \
++	  echo " rm -f $(DESTDIR)$(includedir)/$$f"; \
++	  rm -f $(DESTDIR)$(includedir)/$$f; \
++	done
+ 
+-__um_includes_string.h = smoke.h
+-.PHONY: all final
++# This directory's subdirectories are mostly independent; you can cd
++# into them and run `make' without going through this Makefile.
++# To change the values of `make' variables: instead of editing Makefiles,
++# (1) if the variable is set in `config.status', edit `config.status'
++#     (which will cause the Makefiles to be regenerated when you run `make');
++# (2) otherwise, pass the desired values on the `make' command line.
++$(RECURSIVE_TARGETS):
++	@set fnord $$MAKEFLAGS; amf=$$2; \
++	dot_seen=no; \
++	target=`echo $@ | sed s/-recursive//`; \
++	list='$(SUBDIRS)'; for subdir in $$list; do \
++	  echo "Making $$target in $$subdir"; \
++	  if test "$$subdir" = "."; then \
++	    dot_seen=yes; \
++	    local_target="$$target-am"; \
++	  else \
++	    local_target="$$target"; \
++	  fi; \
++	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
++	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
++	done; \
++	if test "$$dot_seen" = "no"; then \
++	  $(MAKE) $(AM_MAKEFLAGS) "$$target-am" || exit 1; \
++	fi; test -z "$$fail"
++
++mostlyclean-recursive clean-recursive distclean-recursive \
++maintainer-clean-recursive:
++	@set fnord $$MAKEFLAGS; amf=$$2; \
++	dot_seen=no; \
++	case "$@" in \
++	  distclean-* | maintainer-clean-*) list='$(DIST_SUBDIRS)' ;; \
++	  *) list='$(SUBDIRS)' ;; \
++	esac; \
++	rev=''; for subdir in $$list; do \
++	  if test "$$subdir" = "."; then :; else \
++	    rev="$$subdir $$rev"; \
++	  fi; \
++	done; \
++	rev="$$rev ."; \
++	target=`echo $@ | sed s/-recursive//`; \
++	for subdir in $$rev; do \
++	  echo "Making $$target in $$subdir"; \
++	  if test "$$subdir" = "."; then \
++	    local_target="$$target-am"; \
++	  else \
++	    local_target="$$target"; \
++	  fi; \
++	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
++	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
++	done && test -z "$$fail"
++tags-recursive:
++	list='$(SUBDIRS)'; for subdir in $$list; do \
++	  test "$$subdir" = . || (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) tags); \
++	done
++ctags-recursive:
++	list='$(SUBDIRS)'; for subdir in $$list; do \
++	  test "$$subdir" = . || (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) ctags); \
++	done
++
++ETAGS = etags
++ETAGSFLAGS =
++
++CTAGS = ctags
++CTAGSFLAGS =
++
++tags: TAGS
++
++ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
++	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
++	unique=`for i in $$list; do \
++	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
++	  done | \
++	  $(AWK) '    { files[$$0] = 1; } \
++	       END { for (i in files) print i; }'`; \
++	mkid -fID $$unique
++
++TAGS: tags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
++		$(TAGS_FILES) $(LISP)
++	tags=; \
++	here=`pwd`; \
++	if (etags --etags-include --version) >/dev/null 2>&1; then \
++	  include_option=--etags-include; \
++	else \
++	  include_option=--include; \
++	fi; \
++	list='$(SUBDIRS)'; for subdir in $$list; do \
++	  if test "$$subdir" = .; then :; else \
++	    test -f $$subdir/TAGS && \
++	      tags="$$tags $$include_option=$$here/$$subdir/TAGS"; \
++	  fi; \
++	done; \
++	list='$(SOURCES) $(HEADERS)  $(LISP) $(TAGS_FILES)'; \
++	unique=`for i in $$list; do \
++	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
++	  done | \
++	  $(AWK) '    { files[$$0] = 1; } \
++	       END { for (i in files) print i; }'`; \
++	test -z "$(ETAGS_ARGS)$$tags$$unique" \
++	  || $(ETAGS) $(ETAGSFLAGS) $(AM_ETAGSFLAGS) $(ETAGS_ARGS) \
++	     $$tags $$unique
++
++ctags: CTAGS
++CTAGS: ctags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
++		$(TAGS_FILES) $(LISP)
++	tags=; \
++	here=`pwd`; \
++	list='$(SOURCES) $(HEADERS)  $(LISP) $(TAGS_FILES)'; \
++	unique=`for i in $$list; do \
++	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
++	  done | \
++	  $(AWK) '    { files[$$0] = 1; } \
++	       END { for (i in files) print i; }'`; \
++	test -z "$(CTAGS_ARGS)$$tags$$unique" \
++	  || $(CTAGS) $(CTAGSFLAGS) $(AM_CTAGSFLAGS) $(CTAGS_ARGS) \
++	     $$tags $$unique
++
++GTAGS:
++	here=`$(am__cd) $(top_builddir) && pwd` \
++	  && cd $(top_srcdir) \
++	  && gtags -i $(GTAGS_ARGS) $$here
++
++distclean-tags:
++	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
++DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
++
++top_distdir = ..
++distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
++
++distdir: $(DISTFILES)
++	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
++	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
++	list='$(DISTFILES)'; for file in $$list; do \
++	  case $$file in \
++	    $(srcdir)/*) file=`echo "$$file" | sed "s|^$$srcdirstrip/||"`;; \
++	    $(top_srcdir)/*) file=`echo "$$file" | sed "s|^$$topsrcdirstrip/|$(top_builddir)/|"`;; \
++	  esac; \
++	  if test -f $$file || test -d $$file; then d=.; else d=$(srcdir); fi; \
++	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
++	  if test "$$dir" != "$$file" && test "$$dir" != "."; then \
++	    dir="/$$dir"; \
++	    $(mkinstalldirs) "$(distdir)$$dir"; \
++	  else \
++	    dir=''; \
++	  fi; \
++	  if test -d $$d/$$file; then \
++	    if test -d $(srcdir)/$$file && test $$d != $(srcdir); then \
++	      cp -pR $(srcdir)/$$file $(distdir)$$dir || exit 1; \
++	    fi; \
++	    cp -pR $$d/$$file $(distdir)$$dir || exit 1; \
++	  else \
++	    test -f $(distdir)/$$file \
++	    || cp -p $$d/$$file $(distdir)/$$file \
++	    || exit 1; \
++	  fi; \
++	done
++	list='$(SUBDIRS)'; for subdir in $$list; do \
++	  if test "$$subdir" = .; then :; else \
++	    test -d $(distdir)/$$subdir \
++	    || mkdir $(distdir)/$$subdir \
++	    || exit 1; \
++	    (cd $$subdir && \
++	      $(MAKE) $(AM_MAKEFLAGS) \
++	        top_distdir="$(top_distdir)" \
++	        distdir=../$(distdir)/$$subdir \
++	        distdir) \
++	      || exit 1; \
++	  fi; \
++	done
++check-am: all-am
++check: check-recursive
++all-am: Makefile $(HEADERS)
++installdirs: installdirs-recursive
++installdirs-am:
++	$(mkinstalldirs) $(DESTDIR)$(includedir)
++
++install: install-recursive
++install-exec: install-exec-recursive
++install-data: install-data-recursive
++uninstall: uninstall-recursive
++
++install-am: all-am
++	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
++
++installcheck: installcheck-recursive
++install-strip:
++	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
++	  install_sh_PROGRAM="$(INSTALL_STRIP_PROGRAM)" INSTALL_STRIP_FLAG=-s \
++	  `test -z '$(STRIP)' || \
++	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
++mostlyclean-generic:
++
++clean-generic:
++
++distclean-generic:
++	-rm -f $(CONFIG_CLEAN_FILES)
++
++maintainer-clean-generic:
++	@echo "This command is intended for maintainers to use"
++	@echo "it deletes files that may require special tools to rebuild."
++clean: clean-recursive
++
++clean-am: clean-generic clean-libtool mostlyclean-am
++
++distclean: distclean-recursive
++	-rm -f Makefile
++distclean-am: clean-am distclean-generic distclean-libtool \
++	distclean-tags
++
++dvi: dvi-recursive
++
++dvi-am:
++
++info: info-recursive
++
++info-am:
++
++install-data-am: install-includeHEADERS
++
++install-exec-am:
++
++install-info: install-info-recursive
++
++install-man:
++
++installcheck-am:
++
++maintainer-clean: maintainer-clean-recursive
++	-rm -f Makefile
++maintainer-clean-am: distclean-am maintainer-clean-generic
++
++mostlyclean: mostlyclean-recursive
++
++mostlyclean-am: mostlyclean-generic mostlyclean-libtool
++
++pdf: pdf-recursive
++
++pdf-am:
++
++ps: ps-recursive
++
++ps-am:
++
++uninstall-am: uninstall-includeHEADERS uninstall-info-am
++
++uninstall-info: uninstall-info-recursive
++
++.PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am check check-am clean \
++	clean-generic clean-libtool clean-recursive ctags \
++	ctags-recursive distclean distclean-generic distclean-libtool \
++	distclean-recursive distclean-tags distdir dvi dvi-am \
++	dvi-recursive info info-am info-recursive install install-am \
++	install-data install-data-am install-data-recursive \
++	install-exec install-exec-am install-exec-recursive \
++	install-includeHEADERS install-info install-info-am \
++	install-info-recursive install-man install-recursive \
++	install-strip installcheck installcheck-am installdirs \
++	installdirs-am installdirs-recursive maintainer-clean \
++	maintainer-clean-generic maintainer-clean-recursive mostlyclean \
++	mostlyclean-generic mostlyclean-libtool mostlyclean-recursive \
++	pdf pdf-am pdf-recursive ps ps-am ps-recursive tags \
++	tags-recursive uninstall uninstall-am uninstall-includeHEADERS \
++	uninstall-info-am uninstall-info-recursive uninstall-recursive
++
++# Tell versions [3.59,3.63) of GNU make to not export all variables.
++# Otherwise a system limit (for SysV at least) may be exceeded.
++.NOEXPORT:
+
+Modified: trunk/smoke/qt/Makefile.in
+===================================================================
+--- trunk/smoke/qt/Makefile.in	2006-11-09 17:37:59 UTC (rev 282)
++++ trunk/smoke/qt/Makefile.in	2006-11-09 17:43:08 UTC (rev 283)
+@@ -1,51 +1,621 @@
+-# Makefile.in generated by unsermake
+-####################################
++# Makefile.in generated by automake 1.7.9 from Makefile.am.
++# @configure_input@
+ 
++# Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003
++# Free Software Foundation, Inc.
++# This Makefile.in is free software; the Free Software Foundation
++# gives unlimited permission to copy and/or distribute it,
++# with or without modifications, as long as this notice is preserved.
++
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
++# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
++# PARTICULAR PURPOSE.
++
++ at SET_MAKE@
++
++srcdir = @srcdir@
++top_srcdir = @top_srcdir@
++VPATH = @srcdir@
++pkgdatadir = $(datadir)/@PACKAGE@
++pkglibdir = $(libdir)/@PACKAGE@
++pkgincludedir = $(includedir)/@PACKAGE@
+ top_builddir = ../..
+-top_srcdir = @top_srcdir@
+-srcdir = @srcdir@
+-.FORWARDS: all install install-data install-exec clean check force-reedit
+ 
+-all:
+-	@echo 'WARNING: use unsermake instead of make or use a wrapper script, e.g. makeobj!!!'
+-	/home/moni/Documents/projekte/php_qt/unsermake/unsermake all
++am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
++INSTALL = @INSTALL@
++install_sh_DATA = $(install_sh) -c -m 644
++install_sh_PROGRAM = $(install_sh) -c
++install_sh_SCRIPT = $(install_sh) -c
++INSTALL_HEADER = $(INSTALL_DATA)
++transform = $(program_transform_name)
++NORMAL_INSTALL = :
++PRE_INSTALL = :
++POST_INSTALL = :
++NORMAL_UNINSTALL = :
++PRE_UNINSTALL = :
++POST_UNINSTALL = :
++build_triplet = @build@
++host_triplet = @host@
++target_triplet = @target@
++ACLOCAL = @ACLOCAL@
++AMDEP_FALSE = @AMDEP_FALSE@
++AMDEP_TRUE = @AMDEP_TRUE@
++AMTAR = @AMTAR@
++AR = @AR@
++AUTOCONF = @AUTOCONF@
++AUTOHEADER = @AUTOHEADER@
++AUTOMAKE = @AUTOMAKE@
++AWK = @AWK@
++CC = @CC@
++CCDEPMODE = @CCDEPMODE@
++CFLAGS = @CFLAGS@
++CPP = @CPP@
++CPPFLAGS = @CPPFLAGS@
++CXX = @CXX@
++CXXCPP = @CXXCPP@
++CXXDEPMODE = @CXXDEPMODE@
++CXXFLAGS = @CXXFLAGS@
++CYGPATH_W = @CYGPATH_W@
++DEFS = @DEFS@
++DEPDIR = @DEPDIR@
++ECHO = @ECHO@
++ECHO_C = @ECHO_C@
++ECHO_N = @ECHO_N@
++ECHO_T = @ECHO_T@
++EGREP = @EGREP@
++ENABLE_PERMISSIVE_FLAG = @ENABLE_PERMISSIVE_FLAG@
++EXEEXT = @EXEEXT@
++FRAMEWORK_COREAUDIO = @FRAMEWORK_COREAUDIO@
++GLINC = @GLINC@
++GLLIB = @GLLIB@
++HAVE_GCC_VISIBILITY = @HAVE_GCC_VISIBILITY@
++INSTALL_DATA = @INSTALL_DATA@
++INSTALL_PROGRAM = @INSTALL_PROGRAM@
++INSTALL_SCRIPT = @INSTALL_SCRIPT@
++INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
++KDE_HAVE_GL = @KDE_HAVE_GL@
++KDE_MT_LDFLAGS = @KDE_MT_LDFLAGS@
++KDE_MT_LIBS = @KDE_MT_LIBS@
++KDE_NO_UNDEFINED = @KDE_NO_UNDEFINED@
++KDE_PLUGIN = @KDE_PLUGIN@
++KDE_USE_CLOSURE_FALSE = @KDE_USE_CLOSURE_FALSE@
++KDE_USE_CLOSURE_TRUE = @KDE_USE_CLOSURE_TRUE@
++KDE_USE_FINAL_FALSE = @KDE_USE_FINAL_FALSE@
++KDE_USE_FINAL_TRUE = @KDE_USE_FINAL_TRUE@
++KDE_USE_FPIE = @KDE_USE_FPIE@
++KDE_USE_NMCHECK_FALSE = @KDE_USE_NMCHECK_FALSE@
++KDE_USE_NMCHECK_TRUE = @KDE_USE_NMCHECK_TRUE@
++KDE_USE_PIE = @KDE_USE_PIE@
++LDFLAGS = @LDFLAGS@
++LDFLAGS_AS_NEEDED = @LDFLAGS_AS_NEEDED@
++LDFLAGS_NEW_DTAGS = @LDFLAGS_NEW_DTAGS@
++LIBCOMPAT = @LIBCOMPAT@
++LIBCRYPT = @LIBCRYPT@
++LIBDL = @LIBDL@
++LIBJPEG = @LIBJPEG@
++LIBOBJS = @LIBOBJS@
++LIBPNG = @LIBPNG@
++LIBPTHREAD = @LIBPTHREAD@
++LIBQSCINTILLA = @LIBQSCINTILLA@
++LIBQTDBUS = @LIBQTDBUS@
++LIBQWT = @LIBQWT@
++LIBRESOLV = @LIBRESOLV@
++LIBS = @LIBS@
++LIBSM = @LIBSM@
++LIBSOCKET = @LIBSOCKET@
++LIBTOOL = @LIBTOOL@
++LIBUCB = @LIBUCB@
++LIBUTIL = @LIBUTIL@
++LIBZ = @LIBZ@
++LIB_KAB = @LIB_KAB@
++LIB_KABC = @LIB_KABC@
++LIB_KDE3SUPPORT = @LIB_KDE3SUPPORT@
++LIB_KDECORE = @LIB_KDECORE@
++LIB_KDED = @LIB_KDED@
++LIB_KDEPIM = @LIB_KDEPIM@
++LIB_KDEPRINT = @LIB_KDEPRINT@
++LIB_KDEUI = @LIB_KDEUI@
++LIB_KDNSSD = @LIB_KDNSSD@
++LIB_KFILE = @LIB_KFILE@
++LIB_KHTML = @LIB_KHTML@
++LIB_KIMPROXY = @LIB_KIMPROXY@
++LIB_KIO = @LIB_KIO@
++LIB_KJS = @LIB_KJS@
++LIB_KNEWSTUFF = @LIB_KNEWSTUFF@
++LIB_KPARTS = @LIB_KPARTS@
++LIB_KSPELL = @LIB_KSPELL@
++LIB_KSPELL2 = @LIB_KSPELL2@
++LIB_KSYCOCA = @LIB_KSYCOCA@
++LIB_KUTILS = @LIB_KUTILS@
++LIB_POLL = @LIB_POLL@
++LIB_QPE = @LIB_QPE@
++LIB_QT = @LIB_QT@
++LIB_QT3SUPPORT = @LIB_QT3SUPPORT@
++LIB_QTCORE = @LIB_QTCORE@
++LIB_QTDESIGNER = @LIB_QTDESIGNER@
++LIB_QTGUI = @LIB_QTGUI@
++LIB_QTNETWORK = @LIB_QTNETWORK@
++LIB_QTOPENGL = @LIB_QTOPENGL@
++LIB_QTSQL = @LIB_QTSQL@
++LIB_QTTESTLIB = @LIB_QTTESTLIB@
++LIB_QTXML = @LIB_QTXML@
++LIB_SMB = @LIB_SMB@
++LIB_X11 = @LIB_X11@
++LIB_XEXT = @LIB_XEXT@
++LIB_XRENDER = @LIB_XRENDER@
++LN_S = @LN_S@
++LTLIBOBJS = @LTLIBOBJS@
++MAKEINFO = @MAKEINFO@
++MOC = @MOC@
++NOOPT_CFLAGS = @NOOPT_CFLAGS@
++NOOPT_CXXFLAGS = @NOOPT_CXXFLAGS@
++OBJEXT = @OBJEXT@
++PACKAGE = @PACKAGE@
++PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
++PACKAGE_NAME = @PACKAGE_NAME@
++PACKAGE_STRING = @PACKAGE_STRING@
++PACKAGE_TARNAME = @PACKAGE_TARNAME@
++PACKAGE_VERSION = @PACKAGE_VERSION@
++PATH_SEPARATOR = @PATH_SEPARATOR@
++PERL = @PERL@
++QTE_NORTTI = @QTE_NORTTI@
++QT_INCLUDES = @QT_INCLUDES@
++QT_LDFLAGS = @QT_LDFLAGS@
++RANLIB = @RANLIB@
++RCC = @RCC@
++RUBY = @RUBY@
++RUBY_ARCHDIR = @RUBY_ARCHDIR@
++RUBY_LIBDIR = @RUBY_LIBDIR@
++RUBY_LIBRUBYARG = @RUBY_LIBRUBYARG@
++RUBY_SITEARCHDIR = @RUBY_SITEARCHDIR@
++RUBY_SITEDIR = @RUBY_SITEDIR@
++SET_MAKE = @SET_MAKE@
++SHELL = @SHELL@
++STRIP = @STRIP@
++TOPSUBDIRS = @TOPSUBDIRS@
++UIC = @UIC@
++UIC3_PATH = @UIC3_PATH@
++UIC_TR = @UIC_TR@
++USER_INCLUDES = @USER_INCLUDES@
++USER_LDFLAGS = @USER_LDFLAGS@
++USE_EXCEPTIONS = @USE_EXCEPTIONS@
++USE_RTTI = @USE_RTTI@
++USE_THREADS = @USE_THREADS@
++VERSION = @VERSION@
++WOVERLOADED_VIRTUAL = @WOVERLOADED_VIRTUAL@
++X_EXTRA_LIBS = @X_EXTRA_LIBS@
++X_INCLUDES = @X_INCLUDES@
++X_LDFLAGS = @X_LDFLAGS@
++X_PRE_LIBS = @X_PRE_LIBS@
++ac_ct_AR = @ac_ct_AR@
++ac_ct_CC = @ac_ct_CC@
++ac_ct_CXX = @ac_ct_CXX@
++ac_ct_RANLIB = @ac_ct_RANLIB@
++ac_ct_STRIP = @ac_ct_STRIP@
++all_includes = @all_includes@
++all_libraries = @all_libraries@
++am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
++am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
++am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
++am__fastdepCXX_TRUE = @am__fastdepCXX_TRUE@
++am__include = @am__include@
++am__leading_dot = @am__leading_dot@
++am__quote = @am__quote@
++bindir = @bindir@
++build = @build@
++build_alias = @build_alias@
++build_cpu = @build_cpu@
++build_os = @build_os@
++build_vendor = @build_vendor@
++datadir = @datadir@
++exec_prefix = @exec_prefix@
++host = @host@
++host_alias = @host_alias@
++host_cpu = @host_cpu@
++host_os = @host_os@
++host_vendor = @host_vendor@
++include_x11_FALSE = @include_x11_FALSE@
++include_x11_TRUE = @include_x11_TRUE@
++includedir = @includedir@
++infodir = @infodir@
++install_sh = @install_sh@
++kde_build_libsmoke = @kde_build_libsmoke@
++kde_qtver = @kde_qtver@
++libdir = @libdir@
++libexecdir = @libexecdir@
++localstatedir = @localstatedir@
++mandir = @mandir@
++oldincludedir = @oldincludedir@
++prefix = @prefix@
++program_transform_name = @program_transform_name@
++qt_includes = @qt_includes@
++qt_libraries = @qt_libraries@
++qt_test_threshold = @qt_test_threshold@
++qtdbus = @qtdbus@
++qtextscintilla = @qtextscintilla@
++qtruby_SUBDIR_included_FALSE = @qtruby_SUBDIR_included_FALSE@
++qtruby_SUBDIR_included_TRUE = @qtruby_SUBDIR_included_TRUE@
++qwt = @qwt@
++sbindir = @sbindir@
++sharedstatedir = @sharedstatedir@
++smoke_SUBDIR_included_FALSE = @smoke_SUBDIR_included_FALSE@
++smoke_SUBDIR_included_TRUE = @smoke_SUBDIR_included_TRUE@
++sysconfdir = @sysconfdir@
++target = @target@
++target_alias = @target_alias@
++target_cpu = @target_cpu@
++target_os = @target_os@
++target_vendor = @target_vendor@
++unsermake_enable_pch_FALSE = @unsermake_enable_pch_FALSE@
++unsermake_enable_pch_TRUE = @unsermake_enable_pch_TRUE@
++x_includes = @x_includes@
++x_libraries = @x_libraries@
++lib_LTLIBRARIES = libsmokeqt.la
+ 
+-install:
+-	@echo 'WARNING: use unsermake instead of make or use a wrapper script, e.g. makeobj!!!'
+-	/home/moni/Documents/projekte/php_qt/unsermake/unsermake install
++# set the include path for X, qt and KDE
++INCLUDES = -I$(srcdir)/.. $(all_includes) -I$(qt_includes)/QtUiTools \
++                   -I$(qt_includes)/QtDBus
+ 
+-install-data:
+-	@echo 'WARNING: use unsermake instead of make or use a wrapper script, e.g. makeobj!!!'
+-	/home/moni/Documents/projekte/php_qt/unsermake/unsermake install-data
+ 
+-install-exec:
+-	@echo 'WARNING: use unsermake instead of make or use a wrapper script, e.g. makeobj!!!'
+-	/home/moni/Documents/projekte/php_qt/unsermake/unsermake install-exec
++EXTRA_DIST = generate.pl.in qtguess.pl.in qt_smoke.h Makefile.am
+ 
+-clean:
+-	@echo 'WARNING: use unsermake instead of make or use a wrapper script, e.g. makeobj!!!'
+-	/home/moni/Documents/projekte/php_qt/unsermake/unsermake clean
++# the library search path. 
++libsmokeqt_la_LDFLAGS = -version-info 3:3:2 -no-undefined $(all_libraries) $(GLINC)
+ 
+-check:
+-	@echo 'WARNING: use unsermake instead of make or use a wrapper script, e.g. makeobj!!!'
+-	/home/moni/Documents/projekte/php_qt/unsermake/unsermake check
++# the libraries to link against.
++libsmokeqt_la_LIBADD = $(LIB_QTCORE) $(LIB_QTGUI) $(LIB_QTNETWORK) \
++						$(LIB_QTOPENGL) $(LIB_QTSQL) $(LIB_QTCORE) $(LIB_QTXML) $(LIB_QTSVG) \
++						$(GLLIB) $(LIBQSCINTILLA) \
++						-lQtSvg -lQtUiTools $(LIBQTDBUS) $(LIBQWT)
+ 
+-force-reedit:
+-	@echo 'WARNING: use unsermake instead of make or use a wrapper script, e.g. makeobj!!!'
+-	/home/moni/Documents/projekte/php_qt/unsermake/unsermake force-reedit
+ 
+-$(top_builddir)/smoke/qt/Makefile: $(top_builddir)/config.status $(top_srcdir)/smoke/qt/Makefile.in
+-	cd $(top_builddir) && $(SHELL) ./config.status smoke/qt/Makefile
++x_sources = x_1.cpp x_2.cpp x_3.cpp x_4.cpp x_5.cpp x_6.cpp x_7.cpp \
++   x_8.cpp x_9.cpp x_10.cpp x_11.cpp x_12.cpp x_13.cpp x_14.cpp x_15.cpp \
++   x_16.cpp x_17.cpp x_18.cpp x_19.cpp x_20.cpp
+ 
+-$(top_builddir)/smoke/qt/generate.pl: $(top_builddir)/config.status $(srcdir)/generate.pl.in
+-		cd $(top_builddir) && $(SHELL) ./config.status smoke/qt/generate.pl
+ 
+-$(top_builddir)/smoke/qt/qtguess.pl: $(top_builddir)/config.status $(srcdir)/qtguess.pl.in
+-		cd $(top_builddir) && $(SHELL) ./config.status smoke/qt/qtguess.pl
++# which sources should be compiled for perlqtkde
++libsmokeqt_la_SOURCES = smokedata.cpp $(x_sources)
+ 
+-all: $(top_builddir)/smoke/qt/Makefile
+-final: 
+-	/home/moni/Documents/projekte/php_qt/unsermake/unsermake -C $(top_builddir)/smoke/qt UNSERMAKE_FORCE_FINAL=1 libsmokeqt.la
++CLEANFILES = $(libsmokeqt_la_SOURCES)
++subdir = smoke/qt
++ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
++mkinstalldirs = $(SHELL) $(top_srcdir)/admin/mkinstalldirs
++CONFIG_HEADER = $(top_builddir)/config.h
++CONFIG_CLEAN_FILES = qtguess.pl generate.pl
++LTLIBRARIES = $(lib_LTLIBRARIES)
+ 
+-INCLUDES = -I$(top_srcdir)/smoke/qt/.. $(all_includes) -I$(qt_includes)/QtUiTools -I$(qt_includes)/QtDBus
+-.PHONY: all final
++libsmokeqt_la_DEPENDENCIES =
++am__objects_1 = x_1.lo x_2.lo x_3.lo x_4.lo x_5.lo x_6.lo x_7.lo x_8.lo \
++	x_9.lo x_10.lo x_11.lo x_12.lo x_13.lo x_14.lo x_15.lo x_16.lo \
++	x_17.lo x_18.lo x_19.lo x_20.lo
++am_libsmokeqt_la_OBJECTS = smokedata.lo $(am__objects_1)
++libsmokeqt_la_OBJECTS = $(am_libsmokeqt_la_OBJECTS)
++
++DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
++depcomp = $(SHELL) $(top_srcdir)/admin/depcomp
++am__depfiles_maybe = depfiles
++ at AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/smokedata.Plo ./$(DEPDIR)/x_1.Plo \
++ at AMDEP_TRUE@	./$(DEPDIR)/x_10.Plo ./$(DEPDIR)/x_11.Plo \
++ at AMDEP_TRUE@	./$(DEPDIR)/x_12.Plo ./$(DEPDIR)/x_13.Plo \
++ at AMDEP_TRUE@	./$(DEPDIR)/x_14.Plo ./$(DEPDIR)/x_15.Plo \
++ at AMDEP_TRUE@	./$(DEPDIR)/x_16.Plo ./$(DEPDIR)/x_17.Plo \
++ at AMDEP_TRUE@	./$(DEPDIR)/x_18.Plo ./$(DEPDIR)/x_19.Plo \
++ at AMDEP_TRUE@	./$(DEPDIR)/x_2.Plo ./$(DEPDIR)/x_20.Plo \
++ at AMDEP_TRUE@	./$(DEPDIR)/x_3.Plo ./$(DEPDIR)/x_4.Plo \
++ at AMDEP_TRUE@	./$(DEPDIR)/x_5.Plo ./$(DEPDIR)/x_6.Plo \
++ at AMDEP_TRUE@	./$(DEPDIR)/x_7.Plo ./$(DEPDIR)/x_8.Plo \
++ at AMDEP_TRUE@	./$(DEPDIR)/x_9.Plo
++CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
++	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
++LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) \
++	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
++	$(AM_CXXFLAGS) $(CXXFLAGS)
++CXXLD = $(CXX)
++CXXLINK = $(LIBTOOL) --mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
++	$(AM_LDFLAGS) $(LDFLAGS) -o $@
++DIST_SOURCES = $(libsmokeqt_la_SOURCES)
++DIST_COMMON = $(srcdir)/Makefile.in Makefile.am generate.pl.in \
++	qtguess.pl.in
++SOURCES = $(libsmokeqt_la_SOURCES)
++
++all: all-am
++
++.SUFFIXES:
++.SUFFIXES: .cpp .lo .o .obj
++$(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
++	cd $(top_srcdir) && \
++	  $(AUTOMAKE) --gnu  smoke/qt/Makefile
++Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
++	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)
++qtguess.pl: $(top_builddir)/config.status qtguess.pl.in
++	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
++generate.pl: $(top_builddir)/config.status generate.pl.in
++	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
++libLTLIBRARIES_INSTALL = $(INSTALL)
++install-libLTLIBRARIES: $(lib_LTLIBRARIES)
++	@$(NORMAL_INSTALL)
++	$(mkinstalldirs) $(DESTDIR)$(libdir)
++	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
++	  if test -f $$p; then \
++	    f="`echo $$p | sed -e 's|^.*/||'`"; \
++	    echo " $(LIBTOOL) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(libdir)/$$f"; \
++	    $(LIBTOOL) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) $$p $(DESTDIR)$(libdir)/$$f; \
++	  else :; fi; \
++	done
++
++uninstall-libLTLIBRARIES:
++	@$(NORMAL_UNINSTALL)
++	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
++	    p="`echo $$p | sed -e 's|^.*/||'`"; \
++	  echo " $(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(libdir)/$$p"; \
++	  $(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(libdir)/$$p; \
++	done
++
++clean-libLTLIBRARIES:
++	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
++	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
++	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
++	  test "$$dir" = "$$p" && dir=.; \
++	  echo "rm -f \"$${dir}/so_locations\""; \
++	  rm -f "$${dir}/so_locations"; \
++	done
++libsmokeqt.la: $(libsmokeqt_la_OBJECTS) $(libsmokeqt_la_DEPENDENCIES) 
++	$(CXXLINK) -rpath $(libdir) $(libsmokeqt_la_LDFLAGS) $(libsmokeqt_la_OBJECTS) $(libsmokeqt_la_LIBADD) $(LIBS)
++
++mostlyclean-compile:
++	-rm -f *.$(OBJEXT) core *.core
++
++distclean-compile:
++	-rm -f *.tab.c
++
++ at AMDEP_TRUE@@am__include@ @am__quote at ./$(DEPDIR)/smokedata.Plo at am__quote@
++ at AMDEP_TRUE@@am__include@ @am__quote at ./$(DEPDIR)/x_1.Plo at am__quote@
++ at AMDEP_TRUE@@am__include@ @am__quote at ./$(DEPDIR)/x_10.Plo at am__quote@
++ at AMDEP_TRUE@@am__include@ @am__quote at ./$(DEPDIR)/x_11.Plo at am__quote@
++ at AMDEP_TRUE@@am__include@ @am__quote at ./$(DEPDIR)/x_12.Plo at am__quote@
++ at AMDEP_TRUE@@am__include@ @am__quote at ./$(DEPDIR)/x_13.Plo at am__quote@
++ at AMDEP_TRUE@@am__include@ @am__quote at ./$(DEPDIR)/x_14.Plo at am__quote@
++ at AMDEP_TRUE@@am__include@ @am__quote at ./$(DEPDIR)/x_15.Plo at am__quote@
++ at AMDEP_TRUE@@am__include@ @am__quote at ./$(DEPDIR)/x_16.Plo at am__quote@
++ at AMDEP_TRUE@@am__include@ @am__quote at ./$(DEPDIR)/x_17.Plo at am__quote@
++ at AMDEP_TRUE@@am__include@ @am__quote at ./$(DEPDIR)/x_18.Plo at am__quote@
++ at AMDEP_TRUE@@am__include@ @am__quote at ./$(DEPDIR)/x_19.Plo at am__quote@
++ at AMDEP_TRUE@@am__include@ @am__quote at ./$(DEPDIR)/x_2.Plo at am__quote@
++ at AMDEP_TRUE@@am__include@ @am__quote at ./$(DEPDIR)/x_20.Plo at am__quote@
++ at AMDEP_TRUE@@am__include@ @am__quote at ./$(DEPDIR)/x_3.Plo at am__quote@
++ at AMDEP_TRUE@@am__include@ @am__quote at ./$(DEPDIR)/x_4.Plo at am__quote@
++ at AMDEP_TRUE@@am__include@ @am__quote at ./$(DEPDIR)/x_5.Plo at am__quote@
++ at AMDEP_TRUE@@am__include@ @am__quote at ./$(DEPDIR)/x_6.Plo at am__quote@
++ at AMDEP_TRUE@@am__include@ @am__quote at ./$(DEPDIR)/x_7.Plo at am__quote@
++ at AMDEP_TRUE@@am__include@ @am__quote at ./$(DEPDIR)/x_8.Plo at am__quote@
++ at AMDEP_TRUE@@am__include@ @am__quote at ./$(DEPDIR)/x_9.Plo at am__quote@
++
++.cpp.o:
++ at am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \
++ at am__fastdepCXX_TRUE@	  -c -o $@ `test -f '$<' || echo '$(srcdir)/'`$<; \
++ at am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; \
++ at am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; \
++ at am__fastdepCXX_TRUE@	fi
++ at AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
++ at AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
++ at AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++ at am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `test -f '$<' || echo '$(srcdir)/'`$<
++
++.cpp.obj:
++ at am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \
++ at am__fastdepCXX_TRUE@	  -c -o $@ `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`; \
++ at am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Po"; \
++ at am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; \
++ at am__fastdepCXX_TRUE@	fi
++ at AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
++ at AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' @AMDEPBACKSLASH@
++ at AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++ at am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`
++
++.cpp.lo:
++ at am__fastdepCXX_TRUE@	if $(LTCXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \
++ at am__fastdepCXX_TRUE@	  -c -o $@ `test -f '$<' || echo '$(srcdir)/'`$<; \
++ at am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.Plo"; \
++ at am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; \
++ at am__fastdepCXX_TRUE@	fi
++ at AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
++ at AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/$*.Plo' tmpdepfile='$(DEPDIR)/$*.TPlo' @AMDEPBACKSLASH@
++ at AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++ at am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ `test -f '$<' || echo '$(srcdir)/'`$<
++
++mostlyclean-libtool:
++	-rm -f *.lo
++
++clean-libtool:
++	-rm -rf .libs _libs
++
++distclean-libtool:
++	-rm -f libtool
++uninstall-info-am:
++
++ETAGS = etags
++ETAGSFLAGS =
++
++CTAGS = ctags
++CTAGSFLAGS =
++
++tags: TAGS
++
++ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
++	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
++	unique=`for i in $$list; do \
++	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
++	  done | \
++	  $(AWK) '    { files[$$0] = 1; } \
++	       END { for (i in files) print i; }'`; \
++	mkid -fID $$unique
++
++TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
++		$(TAGS_FILES) $(LISP)
++	tags=; \
++	here=`pwd`; \
++	list='$(SOURCES) $(HEADERS)  $(LISP) $(TAGS_FILES)'; \
++	unique=`for i in $$list; do \
++	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
++	  done | \
++	  $(AWK) '    { files[$$0] = 1; } \
++	       END { for (i in files) print i; }'`; \
++	test -z "$(ETAGS_ARGS)$$tags$$unique" \
++	  || $(ETAGS) $(ETAGSFLAGS) $(AM_ETAGSFLAGS) $(ETAGS_ARGS) \
++	     $$tags $$unique
++
++ctags: CTAGS
++CTAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
++		$(TAGS_FILES) $(LISP)
++	tags=; \
++	here=`pwd`; \
++	list='$(SOURCES) $(HEADERS)  $(LISP) $(TAGS_FILES)'; \
++	unique=`for i in $$list; do \
++	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
++	  done | \
++	  $(AWK) '    { files[$$0] = 1; } \
++	       END { for (i in files) print i; }'`; \
++	test -z "$(CTAGS_ARGS)$$tags$$unique" \
++	  || $(CTAGS) $(CTAGSFLAGS) $(AM_CTAGSFLAGS) $(CTAGS_ARGS) \
++	     $$tags $$unique
++
++GTAGS:
++	here=`$(am__cd) $(top_builddir) && pwd` \
++	  && cd $(top_srcdir) \
++	  && gtags -i $(GTAGS_ARGS) $$here
++
++distclean-tags:
++	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
++DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
++
++top_distdir = ../..
++distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
++
++distdir: $(DISTFILES)
++	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
++	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
++	list='$(DISTFILES)'; for file in $$list; do \
++	  case $$file in \
++	    $(srcdir)/*) file=`echo "$$file" | sed "s|^$$srcdirstrip/||"`;; \
++	    $(top_srcdir)/*) file=`echo "$$file" | sed "s|^$$topsrcdirstrip/|$(top_builddir)/|"`;; \
++	  esac; \
++	  if test -f $$file || test -d $$file; then d=.; else d=$(srcdir); fi; \
++	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
++	  if test "$$dir" != "$$file" && test "$$dir" != "."; then \
++	    dir="/$$dir"; \
++	    $(mkinstalldirs) "$(distdir)$$dir"; \
++	  else \
++	    dir=''; \
++	  fi; \
++	  if test -d $$d/$$file; then \
++	    if test -d $(srcdir)/$$file && test $$d != $(srcdir); then \
++	      cp -pR $(srcdir)/$$file $(distdir)$$dir || exit 1; \
++	    fi; \
++	    cp -pR $$d/$$file $(distdir)$$dir || exit 1; \
++	  else \
++	    test -f $(distdir)/$$file \
++	    || cp -p $$d/$$file $(distdir)/$$file \
++	    || exit 1; \
++	  fi; \
++	done
++check-am: all-am
++check: check-am
++all-am: Makefile $(LTLIBRARIES)
++
++installdirs:
++	$(mkinstalldirs) $(DESTDIR)$(libdir)
++install: install-am
++install-exec: install-exec-am
++install-data: install-data-am
++uninstall: uninstall-am
++
++install-am: all-am
++	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
++
++installcheck: installcheck-am
++install-strip:
++	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
++	  install_sh_PROGRAM="$(INSTALL_STRIP_PROGRAM)" INSTALL_STRIP_FLAG=-s \
++	  `test -z '$(STRIP)' || \
++	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
++mostlyclean-generic:
++
++clean-generic:
++	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
++
++distclean-generic:
++	-rm -f $(CONFIG_CLEAN_FILES)
++
++maintainer-clean-generic:
++	@echo "This command is intended for maintainers to use"
++	@echo "it deletes files that may require special tools to rebuild."
++clean: clean-am
++
++clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
++	mostlyclean-am
++
++distclean: distclean-am
++	-rm -rf ./$(DEPDIR)
++	-rm -f Makefile
++distclean-am: clean-am distclean-compile distclean-generic \
++	distclean-libtool distclean-tags
++
++dvi: dvi-am
++
++dvi-am:
++
++info: info-am
++
++info-am:
++
++install-data-am:
++
++install-exec-am: install-libLTLIBRARIES
++
++install-info: install-info-am
++
++install-man:
++
++installcheck-am:
++
++maintainer-clean: maintainer-clean-am
++	-rm -rf ./$(DEPDIR)
++	-rm -f Makefile
++maintainer-clean-am: distclean-am maintainer-clean-generic
++
++mostlyclean: mostlyclean-am
++
++mostlyclean-am: mostlyclean-compile mostlyclean-generic \
++	mostlyclean-libtool
++
++pdf: pdf-am
++
++pdf-am:
++
++ps: ps-am
++
++ps-am:
++
++uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES
++
++.PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
++	clean-libLTLIBRARIES clean-libtool ctags distclean \
++	distclean-compile distclean-generic distclean-libtool \
++	distclean-tags distdir dvi dvi-am info info-am install \
++	install-am install-data install-data-am install-exec \
++	install-exec-am install-info install-info-am \
++	install-libLTLIBRARIES install-man install-strip installcheck \
++	installcheck-am installdirs maintainer-clean \
++	maintainer-clean-generic mostlyclean mostlyclean-compile \
++	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
++	tags uninstall uninstall-am uninstall-info-am \
++	uninstall-libLTLIBRARIES
++
++
++$(x_sources) smokedata.cpp:
++	perl generate.pl
++# Tell versions [3.59,3.63) of GNU make to not export all variables.
++# Otherwise a system limit (for SysV at least) may be exceeded.
++.NOEXPORT:
+
+
+
+From tm243 at mail.berlios.de  Thu Nov  9 18:52:29 2006
+From: tm243 at mail.berlios.de (tm243 at mail.berlios.de)
+Date: Thu, 9 Nov 2006 18:52:29 +0100
+Subject: [Php-qt-svn] r284 - trunk
+Message-ID: <200611091752.kA9HqToN008545@sheep.berlios.de>
+
+Author: tm243
+Date: 2006-11-09 18:52:26 +0100 (Thu, 09 Nov 2006)
+New Revision: 284
+
+Modified:
+   trunk/config.m4
+Log:
+static linking of Smoke library
+
+Modified: trunk/config.m4
+===================================================================
+--- trunk/config.m4	2006-11-09 17:43:08 UTC (rev 283)
++++ trunk/config.m4	2006-11-09 17:52:26 UTC (rev 284)
+@@ -117,8 +117,7 @@
+ 		   $GLLIB \
+ 		   $LIBQSCINTILLA \
+ 		    -lQtSvg \
+-		    -lQtUiTools \
+-		    -lsmokeqt"
++		    -lQtUiTools"
+ 
+   LDFLAGS="$LDFLAGS $all_libraries $USER_LDFLAGS $LIBQT $smoke_libraries"
+   PHP_REQUIRE_CXX
+
+
+
+From tm243 at mail.berlios.de  Mon Nov 13 20:14:36 2006
+From: tm243 at mail.berlios.de (tm243 at mail.berlios.de)
+Date: Mon, 13 Nov 2006 20:14:36 +0100
+Subject: [Php-qt-svn] r285 - trunk/qt
+Message-ID: <200611131914.kADJEa3L005234@sheep.berlios.de>
+
+Author: tm243
+Date: 2006-11-13 20:14:34 +0100 (Mon, 13 Nov 2006)
+New Revision: 285
+
+Modified:
+   trunk/qt/functions.cpp
+   trunk/qt/php_qt.cpp
+   trunk/qt/php_qt.h
+   trunk/qt/smokephp.cpp
+Log:
+new method check_qobject for internal usage, minor fixes, internal functions set/getSmokePHPObject
+
+Modified: trunk/qt/functions.cpp
+===================================================================
+--- trunk/qt/functions.cpp	2006-11-09 17:52:26 UTC (rev 284)
++++ trunk/qt/functions.cpp	2006-11-13 19:14:34 UTC (rev 285)
+@@ -136,6 +136,7 @@
+ 	o->smoke = qt_Smoke;
+ 	o->classId = qstring;
+ 	o->ce_ptr = qstring_ce;
++	o->zval_ptr = return_value;
+ 
+ 	object_init_ex(return_value, qstring_ce);
+ 	zend_rsrc_list_entry le;
+@@ -144,3 +145,38 @@
+     return;
+ }
+ 
++/*!
++ *	check_qobject()
++ *
++ */
++
++PHP_FUNCTION(check_qobject)
++{
++    zval* zobject;
++    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,"o",&zobject)) {
++        return;
++    }
++
++	smokephp_object* o = phpqt_fetch(zobject);
++
++	cout << "PHP-Qt object \n(" << endl;
++
++	cout << "\t       zval => " << zobject << endl;
++	cout << "\tclass entry => " << Z_OBJCE_P(zobject)->name << endl;
++	cout << "\t  ref count => " << zobject->refcount << endl;
++	cout << "\t     is_ref => " << zobject->is_ref << endl;
++	cout << "\t       type => " << zobject->type << endl;
++
++	cout << endl;
++
++	cout << "\t      smokeobj => " << o << endl;
++	cout << "\t         Smoke => " << o->smoke << endl;
++	cout << "\t       classId => " << o->classId << endl;
++	cout << "\t        Qt ptr => " << o->ptr << endl;
++	cout << "\t        ce_ptr => " << o->ce_ptr << endl;
++	cout << "\t      zval_ptr => " << o->zval_ptr << endl;
++	cout << "\t  QMetaObject* => " << o->meta << endl;
++
++	cout << ")" << endl;
++
++}
+\ No newline at end of file
+
+Modified: trunk/qt/php_qt.cpp
+===================================================================
+--- trunk/qt/php_qt.cpp	2006-11-09 17:52:26 UTC (rev 284)
++++ trunk/qt/php_qt.cpp	2006-11-13 19:14:34 UTC (rev 285)
+@@ -57,6 +57,7 @@
+ 	PHP_FE(SLOT,	NULL)	
+ 	PHP_FE(qobject_cast,	NULL)
+ 	PHP_FE(tr,	NULL)
++	PHP_FE(check_qobject,	NULL)
+ 	{NULL, NULL, NULL}	/* Must be the last line in php_qt_functions[] */
+ };
+ 
+@@ -84,7 +85,7 @@
+ #endif
+ 
+ static QHash<void*, zval*> zval_x_qt;
+-QHash<void*, long int>SmokeToPtr;
++QHash<void*, size_t>SmokeToPtr;
+ QStack<QString*> methodNameStack;
+ 
+ // cached
+@@ -244,7 +245,7 @@
+ 	} 
+ 
+ 	// store relations
+-	SmokeToPtr.insert(o->ptr, (long int) o);
++	phpqt_setSmokePHPObject(o);
+     PHP_QT_REGISTER(o);
+ 	zval_x_qt.insert(qargs[0].s_class, getThis());
+ 
+@@ -805,7 +806,17 @@
+ 
+ smokephp_object*
+ phpqt_getSmokePHPObject(void* ptr){
++	smokephp_object* a = (smokephp_object*) SmokeToPtr[ptr];
+ 	return (smokephp_object*) SmokeToPtr[ptr];
+ }
+ 
++void
++phpqt_setSmokePHPObject(smokephp_object* o){
++	SmokeToPtr.insert(o->ptr, (size_t) o);
++}
+ 
++bool
++phpqt_SmokePHPObjectExists(smokephp_object* o){
++	return (SmokeToPtr.find(o->ptr) != SmokeToPtr.end());
++}
++
+
+Modified: trunk/qt/php_qt.h
+===================================================================
+--- trunk/qt/php_qt.h	2006-11-09 17:52:26 UTC (rev 284)
++++ trunk/qt/php_qt.h	2006-11-13 19:14:34 UTC (rev 285)
+@@ -93,8 +93,9 @@
+ PHP_FUNCTION(qobject_cast);
+ PHP_FUNCTION(tr);
+ 
++PHP_FUNCTION(check_qobject);
++
+ struct smokephp_object {
+-    bool allocated;
+     Smoke *smoke;
+     int classId;
+     void *ptr;
+@@ -116,6 +117,8 @@
+ char*				phpqt_checkForOperator(const char* fname);
+ bool				phpqt_zval2qtIsEnd(void *o);
+ smokephp_object*	phpqt_getSmokePHPObject(void* ptr);
++void				phpqt_setSmokePHPObject(smokephp_object* o);
++bool				phpqt_SmokePHPObjectExists(smokephp_object* o);
+ 
+ extern int le_php_qt_hashtype;
+ extern HashTable php_qt_objptr_hash;
+@@ -130,6 +133,5 @@
+ void				smokephp_convertReturn(Smoke::StackItem *ret_val, const Smoke::Type type, const Smoke::Index ret, zval* return_value);
+ void				smokephp_init();
+ Smoke::Index		smokephp_findConnect();
+-smokephp_object*	smokephp_getSmokePHPObject(void* ptr);
+ bool				smokephp_isConnect(Smoke::Index method);
+ 
+
+Modified: trunk/qt/smokephp.cpp
+===================================================================
+--- trunk/qt/smokephp.cpp	2006-11-09 17:52:26 UTC (rev 284)
++++ trunk/qt/smokephp.cpp	2006-11-13 19:14:34 UTC (rev 285)
+@@ -301,7 +301,7 @@
+ void 
+ smokephp_convertReturn(Smoke::StackItem *ret_val, const Smoke::Type type, const Smoke::Index ret, zval* return_value){
+ 
+-    smokephp_object* o = (smokephp_object*) emalloc(sizeof(smokephp_object));
++    smokephp_object* o;
+ 
+     switch((type.flags & Smoke::tf_elem)){
+         case Smoke::t_voidp:
+@@ -345,6 +345,8 @@
+             break;
+         case Smoke::t_class:
+ 
++ 			o = (smokephp_object*) emalloc(sizeof(smokephp_object));
++
+ 			// zval already exists
+ //			if(zval_x_qt.find(o) != zval_x_qt.end()){
+ 			if(phpqt_zval2qtIsEnd(o)){
+@@ -377,9 +379,10 @@
+ 				o->zval_ptr = return_value;
+ 				o->ce_ptr = Z_OBJCE_P(return_value);
+ 				o->classId = qt_Smoke->types[ret].classId;
+-// FIXME:	segfaults here:
+-//				SmokeToPtr.insert(o->ptr, (long int) o);
+ 
++				if(!phpqt_SmokePHPObjectExists(o))
++					phpqt_setSmokePHPObject(o);
++
+ 				zend_rsrc_list_entry le;
+ 				le.ptr = o;
+ 				phpqt_register(return_value, le);
+
+
+
+From tm243 at mail.berlios.de  Sat Nov 18 13:51:05 2006
+From: tm243 at mail.berlios.de (tm243 at mail.berlios.de)
+Date: Sat, 18 Nov 2006 13:51:05 +0100
+Subject: [Php-qt-svn] r286 - in trunk: . qt
+Message-ID: <200611181251.kAICp5Ae010386@sheep.berlios.de>
+
+Author: tm243
+Date: 2006-11-18 13:51:03 +0100 (Sat, 18 Nov 2006)
+New Revision: 286
+
+Modified:
+   trunk/ChangeLog
+   trunk/qt/functions.cpp
+   trunk/qt/php_qt.cpp
+   trunk/qt/php_qt.h
+   trunk/qt/smokephp.cpp
+Log:
+array & reference support in method arguments, new enums, some bugs fixed
+
+Modified: trunk/ChangeLog
+===================================================================
+--- trunk/ChangeLog	2006-11-13 19:14:34 UTC (rev 285)
++++ trunk/ChangeLog	2006-11-18 12:51:03 UTC (rev 286)
+@@ -1,3 +1,10 @@
++2006-011-18  Thomas Moenicke <thomas.moenicke at kdemail.net>
++
++		* method argument handling: support for arrays, references
++		* some enums added
++		* internal function check_function
++		* fixed some minor bugs
++
+ 2006-011-7  Thomas Moenicke <thomas.moenicke at kdemail.net>
+ 
+ 		* function tr() implemented
+
+Modified: trunk/qt/functions.cpp
+===================================================================
+--- trunk/qt/functions.cpp	2006-11-13 19:14:34 UTC (rev 285)
++++ trunk/qt/functions.cpp	2006-11-18 12:51:03 UTC (rev 286)
+@@ -179,4 +179,4 @@
+ 
+ 	cout << ")" << endl;
+ 
+-}
+\ No newline at end of file
++}
+
+Modified: trunk/qt/php_qt.cpp
+===================================================================
+--- trunk/qt/php_qt.cpp	2006-11-13 19:14:34 UTC (rev 285)
++++ trunk/qt/php_qt.cpp	2006-11-18 12:51:03 UTC (rev 286)
+@@ -154,6 +154,8 @@
+ 	RETVAL_NULL();
+ }
+ 
++// TODO cache idClass
++
+ ZEND_METHOD(php_qt_generic_class, __construct)
+ {
+ 
+@@ -182,18 +184,11 @@
+ 
+ 	smokephp_object *o = (smokephp_object*) emalloc(sizeof(smokephp_object));
+ 
+-	// FIXME
+-	if(!strcmp(ce->name, "QApplication")){
+-		char** c = new char*[1];
+-		c[0] = "";
+-		int argc_dummy = 1;
+-		qargs[0].s_class = new QApplication(argc_dummy, c);
+-	// handle QString
+-	} else if (!strcmp(ce->name, "QString")){
++	if (!strcmp(ce->name, "QString")){
+ 		if(argc > 0){
+         	qargs[0].s_class = new QString(Z_STRVAL_PP(args[0]));
+     	} else {
+-    		qargs[0].s_class = new QString("");
++    		qargs[0].s_class = new QString("");	// create an empty string
+     	}
+ 	} else {
+ 	    // call Qt method via Smoke
+@@ -414,13 +409,28 @@
+ 			qstring_ce = ce_ptr;
+ 		}
+ 
+-
+         // register enums
+ 		if(!strcmp(qt_Smoke->classes[i].className, "Qt")){
+ 			zend_declare_class_constant_long(ce_ptr, "Horizontal", strlen("Horizontal"), Qt::Horizontal);
+ 			zend_declare_class_constant_long(ce_ptr, "Vertical", strlen("Vertical"), Qt::Vertical);
+ 			zend_declare_class_constant_long(ce_ptr, "AlignRight", strlen("AlignRight"), Qt::AlignRight);
++			zend_declare_class_constant_long(ce_ptr, "LeftButton", strlen("LeftButton"), Qt::LeftButton);
++		} else if(!strcmp(qt_Smoke->classes[i].className, "QPalette")){
++			zend_declare_class_constant_long(ce_ptr, "Button", strlen("Button"), QPalette::Button);
++			zend_declare_class_constant_long(ce_ptr, "Text", strlen("Text"), QPalette::Text);
++			zend_declare_class_constant_long(ce_ptr, "Base", strlen("Base"), QPalette::Base);
++		} else if(!strcmp(qt_Smoke->classes[i].className, "QSizePolicy")){
++			zend_declare_class_constant_long(ce_ptr, "Expanding", strlen("Expanding"), QSizePolicy::Expanding);
++			zend_declare_class_constant_long(ce_ptr, "Preferred", strlen("Preferred"), QSizePolicy::Preferred);
++		} else if(!strcmp(qt_Smoke->classes[i].className, "QLayout")){
++			zend_declare_class_constant_long(ce_ptr, "SetFixedSize", strlen("SetFixedSize"), QLayout::SetFixedSize);
++		} else if(!strcmp(qt_Smoke->classes[i].className, "QEvent")){
++			zend_declare_class_constant_long(ce_ptr, "MouseButtonPress", strlen("MouseButtonPress"), QEvent::MouseButtonPress);
++			zend_declare_class_constant_long(ce_ptr, "MouseButtonDblClick", strlen("MouseButtonDblClick"), QEvent::MouseButtonDblClick);
++			zend_declare_class_constant_long(ce_ptr, "MouseButtonRelease", strlen("MouseButtonRelease"), QEvent::MouseButtonRelease);
++			zend_declare_class_constant_long(ce_ptr, "ContextMenu", strlen("ContextMenu"), QEvent::ContextMenu);
+ 		}
++		
+ 	}
+ 
+     for(Smoke::Index i = 1; i <= qt_Smoke->numClasses; i++){
+
+Modified: trunk/qt/php_qt.h
+===================================================================
+--- trunk/qt/php_qt.h	2006-11-13 19:14:34 UTC (rev 285)
++++ trunk/qt/php_qt.h	2006-11-18 12:51:03 UTC (rev 286)
+@@ -38,6 +38,7 @@
+ #include <QHash>
+ #include <QCoreApplication>
+ #include <QApplication>
++#include <QLayout>
+ 
+ // for older php versions
+ #ifndef ZEND_MN
+@@ -134,4 +135,3 @@
+ void				smokephp_init();
+ Smoke::Index		smokephp_findConnect();
+ bool				smokephp_isConnect(Smoke::Index method);
+-
+
+Modified: trunk/qt/smokephp.cpp
+===================================================================
+--- trunk/qt/smokephp.cpp	2006-11-13 19:14:34 UTC (rev 285)
++++ trunk/qt/smokephp.cpp	2006-11-18 12:51:03 UTC (rev 286)
+@@ -250,36 +250,153 @@
+  *  @param  Smoke::StackItem*       qargs
+  */
+ 
++static
++int treatArray(zval **val, int num_args, va_list args, zend_hash_key *hash_key){
++
++	uint type = va_arg(args, uint);
++	int e_arrayc = va_arg(args, int);
++	void** e_arrayv = va_arg(args, void**);
++
++	smokephp_object *o;
++	if(type == IS_OBJECT)
++		o = phpqt_fetch(((zval*) *val));
++
++	switch(type){
++		case IS_STRING:
++			e_arrayv[e_arrayc] = emalloc(Z_STRLEN(**val)+1);
++ 			e_arrayv[e_arrayc++] = (void*) Z_STRVAL(**val);
++ 			break;
++ 		case IS_LONG:
++ 			e_arrayv[e_arrayc] = emalloc(sizeof(long));
++ 			e_arrayv[e_arrayc++] = (void*) Z_LVAL_PP(val);
++ 			break;
++ 		case IS_DOUBLE:
++ 			e_arrayv[e_arrayc] = emalloc(sizeof(double));
++ 			e_arrayv[e_arrayc++] = (void*) Z_LVAL_PP(val);
++ 			break;
++ 		case IS_BOOL:
++ 			e_arrayv[e_arrayc] = emalloc(sizeof(bool));
++ 			e_arrayv[e_arrayc++] = (void*) Z_BVAL_PP(val);
++ 			break;
++ 		case IS_OBJECT:
++ 			e_arrayv[e_arrayc] = emalloc(sizeof(o->ptr));
++ 			e_arrayv[e_arrayc++] = o->ptr;
++ 			break;
++		default:
++			php_error(E_ERROR, "PHP-Qt: unsupported array type %d", type);
++ 			break;
++	}
++
++	return ZEND_HASH_APPLY_KEEP;
++
++}
++
++static 
++void* transformArray(zval* args){
++
++	// array informations
++	int e_arrayc = zend_hash_num_elements(((zval) *args).value.ht);	// length
++	// find the first type
++	zval** first_elem;
++	if(zend_hash_get_current_data_ex(((zval) *args).value.ht, (void**) &first_elem, 0) == FAILURE){
++		php_error(E_ERROR, "PHP-Qt: could not get first value of hashtable.");
++	}
++	
++	uint type = (int) (**first_elem).type;
++	if(type < 0 || type > 9){
++		// should never happen
++		php_error(E_ERROR, "could not guess type of array");
++	}
++	
++	void* e_arrayv;
++
++	switch(type){
++		case IS_STRING:
++			e_arrayv = safe_emalloc(e_arrayc, sizeof(char*), 0);
++			break;
++		case IS_LONG:
++			e_arrayv = safe_emalloc(e_arrayc, sizeof(long), 0);
++			break;
++		case IS_DOUBLE:
++			e_arrayv = safe_emalloc(e_arrayc, sizeof(double), 0);
++			break;
++		case IS_BOOL:
++			e_arrayv = safe_emalloc(e_arrayc, sizeof(bool), 0);
++			break;
++		case IS_OBJECT:
++			e_arrayv = safe_emalloc(e_arrayc, sizeof(QObject*), 0);
++			break;
++		default:
++			php_error(E_ERROR, "PHP-Qt: unsupported array type %d", type);
++	}
++
++	zend_hash_apply_with_arguments(((zval) *args).value.ht, (apply_func_args_t) treatArray, 3, type, e_arrayc, e_arrayv);
++
++}
++
+ void 
+ smokephp_convertArgsZendToCxx(zval*** args, int argc, Smoke::StackItem* qargs, QStack<QString*> &methodNameStack) {
+ 
+     for(int i=0;i<argc;i++){
++
+ 	    uint type = ((int) ((zval) **args[i]).type);
+-	    if (type == IS_RESOURCE){
++
++		if (type == IS_RESOURCE){ // TODO
++
+ 	    } else if (type == IS_ARRAY){
+-	        // convert array
+-      	    char** c = new char*[1];
+-      	    c[0] = "";
+-      	    qargs[i+1].s_voidp = (void*) c;
++			// TODO reference
++      	    qargs[i+1].s_voidp = transformArray(*args[i]);
+ 			methodNameStack.top()->append("?");
++
+ 	    } else if (type == IS_BOOL){
+-    	    qargs[i+1].s_bool = Z_BVAL_PP(args[i]);
++
++			// Reference
++	    	if((((zval) **args[i]).is_ref)){
++				qargs[1].s_voidp = &Z_LVAL_PP(args[i]);
++	    	} else {
++    	    	qargs[i+1].s_bool = Z_BVAL_PP(args[i]);
++    	    }
++
+             methodNameStack.top()->append("$");
++
+ 	    } else if (type == IS_LONG){
+-    	    qargs[i+1].s_short = Z_LVAL_PP(args[i]);
+-    	    qargs[i+1].s_ushort = Z_LVAL_PP(args[i]);
+-    	    qargs[i+1].s_int = Z_LVAL_PP(args[i]);
+-    	    qargs[i+1].s_uint = Z_LVAL_PP(args[i]);
+-    	    qargs[i+1].s_long = Z_LVAL_PP(args[i]);
+-    	    qargs[i+1].s_ulong = Z_LVAL_PP(args[i]);
++
++	    	// Reference
++	    	if((((zval) **args[i]).is_ref)){
++				qargs[1].s_voidp = &Z_LVAL_PP(args[i]);
++	    	} else {
++				qargs[i+1].s_short = Z_LVAL_PP(args[i]);
++				qargs[i+1].s_ushort = Z_LVAL_PP(args[i]);
++				qargs[i+1].s_int = Z_LVAL_PP(args[i]);
++				qargs[i+1].s_uint = Z_LVAL_PP(args[i]);
++				qargs[i+1].s_long = Z_LVAL_PP(args[i]);
++				qargs[i+1].s_ulong = Z_LVAL_PP(args[i]);
++	    	}
++
+     	    methodNameStack.top()->append("$");
++
+ 	    } else if (type == IS_DOUBLE){
+-    	    qargs[i+1].s_double = Z_DVAL_PP(args[i]);
++
++	    	// Reference
++	    	if((((zval) **args[i]).is_ref)){
++				qargs[1].s_voidp = &Z_DVAL_PP(args[i]);
++	    	} else {
++    	    	qargs[i+1].s_double = Z_DVAL_PP(args[i]);
++    	    	qargs[i+1].s_float = Z_DVAL_PP(args[i]);
++    	    }
+             methodNameStack.top()->append("$");
++
+ 	    } else if (type == IS_STRING){
+-    	    qargs[i+1].s_class = emalloc(sizeof(QString)+strlen(Z_STRVAL_PP(args[i]))); // important
+-    	    qargs[i+1].s_class = new QString(Z_STRVAL_PP(args[i]));
++
++			if((((zval) **args[i]).is_ref)){
++				qargs[i+1].s_class = phpqt_fetch(*args[i])->ptr;
++			} else {
++    	    	qargs[i+1].s_class = emalloc(sizeof(QString)+strlen(Z_STRVAL_PP(args[i]))); // important
++    	    	qargs[i+1].s_class = new QString(Z_STRVAL_PP(args[i]));
++            }
++
+             methodNameStack.top()->append("$");
++
+ 	    } else if (type == IS_OBJECT){
+ 			smokephp_object *o = phpqt_fetch(((zval*) *args[i]));
+             qargs[i+1].s_class = o->ptr;
+@@ -290,10 +407,12 @@
+             } else {
+             	methodNameStack.top()->append("#");
+             }
++
+ 	    } else {
+ 	        php_error(E_ERROR,"Unknown argument or unsupported argument type %d, type %d, exit\n", i, type);
+ 	        exit(FAILURE);
+ 	    }
++
+     }
+ 
+ }
+
+
+
+From tm243 at mail.berlios.de  Sat Nov 18 16:19:30 2006
+From: tm243 at mail.berlios.de (tm243 at mail.berlios.de)
+Date: Sat, 18 Nov 2006 16:19:30 +0100
+Subject: [Php-qt-svn] r287 - in trunk: examples/calculator tutorials/t1
+	tutorials/t2 tutorials/t3 tutorials/t4 tutorials/t5
+	tutorials/t6 tutorials/t7
+Message-ID: <200611181519.kAIFJUhw022683@sheep.berlios.de>
+
+Author: tm243
+Date: 2006-11-18 16:19:26 +0100 (Sat, 18 Nov 2006)
+New Revision: 287
+
+Modified:
+   trunk/examples/calculator/button.php
+   trunk/examples/calculator/calculator.php
+   trunk/examples/calculator/main.php
+   trunk/tutorials/t1/main.php
+   trunk/tutorials/t2/main.php
+   trunk/tutorials/t3/main.php
+   trunk/tutorials/t4/main.php
+   trunk/tutorials/t5/main.php
+   trunk/tutorials/t6/main.php
+   trunk/tutorials/t7/main.php
+Log:
+tutorials and example cleaned up
+
+Modified: trunk/examples/calculator/button.php
+===================================================================
+--- trunk/examples/calculator/button.php	2006-11-18 12:51:03 UTC (rev 286)
++++ trunk/examples/calculator/button.php	2006-11-18 15:19:26 UTC (rev 287)
+@@ -1,22 +1,27 @@
+ <?php
++
+     /****************************************************************
+     **
+     ** Qt Calculator
+     **
+-    ** http://doc.trolltech.com/4.0/widgets-calculator.html
++    ** original:
++    ** http://doc.trolltech.com/4.1/widgets-calculator.html
+     **
+     ****************************************************************/
+ 
+     class Button extends QToolButton {
+-    
+-        function __construct($text){
+ 
++        function __construct($text, &$color)
++        {
+             parent::__construct();
+-///            $this->setSizePolicy("QSizePolicy::Expanding", "QSizePolicy::Preferred");
+-            $this->setText(new QString($text));
+ 
++            $this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
++            $this->setText($text);
++
++    	    $newPalette = new QPalette();
++            $newPalette->setColor(QPalette::Button, &$color);
++            $this->setPalette($newPalette);
+         }
+-
+     }
+ 
+ ?>
+\ No newline at end of file
+
+Modified: trunk/examples/calculator/calculator.php
+===================================================================
+--- trunk/examples/calculator/calculator.php	2006-11-18 12:51:03 UTC (rev 286)
++++ trunk/examples/calculator/calculator.php	2006-11-18 15:19:26 UTC (rev 287)
+@@ -1,49 +1,50 @@
+ <?php
++
+     /****************************************************************
+     **
+     ** Qt Calculator
+     **
+-    ** http://doc.trolltech.com/4.0/widgets-calculator.html
++    ** original:
++    ** http://doc.trolltech.com/4.1/widgets-calculator.html
+     **
+     ****************************************************************/
+ 
+-    require_once("button.php");
++    require_once('button.php');
+ 
+     class Calculator extends QDialog {
+-    
+-        var $sumInMemory = 0.0;
+-        var $sumSoFar = 0.0;
+-        var $factorSoFar = 0.0;
+-        var $pendingAdditiveOperator;
+-        var $pendingMultiplicativeOperator;
+-        var $waitingForOperand = true;
+ 
+-        var $display;           /// QLineEdit
++        private $sumInMemory = 0.0;
++        private $sumSoFar = 0.0;
++        private $factorSoFar = 0.0;
++        private $pendingAdditiveOperator;
++        private $pendingMultiplicativeOperator;
++        private $waitingForOperand = true;
+ 
+-        var $NumDigitButtons = 10;
+-        var $digitButtons;      /// Array of buttons
++        private $display;
+ 
+-        /// Buttons
+-        var $pointButton;
+-        var $changeSignButton;
+-        var $backspaceButton;
+-        var $clearButton;
+-        var $clearAllButton;
+-        var $clearMemoryButton;
+-        var $readMemoryButton;
+-        var $setMemoryButton;
+-        var $addToMemoryButton;
++        const NumDigitButtons = 10;
++        private $digitButtons;
+ 
+-        var $divisionButton;
+-        var $timesButton;
+-        var $minusButton;
+-        var $plusButton;
+-        var $squareRootButton;
+-        var $powerButton;
+-        var $reciprocalButton;
+-        var $equalButton;
++        private $pointButton;
++        private $changeSignButton;
++        private $backspaceButton;
++        private $clearButton;
++        private $clearAllButton;
++        private $clearMemoryButton;
++        private $readMemoryButton;
++        private $setMemoryButton;
++        private $addToMemoryButton;
+ 
+-        var $slots = array(
++        private $divisionButton;
++        private $timesButton;
++        private $minusButton;
++        private $plusButton;
++        private $squareRootButton;
++        private $powerButton;
++        private $reciprocalButton;
++        private $equalButton;
++
++        private $slots = array(
+             "digitClicked()",
+             "unaryOperatorClicked()",
+             "additiveOperatorClicked()",
+@@ -59,10 +60,10 @@
+             "setMemory()",
+             "addToMemory()"
+         );
+-        var $signals = array("");
++        private $signals = array("");
+ 
+-        function __construct() {
+-
++        function __construct()
++        {
+             parent::__construct();
+ 
+             $this->pendingAdditiveOperator = new QString();
+@@ -74,53 +75,59 @@
+             $this->display->setMaxLength(15);
+             $this->display->installEventFilter($this);
+ 
+-            for ($i = 0; $i < $this->NumDigitButtons; ++$i) {
+-                    $this->digitButtons[$i] = $this->createButton($i."", SLOT("digitClicked()"));
++            $font = $this->display->font();
++            $font->setPointSize($font->pointSize() + 8);
++            $this->display->setFont($font);
++
++            $digitColor = new QColor(150, 205, 205);
++            $backspaceColor = new QColor(225, 185, 135);
++            $memoryColor = new QColor(100, 155, 155);
++            $operatorColor = new QColor(155, 175, 195);
++
++            for ($i = 0; $i < Calculator::NumDigitButtons; ++$i) {
++                    $this->digitButtons[$i] = $this->createButton(tr($i), $digitColor, SLOT('digitClicked()'));
+             }
+ 
+-            $this->pointButton = $this->createButton(".", SLOT("pointClicked()"));
+-            $this->changeSignButton = $this->createButton("\261", SLOT("changeSignClicked()"));
++            $this->pointButton = $this->createButton(tr("."), $digitColor, SLOT('pointClicked()'));
++            $this->changeSignButton = $this->createButton(tr("\261"), $digitColor, SLOT('changeSignClicked()'));
+ 
+-            $this->backspaceButton = $this->createButton("Backspace", SLOT("backspaceClicked()"));
+-            $this->clearButton = $this->createButton("Clear", SLOT("clear()"));
+-            $this->clearAllButton = $this->createButton("Clear All", SLOT("clearAll()"));
++            $this->backspaceButton = $this->createButton(tr("Backspace"), $backspaceColor, SLOT('backspaceClicked()'));
++            $this->clearButton = $this->createButton(tr("Clear"), $backspaceColor, SLOT('clear()'));
++            $this->clearAllButton = $this->createButton(tr("Clear All"), $backspaceColor, SLOT('clearAll()'));
+ 
+-            $this->clearMemoryButton = $this->createButton("MC", SLOT("clearMemory()"));
+-            $this->readMemoryButton = $this->createButton("MR", SLOT("read_Memory()"));
+-            $this->setMemoryButton = $this->createButton("MS", SLOT("setMemory()"));
+-            $this->addToMemoryButton = $this->createButton("M+", SLOT("addToMemory()"));
++            $this->clearMemoryButton = $this->createButton(tr("MC"), $memoryColor, SLOT('clearMemory()'));
++            $this->readMemoryButton = $this->createButton(tr("MR"), $memoryColor, SLOT('read_Memory()'));
++            $this->setMemoryButton = $this->createButton(tr("MS"), $memoryColor, SLOT('setMemory()'));
++            $this->addToMemoryButton = $this->createButton(tr("M+"), $memoryColor, SLOT('addToMemory()'));
+ 
+-            $this->divisionButton = $this->createButton("\367", SLOT("multiplicativeOperatorClicked()"));
++            $this->divisionButton = $this->createButton(tr("\367"), $operatorColor, SLOT('multiplicativeOperatorClicked()'));
+ 
+-            $this->timesButton = $this->createButton("\327", SLOT("multiplicativeOperatorClicked()"));
+-            $this->minusButton = $this->createButton("-", SLOT("additiveOperatorClicked()"));
+-            $this->plusButton = $this->createButton("+", SLOT("additiveOperatorClicked()"));
++            $this->timesButton = $this->createButton(tr("\327"), $operatorColor, SLOT('multiplicativeOperatorClicked()'));
++            $this->minusButton = $this->createButton(tr("-"), $operatorColor, SLOT('additiveOperatorClicked()'));
++            $this->plusButton = $this->createButton(tr("+"), $operatorColor, SLOT('additiveOperatorClicked()'));
+ 
+-            $this->squareRootButton = $this->createButton("Sqrt", SLOT("unaryOperatorClicked()"));
+-            $this->powerButton = $this->createButton("x\262", SLOT("unaryOperatorClicked()"));
+-            $this->reciprocalButton = $this->createButton("1/x", SLOT("unaryOperatorClicked()"));
+-            $this->equalButton = $this->createButton("=", SLOT("equalClicked()"));
++            $this->squareRootButton = $this->createButton(tr("Sqrt"), $operatorColor, SLOT('unaryOperatorClicked()'));
++            $this->powerButton = $this->createButton(tr("x\262"), $operatorColor, SLOT('unaryOperatorClicked()'));
++            $this->reciprocalButton = $this->createButton(tr("1/x"), $operatorColor, SLOT('unaryOperatorClicked()'));
++            $this->equalButton = $this->createButton(tr("="), $operatorColor, SLOT('equalClicked()'));
+ 
+-            $this->mainLayout = new QGridLayout($this);
++            $this->mainLayout = &new QGridLayout($this);
++            $this->mainLayout->setSizeConstraint(QLayout::SetFixedSize);
+ 
+-//            $this->mainLayout->setSizeConstraint("QLayout::SetFixedSize");
+-
+             $this->mainLayout->addWidget($this->display, 0, 0, 1, 6);
+             $this->mainLayout->addWidget($this->backspaceButton, 1, 0, 1, 2);
+             $this->mainLayout->addWidget($this->clearButton, 1, 2, 1, 2);
+             $this->mainLayout->addWidget($this->clearAllButton, 1, 4, 1, 2);
++
+             $this->mainLayout->addWidget($this->clearMemoryButton, 2, 0);
+             $this->mainLayout->addWidget($this->readMemoryButton, 3, 0);
+             $this->mainLayout->addWidget($this->setMemoryButton, 4, 0);
+             $this->mainLayout->addWidget($this->addToMemoryButton, 5, 0);
+ 
+-            for ($i = 1; $i < $this->NumDigitButtons; ++$i) {
+-
++            for ($i = 1; $i < Calculator::NumDigitButtons; ++$i) {
+                     $row = ceil(((8 - ($i+1))) / 3) + 2;
+                     $column = ceil((($i-1) % 3)) + 1;
+-
+                     $this->mainLayout->addWidget($this->digitButtons[$i], (int) $row, (int) $column);
+-
+             }
+ 
+             $this->mainLayout->addWidget($this->digitButtons[0], 5, 1);
+@@ -131,28 +138,45 @@
+             $this->mainLayout->addWidget($this->timesButton, 3, 4);
+             $this->mainLayout->addWidget($this->minusButton, 4, 4);
+             $this->mainLayout->addWidget($this->plusButton, 5, 4);
+-                                
++
+             $this->mainLayout->addWidget($this->squareRootButton, 2, 5);
+             $this->mainLayout->addWidget($this->powerButton, 3, 5);
+             $this->mainLayout->addWidget($this->reciprocalButton, 4, 5);
+             $this->mainLayout->addWidget($this->equalButton, 5, 5);
+ 
+             $this->setLayout($this->mainLayout);
+-            $this->setWindowTitle(new QString("Calculator"));
++            $this->setWindowTitle(tr("Calculator"));
+ 
+         }
+ 
+-        function createButton($text, $member)
+-        {
+-            $button = new Button($text);
+-            $this->connect($button, SIGNAL("clicked()"), $this, $member);
+-            return $button;
++        function eventFilter($target, $event){
++            if ($target == $display) {
++                if ($event->type() == QEvent::MouseButtonPress
++                    || $event->type() == QEvent::MouseButtonDblClick
++                    || $event->type() == QEvent::MouseButtonRelease
++                    || $event->type() == QEvent::ContextMenu) {
++
++                    $mouseEvent = &$event;
++                    if ($mouseEvent->buttons() & Qt::LeftButton) {
++                        $newPalette = $this->palette();
++                        $newPalette->setColor(QPalette::Base,
++                            $this->display->palette()->color(QPalette::Text));
++                        $newPalette->setColor(QPalette::Text,
++                            $this->display->palette()->color(QPalette::Base));
++                        $this->display->setPalette($newPalette);
++                    } else {
++                        $this->display->setPalette($palette());
++                    }
++                    return true;
++                }
++            }
++            return QDialog::eventFilter($target, $event);
+         }
+ 
+         function digitClicked()
+         {
+ 
+-            $clickedButton = qobject_cast($this->sender(),new QToolButton());
++            $clickedButton = qobject_cast($this->sender(), new QToolButton());
+             $digitValue = $clickedButton->text()->toInt();
+ 
+             if ($this->display->text() == "0" && $digitValue == 0.0)
+@@ -163,23 +187,15 @@
+                 $this->waitingForOperand = false;
+             }
+ 
+-            $new_value = new QString();
+-            $display_text = $this->display->text();
+-
+-            $number = QString::number($digitValue);
+-
+-            $new_value->append($display_text);
+-            $new_value->append($number);
+-
+-            $this->display->setText($new_value);
++            $this->display->setText($this->display->text()->append(QString::number($digitValue)));
+         }
+ 
+         function unaryOperatorClicked()
+         {
+-            $clickedButton = qobject_cast($this->sender(), new Button(""));
++            $clickedButton = qobject_cast($this->sender(), $this->pointButton);
+             $clickedOperator = $clickedButton->text();
+             $operand = $this->display->text()->toDouble();
+-            $result;
++            $result = 0.0;
+ 
+             if ($clickedOperator->__toString() == "Sqrt") {
+                 if ($operand < 0.0) {
+@@ -203,9 +219,8 @@
+ 
+         function additiveOperatorClicked()
+         {
+-            $clickedButton = qobject_cast($this->sender(), new Button(""));
++            $clickedButton = qobject_cast($this->sender(), $this->pointButton);
+             $clickedOperator = $clickedButton->text();
+-
+             $operand = $this->display->text()->toDouble();
+ 
+             if (!$this->pendingMultiplicativeOperator->isEmpty()) {
+@@ -220,7 +235,7 @@
+             }
+ 
+             if (!$this->pendingAdditiveOperator->isEmpty()) {
+-                if (!$this->calculate(operand, $this->pendingAdditiveOperator)) {
++                if (!$this->calculate($operand, $this->pendingAdditiveOperator)) {
+                     $this->abortOperation();
+                     return;
+                 }
+@@ -236,9 +251,8 @@
+ 
+         function multiplicativeOperatorClicked()
+         {
+-            $clickedButton = qobject_cast($this->sender(), new Button(""));
++            $clickedButton = qobject_cast($this->sender(), $this->pointButton);
+             $clickedOperator = $clickedButton->text();
+-
+             $operand = $this->display->text()->toDouble();
+ 
+             if (!$this->pendingMultiplicativeOperator->isEmpty()) {
+@@ -285,14 +299,11 @@
+         function pointClicked()
+         {
+             if ($this->waitingForOperand)
+-                $this->display->setText("0");
++                $this->display->setText(tr("0"));
+ 
+-            if (!$this->display->text()->contains(".")){
+-                $new_value = $this->display->text();
+-                $new_value->append(new QString("."));
+-                $this->display->setText($new_value);
+-                
+-            }
++            if (!$this->display->text()->contains(tr(".")))
++                $this->display->setText($this->display->text()->append(tr(".")));
++
+             $this->waitingForOperand = false;
+         }
+ 
+@@ -302,7 +313,7 @@
+             $value = $text->toDouble();
+ 
+             if ($value > 0.0) {
+-                $text->prepend(new QString("-"));
++                $text->prepend(tr("-"));
+             } else if ($value < 0.0) {
+                 $text->remove(0, 1);
+             }
+@@ -317,7 +328,7 @@
+             $text = $this->display->text();
+             $text->chop(1);
+             if ($text->isEmpty()) {
+-                $text = "0";
++                $text = tr("0");
+                 $this->waitingForOperand = true;
+             }
+             $this->display->setText($text);
+@@ -328,7 +339,7 @@
+             if ($this->waitingForOperand)
+                 return;
+ 
+-            $this->display->setText("0");
++            $this->display->setText(tr("0"));
+             $this->waitingForOperand = true;
+         }
+ 
+@@ -338,7 +349,7 @@
+             $this->factorSoFar = 0.0;
+             $this->pendingAdditiveOperator->clear();
+             $this->pendingMultiplicativeOperator->clear();
+-            $this->display->setText("0");
++            $this->display->setText(tr("0"));
+             $this->waitingForOperand = true;
+         }
+ 
+@@ -346,7 +357,7 @@
+         {
+             $this->sumInMemory = 0.0;
+         }
+-                    
++
+         function read_Memory()
+         {
+             $this->display->setText(QString::number($this->sumInMemory));
+@@ -358,17 +369,24 @@
+             $this->equalClicked();
+             $this->sumInMemory = $this->display->text()->toDouble();
+         }
+-                            
++
+         function addToMemory()
+         {
+             $this->equalClicked();
+             $this->sumInMemory += $this->display->text()->toDouble();
+         }
+ 
++        function createButton($text, &$color, $member)
++        {
++            $button = new Button($text, &$color);
++            $this->connect($button, SIGNAL('clicked()'), $this, $member);
++            return $button;
++        }
++
+         function abortOperation()
+         {
+             $this->clearAll();
+-            $this->display->setText($this->tr("####"));
++            $this->display->setText(tr("####"));
+         }
+ 
+         function calculate($rightOperand, $pendingOperator)
+
+Modified: trunk/examples/calculator/main.php
+===================================================================
+--- trunk/examples/calculator/main.php	2006-11-18 12:51:03 UTC (rev 286)
++++ trunk/examples/calculator/main.php	2006-11-18 15:19:26 UTC (rev 287)
+@@ -1,9 +1,11 @@
+ <?php
++
+     /****************************************************************
+     **
+     ** Qt Calculator
+     **
+-    ** http://doc.trolltech.com/4.0/widgets-calculator.html
++    ** original:
++    ** http://doc.trolltech.com/4.1/widgets-calculator.html
+     **
+     ****************************************************************/
+ 
+@@ -13,7 +15,7 @@
+ 
+     require_once('calculator.php');
+ 
+-    $app = new QApplication($argc,$argv);
++    $app = new QApplication(&$argc,$argv);
+ 
+     $calc = new Calculator();
+     $calc->show();
+
+Modified: trunk/tutorials/t1/main.php
+===================================================================
+--- trunk/tutorials/t1/main.php	2006-11-18 12:51:03 UTC (rev 286)
++++ trunk/tutorials/t1/main.php	2006-11-18 15:19:26 UTC (rev 287)
+@@ -1,23 +1,24 @@
+ <?php
+-    /****************************************************************
+-     **
+-     ** Qt tutorial 1
+-     **
+-     ** http://doc.trolltech.com/4.0/tutorial-t1.html
+-     **
+-     ****************************************************************/
+ 
++	/****************************************************************
++	**
++	** Qt tutorial 1
++	**
++	** original:
++	** http://doc.trolltech.com/4.1/tutorial-t1.html
++	**
++	****************************************************************/
++
+ 	if(!extension_loaded('php_qt')) {
+ 		dl('php_qt.' . PHP_SHLIB_SUFFIX);
+ 	}
+ 
++	$app = new QApplication(&$argc,$argv);
++	
++	$hello = new QPushButton("Hello world!");
++	$hello->resize(100, 30);
++	
++	$hello->show();
++	$app->exec();
+ 
+-    $app = new QApplication($argc,$argv);
+-
+-    $hello = new QPushButton("Hello world!");
+-//    hello.resize(100, 30);
+-
+-    $hello->show();
+-    $app->exec();
+-
+ ?>
+
+Modified: trunk/tutorials/t2/main.php
+===================================================================
+--- trunk/tutorials/t2/main.php	2006-11-18 12:51:03 UTC (rev 286)
++++ trunk/tutorials/t2/main.php	2006-11-18 15:19:26 UTC (rev 287)
+@@ -4,27 +4,24 @@
+     **
+     ** Qt tutorial 2
+     **
+-    ** http://doc.trolltech.com/4.0/tutorial-t2.html
++    ** original:
++    ** http://doc.trolltech.com/4.1/tutorial-t2.html
+     **
+     ****************************************************************/
+-                
++
+ 	if(!extension_loaded('php_qt')) {
+ 		dl('php_qt.' . PHP_SHLIB_SUFFIX);
+ 	}
+ 
++    $app = new QApplication(&$argc,$argv);
+ 
+-    $app = new QApplication($argc,$argv);
+-
+     $quit = new QPushButton("Quit");
+-
+     $quit->resize(75,30);
+-//    $quit->setFont();
++    $quit->setFont(new QFont("Times", 18, QFont::Bold));
+ 
+-//    QObject::connect($quit,SIGNAL("clicked()"),$app,SLOT("quit()"));
+-    $quit->connect($quit,SIGNAL("clicked()"),$app,SLOT("quit()"));
++    QObject::connect($quit,SIGNAL('clicked()'),$app,SLOT('quit()'));
+ 
+     $quit->show();
+-
+     $app->exec();
+ 
+ ?>
+
+Modified: trunk/tutorials/t3/main.php
+===================================================================
+--- trunk/tutorials/t3/main.php	2006-11-18 12:51:03 UTC (rev 286)
++++ trunk/tutorials/t3/main.php	2006-11-18 15:19:26 UTC (rev 287)
+@@ -4,29 +4,27 @@
+     **
+     ** Qt tutorial 3
+     **
+-    ** http://doc.trolltech.com/4.0/tutorial-t3.html
++    ** original:
++    ** http://doc.trolltech.com/4.1/tutorial-t3.html
+     **
+     ****************************************************************/
+-                
++
+ 	if(!extension_loaded('php_qt')) {
+ 		dl('php_qt.' . PHP_SHLIB_SUFFIX);
+ 	}
+ 
++    $app = new QApplication(&$argc,$argv);
+ 
+-    $app = new QApplication($argc,$argv);
+-
+     $window = new QWidget();
+     $window->resize(200,120);
+ 
+-    $quit = new QPushButton("Quit", $window);
+-//    $quit->setFont();
++    $quit = new QPushButton("Quit", &$window);
++    $quit->setFont(new QFont("Times", 18, QFont::Bold));
+     $quit->setGeometry(10, 40, 180, 40);
+ 
+-//    QObject::connect($quit,SIGNAL("clicked()"),$app,SLOT("quit()"));
+-    $quit->connect($quit,SIGNAL("clicked()"),$app,SLOT("quit()"));
++    QObject::connect(&$quit,SIGNAL('clicked()'), &$app, SLOT('quit()'));
+ 
+     $window->show();
+-
+     $app->exec();
+ 
+ ?>
+
+Modified: trunk/tutorials/t4/main.php
+===================================================================
+--- trunk/tutorials/t4/main.php	2006-11-18 12:51:03 UTC (rev 286)
++++ trunk/tutorials/t4/main.php	2006-11-18 15:19:26 UTC (rev 287)
+@@ -4,46 +4,39 @@
+     **
+     ** Qt tutorial 4
+     **
+-    ** http://doc.trolltech.com/4.0/tutorial-t4.html
++    ** original:
++    ** http://doc.trolltech.com/4.1/tutorial-t4.html
+     **
+     ****************************************************************/
+-                
++
+ 	if(!extension_loaded('php_qt')) {
+ 		dl('php_qt.' . PHP_SHLIB_SUFFIX);
+ 	}
+ 
+     class MyWidget extends QWidget
+     {
+-    
+-        public $quit;
+ 
++        private $quit;
++
+         function __construct()
+         {
++            parent::__construct();
+ 
+-			parent::__construct();
+-
+             $this->setFixedSize(200, 120);
+ 
+-            $this->quit = new QPushButton("Quit", $this);
++            $this->quit = new QPushButton(tr("Quit"), $this);
+             $this->quit->setGeometry(62, 40, 75, 30);
+-//            $quit->setFont();
++            $this->quit->setFont(new QFont("Times", 18, QFont::Bold));
+ 
+             /* the macro qApp is not available in php-qt, we use QApplication::instance() directly. */
+-
+-            $this->connect($this->quit, SIGNAL("clicked()"), QApplication::instance(), SLOT("quit()"));
+-
+-
+-
++            $this->connect($this->quit, SIGNAL('clicked()'), QApplication::instance(), SLOT('quit()'));
+         }
+-    
++
+     }
+ 
+-    $app = new QApplication($argc,$argv);
+-
++    $app = new QApplication(&$argc,$argv);
+     $widget = new MyWidget();
+-
+     $widget->show();
+-
+     $app->exec();
+ 
+ ?>
+
+Modified: trunk/tutorials/t5/main.php
+===================================================================
+--- trunk/tutorials/t5/main.php	2006-11-18 12:51:03 UTC (rev 286)
++++ trunk/tutorials/t5/main.php	2006-11-18 15:19:26 UTC (rev 287)
+@@ -1,9 +1,11 @@
+ <?php
++
+     /****************************************************************
+     **
+     ** Qt tutorial 5
+     **
+-    ** http://doc.trolltech.com/4.0/tutorial-t5.html
++    ** original:
++    ** http://doc.trolltech.com/4.1/tutorial-t5.html
+     **
+     ****************************************************************/
+ 
+@@ -14,40 +16,38 @@
+     class MyWidget extends QWidget
+     {
+ 
+-        public $quit;
+-        public $slider;
+-        public $layout;
+-        public $lcd;
++        private $quit;
++        private $slider;
++        private $layout;
++        private $lcd;
+ 
+-        function __construct(){
++        function __construct()
++        {
++            parent::__construct();
+ 
+-			parent::__construct();
++            $this->quit = new QPushButton(tr("Quit"));
++            $this->quit->setFont(new QFont("Times", 18, QFont::Bold));
+ 
+-            $this->quit = new QPushButton("Quit", $this);
+-//            $this->quit->setFont(QFont("Times", 18, QFont::Bold));
++            $this->lcd = new QLCDNumber(2);
++            $this->lcd->setSegmentStyle(QLCDNumber::Filled);
+ 
+-            $this->lcd = new QLCDNumber(2,$this);
+-
+-            $this->slider = new QSlider($this);
+-            $this->slider->setOrientation(Qt::Horizontal);
++            $this->slider = new QSlider(Qt::Horizontal);
+             $this->slider->setRange(0, 99);
+             $this->slider->setValue(0);
+ 
+-            $this->connect($this->quit, SIGNAL("clicked()"), QApplication::instance(), SLOT("quit()"));
+-            $this->connect($this->slider, SIGNAL("valueChanged(int)"),$this->lcd, SLOT("display(int)"));
++            $this->connect($this->quit, SIGNAL('clicked()'), QApplication::instance(), SLOT('quit()'));
++            $this->connect($this->slider, SIGNAL('valueChanged(int)'),$this->lcd, SLOT('display(int)'));
+ 
+-            $this->layout = new QVBoxLayout($this);
+-
++            $this->layout = new QVBoxLayout();
+             $this->layout->addWidget($this->quit);
+             $this->layout->addWidget($this->lcd);
+             $this->layout->addWidget($this->slider);
+             $this->setLayout($this->layout);
+-
+         }
+     }
+ 
+ 
+-    $app = new QApplication($argc,$argv);
++    $app = new QApplication(&$argc,$argv);
+     $widget = new MyWidget();
+     $widget->show();
+ 
+
+Modified: trunk/tutorials/t6/main.php
+===================================================================
+--- trunk/tutorials/t6/main.php	2006-11-18 12:51:03 UTC (rev 286)
++++ trunk/tutorials/t6/main.php	2006-11-18 15:19:26 UTC (rev 287)
+@@ -1,9 +1,11 @@
+ <?php
++
+     /****************************************************************
+     **
+     ** Qt tutorial 6
+     **
+-    ** http://doc.trolltech.com/4.0/tutorial-t6.html
++    ** original:
++    ** http://doc.trolltech.com/4.1/tutorial-t6.html
+     **
+     ****************************************************************/
+ 
+@@ -13,43 +15,43 @@
+ 
+     class LCDRange extends QWidget
+     {
+-        var $lcd;
+-        var $slider;
+-        var $layout;
++        private $lcd;
++        private $slider;
++        private $layout;
+ 
+-        function __construct(){
+-
++        function __construct()
++        {
+             parent::__construct();
+ 
+-            $this->lcd = new QLCDNumber(2,$this);
+-            $this->slider = new QSlider($this);
+-            $this->slider->setOrientation(Qt::Horizontal);
++            $this->lcd = new QLCDNumber(2);
++            $this->lcd->setSegmentStyle(QLCDNumber::Filled);
++
++            $this->slider = new QSlider(Qt::Horizontal);
+             $this->slider->setRange(0, 99);
+             $this->slider->setValue(0);
+-            $this->connect($this->slider, SIGNAL("valueChanged(int)"),
+-                    $this->lcd, SLOT("display(int)"));
+-    
+-            $this->layout = new QVBoxLayout($this);
++            $this->connect($this->slider, SIGNAL('valueChanged(int)'),
++                    $this->lcd, SLOT('display(int)'));
++
++            $this->layout = new QVBoxLayout();
+             $this->layout->addWidget($this->lcd);
+             $this->layout->addWidget($this->slider);
+             $this->setLayout($this->layout);
+         }
+-
+     };
+ 
+     class MyWidget extends QWidget
+     {
+-        var $quit;
+-        var $grid;
+-        var $layout;
++        private $quit;
++        private $grid;
++        private $layout;
+ 
+-        function __construct(){
+-
++        function __construct()
++        {
+             parent::__construct();
+ 
+-            $this->quit = new QPushButton("Quit");
+-    //        $this->quit->setFont(QFont("Times", 18, QFont::Bold));
+-            $this->connect($this->quit, SIGNAL("clicked()"), QApplication::instance(), SLOT("quit()"));
++            $this->quit = new QPushButton(tr("Quit"));
++            $this->quit->setFont(new QFont("Times", 18, QFont::Bold));
++            $this->connect($this->quit, SIGNAL('clicked()'), QApplication::instance(), SLOT('quit()'));
+ 
+             $this->grid = new QGridLayout();
+             for ($row = 0; $row < 4; ++$row) {
+@@ -58,14 +60,14 @@
+                 }
+             }
+ 
+-            $this->layout = new QVBoxLayout($this);
++            $this->layout = new QVBoxLayout();
+             $this->layout->addWidget($this->quit);
+-            $this->layout->addLayout($this->grid,0);
++            $this->layout->addLayout($this->grid);
+             $this->setLayout($this->layout);
+         }
+     }
+ 
+-    $app = new QApplication($argc,$argv);
++    $app = new QApplication(&$argc,$argv);
+     $widget = new MyWidget();
+     $widget->show();
+     $app->exec();
+
+Modified: trunk/tutorials/t7/main.php
+===================================================================
+--- trunk/tutorials/t7/main.php	2006-11-18 12:51:03 UTC (rev 286)
++++ trunk/tutorials/t7/main.php	2006-11-18 15:19:26 UTC (rev 287)
+@@ -1,9 +1,11 @@
+ <?php
++
+     /****************************************************************
+     **
+     ** Qt tutorial 7
+     **
+-    ** http://doc.trolltech.com/4.0/tutorial-t6.html
++    ** original:
++    ** http://doc.trolltech.com/4.1/tutorial-t7.html
+     **
+     ****************************************************************/
+ 
+@@ -13,78 +15,79 @@
+ 
+     class LCDRange extends QWidget
+     {
+-        var $lcd;
+-        var $slider;
+-        var $layout;
++        private $lcd;
++        private $slider;
++        private $layout;
+ 
+-        var $slots = array("setValue(int)");
+-        var $signals = array("valueChanged(int)");
++        private $slots = array("setValue(int)");
++        private $signals = array("valueChanged(int)");
+ 
+-        function __construct(){
+-
++        function __construct()
++        {
+             parent::__construct();
+ 
+-            $this->lcd = new QLCDNumber(2,$this);
+-            $this->slider = new QSlider($this);
++            $this->lcd = new QLCDNumber(2);
++            $this->lcd->setSegmentStyle(QLCDNumber::Filled);
+ 
+-            $this->slider->setOrientation(Qt::Horizontal);
++            $this->slider = new QSlider(Qt::Horizontal);
+             $this->slider->setRange(0, 99);
+             $this->slider->setValue(0);
+ 
+-            $this->connect($this->slider, SIGNAL("valueChanged(int)"),
+-                    $this->lcd, SLOT("display(int)"));
++            $this->connect($this->slider, SIGNAL('valueChanged(int)'),
++                    $this->lcd, SLOT('display(int)'));
++            $this->connect($this->slider, SIGNAL('valueChanged(int)'),
++                    $this,SIGNAL('valueChanged(int)'));
+ 
+-            $this->connect($this->slider, SIGNAL("valueChanged(int)"),
+-                    $this,SIGNAL("valueChanged(int)"));
+-
+-            $this->layout = new QVBoxLayout($this);
++            $this->layout = new QVBoxLayout();
+             $this->layout->addWidget($this->lcd);
+             $this->layout->addWidget($this->slider);
+             $this->setLayout($this->layout);
+         }
+ 
++        function value(){
++            return $this->slider->value();
++        }
++
+         function setValue($value){
+             $this->slider->setValue($value);
+         }
+-
+     };
+ 
+     class MyWidget extends QWidget
+     {
+-        var $quit;
+-        var $grid;
+-        var $layout;
++        private $quit;
++        private $grid;
++        private $layout;
+ 
+-        function __construct(){
+-
++        function __construct()
++        {
+             parent::__construct();
+ 
+-            $this->quit = new QPushButton("Quit");
+-            $this->quit->setFont(new QFont("Times", 18, 1));
+-            $this->connect($this->quit, SIGNAL("clicked()"), QApplication::instance(), SLOT("quit()"));
++            $this->quit = new QPushButton(tr("Quit"));
++            $this->quit->setFont(new QFont("Times", 18, QFont::Bold));
++            $this->connect($this->quit, SIGNAL('clicked()'), QApplication::instance(), SLOT('quit()'));
+ 
+-
+             $this->grid = new QGridLayout();
+             for ($row = 0; $row < 3; ++$row) {
+                 for ($column = 0; $column < 3; ++$column) {
+                     $lcdRange = new LCDRange();
+                     $this->grid->addWidget($lcdRange, $row, $column);
+                     if($previousRange)
+-                        $this->connect($lcdRange, SIGNAL("valueChanged(int)"), $previousRange, SLOT("setValue(int)"));
++                        $this->connect($lcdRange, SIGNAL('valueChanged(int)'), $previousRange, SLOT('setValue(int)'));
+                     $previousRange = $lcdRange;
+                 }
+ 
+             }
+ 
+-            $this->layout = new QVBoxLayout($this);
++            $this->layout = new QVBoxLayout();
+             $this->layout->addWidget($this->quit);
+-            $this->layout->addLayout($this->grid,0);
++            $this->layout->addLayout($this->grid);
+             $this->setLayout($this->layout);
+         }
+     }
+ 
+-    $app = new QApplication($argc,$argv);
+-echo "argv";
++    $app = new QApplication(&$argc,$argv);
++
+     $widget = new MyWidget();
+     $widget->show();
+     $app->exec();
+
+
+
+From tm243 at mail.berlios.de  Sun Nov 19 19:40:12 2006
+From: tm243 at mail.berlios.de (tm243 at mail.berlios.de)
+Date: Sun, 19 Nov 2006 19:40:12 +0100
+Subject: [Php-qt-svn] r288 - trunk/qt
+Message-ID: <200611191840.kAJIeCb1022067@sheep.berlios.de>
+
+Author: tm243
+Date: 2006-11-19 19:40:09 +0100 (Sun, 19 Nov 2006)
+New Revision: 288
+
+Modified:
+   trunk/qt/php_qt.cpp
+   trunk/qt/php_qt.h
+Log:
+more constants defined
+
+Modified: trunk/qt/php_qt.cpp
+===================================================================
+--- trunk/qt/php_qt.cpp	2006-11-18 15:19:26 UTC (rev 287)
++++ trunk/qt/php_qt.cpp	2006-11-19 18:40:09 UTC (rev 288)
+@@ -429,7 +429,11 @@
+ 			zend_declare_class_constant_long(ce_ptr, "MouseButtonDblClick", strlen("MouseButtonDblClick"), QEvent::MouseButtonDblClick);
+ 			zend_declare_class_constant_long(ce_ptr, "MouseButtonRelease", strlen("MouseButtonRelease"), QEvent::MouseButtonRelease);
+ 			zend_declare_class_constant_long(ce_ptr, "ContextMenu", strlen("ContextMenu"), QEvent::ContextMenu);
+-		}
++		} else if(!strcmp(qt_Smoke->classes[i].className, "QLCDNumber")){
++			zend_declare_class_constant_long(ce_ptr, "Filled", strlen("Filled"), QLCDNumber::Filled);
++		} else if(!strcmp(qt_Smoke->classes[i].className, "QFont")){
++			zend_declare_class_constant_long(ce_ptr, "Bold", strlen("Bold"), QFont::Bold);
++		} 
+ 		
+ 	}
+ 
+
+Modified: trunk/qt/php_qt.h
+===================================================================
+--- trunk/qt/php_qt.h	2006-11-18 15:19:26 UTC (rev 287)
++++ trunk/qt/php_qt.h	2006-11-19 18:40:09 UTC (rev 288)
+@@ -38,7 +38,10 @@
+ #include <QHash>
+ #include <QCoreApplication>
+ #include <QApplication>
++
+ #include <QLayout>
++#include <QLCDNumber>
++#include <QFont>
+ 
+ // for older php versions
+ #ifndef ZEND_MN
+
+
+
+From tm243 at mail.berlios.de  Tue Nov 28 09:04:54 2006
+From: tm243 at mail.berlios.de (tm243 at mail.berlios.de)
+Date: Tue, 28 Nov 2006 09:04:54 +0100
+Subject: [Php-qt-svn] r289 - trunk/qt
+Message-ID: <200611280804.kAS84sVm024637@sheep.berlios.de>
+
+Author: tm243
+Date: 2006-11-28 09:04:52 +0100 (Tue, 28 Nov 2006)
+New Revision: 289
+
+Modified:
+   trunk/qt/smokephp.cpp
+Log:
+references not only for the first argument
+
+Modified: trunk/qt/smokephp.cpp
+===================================================================
+--- trunk/qt/smokephp.cpp	2006-11-19 18:40:09 UTC (rev 288)
++++ trunk/qt/smokephp.cpp	2006-11-28 08:04:52 UTC (rev 289)
+@@ -352,7 +352,7 @@
+ 
+ 			// Reference
+ 	    	if((((zval) **args[i]).is_ref)){
+-				qargs[1].s_voidp = &Z_LVAL_PP(args[i]);
++				qargs[i+1].s_voidp = &Z_LVAL_PP(args[i]);
+ 	    	} else {
+     	    	qargs[i+1].s_bool = Z_BVAL_PP(args[i]);
+     	    }
+@@ -363,7 +363,7 @@
+ 
+ 	    	// Reference
+ 	    	if((((zval) **args[i]).is_ref)){
+-				qargs[1].s_voidp = &Z_LVAL_PP(args[i]);
++				qargs[i+1].s_voidp = &Z_LVAL_PP(args[i]);
+ 	    	} else {
+ 				qargs[i+1].s_short = Z_LVAL_PP(args[i]);
+ 				qargs[i+1].s_ushort = Z_LVAL_PP(args[i]);
+@@ -379,7 +379,7 @@
+ 
+ 	    	// Reference
+ 	    	if((((zval) **args[i]).is_ref)){
+-				qargs[1].s_voidp = &Z_DVAL_PP(args[i]);
++				qargs[i+1].s_voidp = &Z_DVAL_PP(args[i]);
+ 	    	} else {
+     	    	qargs[i+1].s_double = Z_DVAL_PP(args[i]);
+     	    	qargs[i+1].s_float = Z_DVAL_PP(args[i]);
+
+
+

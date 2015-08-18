@@ -1,0 +1,283 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r278 - in trunk: . qt
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-November/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r278%20-%20in%20trunk%3A%20.%20qt&In-Reply-To=%3C200611071547.kA7FlFc3022233%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000121.html">
+   <LINK REL="Next"  HREF="000123.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r278 - in trunk: . qt</H1>
+    <B>tm243 at mail.berlios.de</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r278%20-%20in%20trunk%3A%20.%20qt&In-Reply-To=%3C200611071547.kA7FlFc3022233%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r278 - in trunk: . qt">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Tue Nov  7 16:47:15 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000121.html">[Php-qt-svn] r277 - in trunk: . examples/calculator kalyptus qt	tutorials/t2 tutorials/t4 tutorials/t5 tutorials/t6 tutorials/t7
+</A></li>
+        <LI>Next message: <A HREF="000123.html">[Php-qt-svn] r279 - trunk/qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#122">[ date ]</a>
+              <a href="thread.html#122">[ thread ]</a>
+              <a href="subject.html#122">[ subject ]</a>
+              <a href="author.html#122">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-11-07 16:47:13 +0100 (Tue, 07 Nov 2006)
+New Revision: 278
+
+Modified:
+   trunk/ChangeLog
+   trunk/config.m4
+   trunk/qt/php_qt.cpp
+   trunk/qt/php_qt.h
+Log:
+new function tr(), function implementation moved to functions.cpp
+
+Modified: trunk/ChangeLog
+===================================================================
+--- trunk/ChangeLog	2006-11-05 20:14:53 UTC (rev 277)
++++ trunk/ChangeLog	2006-11-07 15:47:13 UTC (rev 278)
+@@ -1,3 +1,7 @@
++2006-011-7  Thomas Moenicke &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">thomas.moenicke at kdemail.net</A>&gt;
++
++		* function tr() implemented
++
+ 2006-011-5  Thomas Moenicke &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">thomas.moenicke at kdemail.net</A>&gt;
+ 
+ 		* Code rewritten and ported to kdebindings::Smoke
+
+Modified: trunk/config.m4
+===================================================================
+--- trunk/config.m4	2006-11-05 20:14:53 UTC (rev 277)
++++ trunk/config.m4	2006-11-07 15:47:13 UTC (rev 278)
+@@ -145,7 +145,7 @@
+     x_16.cpp x_17.cpp x_18.cpp x_19.cpp x_20.cpp \
+     smokedata.cpp,,shared_objects_php_qt,yes)
+ 
+-  PHP_NEW_EXTENSION(php_qt, qt/smokephp.cpp qt/php_qt.cpp ,$ext_shared,cli)
++  PHP_NEW_EXTENSION(php_qt, qt/smokephp.cpp qt/php_qt.cpp qt/functions.cpp,$ext_shared,cli)
+   PHP_ADD_BUILD_DIR($ext_builddir/qt)
+ 
+ fi
+
+Modified: trunk/qt/php_qt.cpp
+===================================================================
+--- trunk/qt/php_qt.cpp	2006-11-05 20:14:53 UTC (rev 277)
++++ trunk/qt/php_qt.cpp	2006-11-07 15:47:13 UTC (rev 278)
+@@ -30,9 +30,6 @@
+ 
+ #include &quot;ext/standard/php_string.h&quot;
+ 
+-#include &lt;iostream&gt;
+-using namespace std;
+-
+ extern Smoke *qt_Smoke;
+ extern void init_qt_Smoke();
+ 
+@@ -58,7 +55,8 @@
+ 	PHP_FE(confirm_php_qt_compiled,	NULL)		/* For testing, remove later. */
+ 	PHP_FE(SIGNAL,	NULL)
+ 	PHP_FE(SLOT,	NULL)	
+-	PHP_FE(qobject_cast,	NULL)	
++	PHP_FE(qobject_cast,	NULL)
++	PHP_FE(tr,	NULL)
+ 	{NULL, NULL, NULL}	/* Must be the last line in php_qt_functions[] */
+ };
+ 
+@@ -90,10 +88,11 @@
+ QStack&lt;QString*&gt; methodNameStack;
+ 
+ // cached
+-static Smoke::Index qbool;
+-static Smoke::Index qstring;
+-static Smoke::Index qobject;
++Smoke::Index qbool;
++Smoke::Index qstring;
++Smoke::Index qobject;
+ zend_class_entry* qobject_ce;
++zend_class_entry* qstring_ce;
+ 
+ /**
+  *	proxy handler
+@@ -339,7 +338,8 @@
+ // TODO		QObject Nummer suchen, nachher vergleichen
+ 	smokephp_findConnect();
+ 
+-	Smoke::Index qobject_tmp = smokephp_getClassId(&quot;QObject&quot;);
++	Smoke::Index qobject = smokephp_getClassId(&quot;QObject&quot;);
++	Smoke::Index qstring = smokephp_getClassId(&quot;QString&quot;);
+ 
+     php_qt_static_methods = (zend_function_entry***) safe_emalloc((qt_Smoke-&gt;numClasses), sizeof(zend_function_entry **), 0);
+ 
+@@ -406,10 +406,14 @@
+ 	    INIT_CLASS_ENTRY(ce, qt_Smoke-&gt;classes[i].className, p);
+ 	    ce.name_length = strlen(qt_Smoke-&gt;classes[i].className);
+ 	    zend_class_entry* ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
+-		if(qobject_tmp == i){
++		if(qobject == i){
+ 			qobject_ce = ce_ptr;
+ 		}
++		else if(qstring == i){
++			qstring_ce = ce_ptr;
++		}
+ 
++
+         // register enums
+ 		if(!strcmp(qt_Smoke-&gt;classes[i].className, &quot;Qt&quot;)){
+ 			zend_declare_class_constant_long(ce_ptr, &quot;Horizontal&quot;, strlen(&quot;Horizontal&quot;), Qt::Horizontal);
+@@ -469,103 +473,7 @@
+ 	*/
+ }
+ 
+-/* Every user-visible function in PHP should document itself in the source */
+-/* proto string confirm_php_qt_compiled(string arg)
+-   Return a string to confirm that the module is compiled in */
+-PHP_FUNCTION(confirm_php_qt_compiled)
+-{
+-	char *arg = NULL;
+-	int arg_len, len;
+-	char string[256];
+-
+-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, &quot;s&quot;, &amp;arg, &amp;arg_len) == FAILURE) {
+-		return;
+-	}
+-
+-  	len = sprintf(string, &quot;Congratulations! You have successfully modified ext/%.78s/config.m4. Module %.78s is now compiled into PHP.&quot;, &quot;php_qt&quot;, arg);
+-	RETURN_STRINGL(string, len, 1);
+-
+-}
+-
+ /*!
+- *	PHP userspace functions
+- */
+-
+-/*!
+- *  emulates the Qt SIGNAL() macro
+- */
+-
+-PHP_FUNCTION(SIGNAL)
+-{
+-    const char* string;
+-    int string_len;
+-    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s&quot;,&amp;string,&amp;string_len)) {
+-        return;
+-    }
+-
+-    char* tmp = (char*) emalloc((int) string_len + 2);
+-    strcpy(tmp,&quot;2&quot;);
+-
+-    strncat(tmp, string, (int) string_len);
+-
+-    ZVAL_STRING(return_value,tmp,1);
+-
+-    efree(tmp);
+-
+-    return;
+-}
+-
+-/*!
+- *  emulates the Qt SLOT() macro
+- */
+-
+-PHP_FUNCTION(SLOT)
+-{
+-    const char* string;
+-    int string_len;
+-    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s&quot;,&amp;string,&amp;string_len)) {
+-        return;
+-    }
+-
+-    char* tmp = (char*) emalloc((int) string_len + 2);
+-    strcpy(tmp,&quot;1&quot;);
+-
+-    strncat(tmp, string, (int) string_len);
+-
+-    ZVAL_STRING(return_value,tmp,1);
+-
+-    efree(tmp);
+-
+-    return;
+-}
+-
+-/**
+- *	simply returns the first parameter because objects are casted automatically in smokephp_convertReturn(...)
+- *
+- */
+-
+-PHP_FUNCTION(qobject_cast){
+-
+-    zval *obj;
+-    zval *cast_type;
+-
+-    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zz|&quot;, &amp;obj, &amp;cast_type) == FAILURE) {
+-        php_error(E_WARNING,&quot;error while casting object, wrong parameters&quot;);
+-        return; 
+-    }
+-
+-	ZVAL_ZVAL(return_value, obj, 0, 0);
+-    return;
+-
+-}
+-
+-/*!
+- *	tr()
+- */
+-
+-// TODO: implement!
+-
+-/*!
+  *	PHP-Qt internal functions
+  */
+ 
+
+Modified: trunk/qt/php_qt.h
+===================================================================
+--- trunk/qt/php_qt.h	2006-11-05 20:14:53 UTC (rev 277)
++++ trunk/qt/php_qt.h	2006-11-07 15:47:13 UTC (rev 278)
+@@ -87,6 +87,7 @@
+ PHP_FUNCTION(SIGNAL);
+ PHP_FUNCTION(SLOT);
+ PHP_FUNCTION(qobject_cast);
++PHP_FUNCTION(tr);
+ 
+ struct smokephp_object {
+     bool allocated;
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000121.html">[Php-qt-svn] r277 - in trunk: . examples/calculator kalyptus qt	tutorials/t2 tutorials/t4 tutorials/t5 tutorials/t6 tutorials/t7
+</A></li>
+	<LI>Next message: <A HREF="000123.html">[Php-qt-svn] r279 - trunk/qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#122">[ date ]</a>
+              <a href="thread.html#122">[ thread ]</a>
+              <a href="subject.html#122">[ subject ]</a>
+              <a href="author.html#122">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

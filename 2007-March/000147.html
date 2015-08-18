@@ -1,0 +1,263 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r303 - trunk/php_qt
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-March/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r303%20-%20trunk/php_qt&In-Reply-To=%3C200703062058.l26Kw2mD003571%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000146.html">
+   <LINK REL="Next"  HREF="000148.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r303 - trunk/php_qt</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r303%20-%20trunk/php_qt&In-Reply-To=%3C200703062058.l26Kw2mD003571%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r303 - trunk/php_qt">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Tue Mar  6 21:58:02 CET 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000146.html">[Php-qt-svn] r302 - trunk/php_qt
+</A></li>
+        <LI>Next message: <A HREF="000148.html">[Php-qt-svn] r304 - trunk/tests
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#147">[ date ]</a>
+              <a href="thread.html#147">[ thread ]</a>
+              <a href="subject.html#147">[ subject ]</a>
+              <a href="author.html#147">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2007-03-06 21:58:02 +0100 (Tue, 06 Mar 2007)
+New Revision: 303
+
+Modified:
+   trunk/php_qt/qstring.cpp
+Log:
+* more work on QString
+
+
+
+Modified: trunk/php_qt/qstring.cpp
+===================================================================
+--- trunk/php_qt/qstring.cpp	2007-03-06 07:47:58 UTC (rev 302)
++++ trunk/php_qt/qstring.cpp	2007-03-06 20:58:02 UTC (rev 303)
+@@ -134,7 +134,8 @@
+ 
+   int l = QString_ptr-&gt;size();
+ 
+-  char* c = (char*) (QString_ptr-&gt;toUtf8()).constData();
++//  char* c = (char*) (QString_ptr-&gt;toUtf8()).constData();
++  char* c = (char*) (QString_ptr-&gt;toAscii()).constData();
+ 
+   RETURN_STRING(c,l);
+ }
+@@ -305,10 +306,11 @@
+  */
+ ZEND_METHOD(QString, clear){
+ 	if (ZEND_NUM_ARGS() == 0){
+-			QString *obj = (QString*) PHP_QT_FETCH();
+-			obj-&gt;clear();
+-			RETURN_NULL();
++	    QString *obj = (QString*) PHP_QT_FETCH();
++	    obj-&gt;clear();
++	    RETURN_NULL();
+ 	}
++	php_error(E_ERROR, &quot;wrong argument in QString clear()&quot;);
+ }
+ 
+ /*********************************
+@@ -870,12 +872,18 @@
+ /*
+  *    function  number
+  *    flags:    s
++ *
++ *	QString number ( long n, int base = 10 ) 
++ *	QString number ( ulong n, int base = 10 ) 
++ *	QString number ( int n, int base = 10 ) 
++ *	QString number ( uint n, int base = 10 ) 
++ *	QString number ( qlonglong n, int base = 10 ) 
++ *	QString number ( qulonglong n, int base = 10 ) 
++ *	QString number ( double n, char format = 'g', int precision = 6 )
+  */
+ ZEND_METHOD(QString, number){
+ 
+ 	if (ZEND_NUM_ARGS() == 1){
+-		/* ol public*/
+-		/* int , */
+ 		zval *z_0; // define ZVAL
+ 		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
+ 			if(Z_TYPE_P(z_0) == IS_LONG){
+@@ -884,18 +892,18 @@
+ 				object_init_ex(return_value, qstring_ce);
+ 				phpqt_createObject(return_value, (void*) s1, qstring_ce);
+ 				return;
++			} else if(Z_TYPE_P(z_0) == IS_DOUBLE){
++				QString obj = (QString) QString::number((double) Z_DVAL_P(z_0));
++				QString *s1 = new QString(obj);
++				object_init_ex(return_value, qstring_ce);
++				phpqt_createObject(return_value, (void*) s1, qstring_ce);
++				return;
+ 			}
++			
+ 		}
+ 	}
+ 
+-
+ 	if (ZEND_NUM_ARGS() == 2){
+-		/* ol public*/
+-
+-		/* unsigned long , int base,  */
+-		/* ll public*/
+-
+-		/* int , int base,  */
+ 		zval *z_0; // define ZVAL
+ 		zval *z_1; // define ZVAL
+ 		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
+@@ -927,9 +935,6 @@
+ 	}
+ 
+ 	if (ZEND_NUM_ARGS() == 3){
+-		/* lll public*/
+-
+-		/* double , char f, int prec,  */
+ 		zval *z_0; // define ZVAL
+ 		zval *z_1; // define ZVAL
+ 		zval *z_2; // define ZVAL
+@@ -948,6 +953,7 @@
+ 			}
+ 		}
+ 	}
++	php_error(E_ERROR, &quot;wrong argument in QString::number()&quot;);
+ }
+ 
+ /*********************************
+@@ -1523,9 +1529,10 @@
+  */
+ ZEND_METHOD(QString, isEmpty){
+ 	if (ZEND_NUM_ARGS() == 0){
+-			QString *obj = (QString*) PHP_QT_FETCH();
+-			RETURN_BOOL(obj-&gt;isEmpty());
++	    QString *obj = (QString*) PHP_QT_FETCH();
++	    RETURN_BOOL(obj-&gt;isEmpty());
+ 	}
++	php_error(E_ERROR, &quot;wrong argument in QString isEmpty()&quot;);
+ }
+ 
+ /*********************************
+@@ -2187,17 +2194,9 @@
+ ZEND_METHOD(QString, append){
+ 
+ 	if (ZEND_NUM_ARGS() == 1){
+-		/* l public*/
+-
+-		/* char c,  */
+-		/* s public*/
+-
+-		/* const char* s,  */
+-		/* o public*/
+-
+-		/* const QString&amp; s,  */
+ 		zval *z_0; // define ZVAL
+ 		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
++			/* QString &amp; append ( QChar ch ) */
+ 			if(Z_TYPE_P(z_0) == IS_LONG){
+ 			QString *obj = (QString*) PHP_QT_FETCH();
+ 				QString &amp; return_object = (QString &amp;) obj-&gt;append((char) Z_LVAL_P(z_0));
+@@ -2208,10 +2207,9 @@
+ 				phpqt_register(return_value,le);                   
+ 				return;                                             
+ 			}
++			/* QString &amp; append ( const char * str ) */
+ 			if(Z_TYPE_P(z_0) == IS_STRING){
+-			QString *obj = (QString*) PHP_QT_FETCH();
+-
+-
++				QString *obj = (QString*) PHP_QT_FETCH();
+ 				QString &amp; return_object = (QString &amp;) obj-&gt;append( (const char*) Z_STRVAL_P(z_0));
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, qstring_ce);     
+@@ -2220,11 +2218,17 @@
+ 				phpqt_register(return_value,le);                   
+ 				return;                                             
+ 			}
++
++			/*  QString &amp; append ( const QLatin1String &amp; str )
++			    QString &amp; append ( const QByteArray &amp; ba )
++			    QString &amp; append ( const QString &amp; str ) */
+ 			if(Z_TYPE_P(z_0) == IS_OBJECT){
+-			    QString *obj = (QString*) PHP_QT_FETCH();
++			    smokephp_object* o = phpqt_getSmokePHPObjectFromZval(getThis());
+ 			    QString* obj_z_0 = (QString*) phpqt_getQtObjectFromZval(z_0);
+-			    obj-&gt;append((QString) *obj_z_0);
+-			    RETURN_NULL();
++			    QString s = ((QString*) o-&gt;ptr)-&gt;append((QString) *obj_z_0);
++			    object_init_ex(return_value, qstring_ce);     
++			    phpqt_createObject(return_value, &amp;s, qstring_ce);
++			    return;
+ 			}
+ 		}
+ 	}
+@@ -2269,20 +2273,22 @@
+  */
+ ZEND_METHOD(QString, toDouble){
+ 
++	/* double toDouble ( bool * ok = 0 ) const */
+ 	if (ZEND_NUM_ARGS() == 1){
+-		/* l public*/
+-
+-		/* int* ok,  */
+ 		zval *z_0; // define ZVAL
+ 		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
+ 			if(Z_TYPE_P(z_0) == IS_LONG){
+-			QString *obj = (QString*) PHP_QT_FETCH();
+-
+-
+-			RETURN_DOUBLE(obj-&gt;toDouble((bool*) Z_LVAL_P(z_0)));
++			    QString *obj = (QString*) PHP_QT_FETCH();
++			    RETURN_DOUBLE(obj-&gt;toDouble((bool*) Z_LVAL_P(z_0)));
+ 			}
+ 		}
+ 	}
++	if(ZEND_NUM_ARGS() == 0) {
++	    QString *obj = (QString*) PHP_QT_FETCH();
++	    RETURN_DOUBLE(obj-&gt;toDouble());
++	}
++	php_error(E_ERROR, &quot;wrong argument in QString toDouble()&quot;);
++
+ }
+ 
+ /*********************************
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000146.html">[Php-qt-svn] r302 - trunk/php_qt
+</A></li>
+	<LI>Next message: <A HREF="000148.html">[Php-qt-svn] r304 - trunk/tests
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#147">[ date ]</a>
+              <a href="thread.html#147">[ thread ]</a>
+              <a href="subject.html#147">[ subject ]</a>
+              <a href="author.html#147">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

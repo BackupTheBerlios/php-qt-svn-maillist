@@ -1,0 +1,253 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r170 - in trunk: . qt
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-January/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r170%20-%20in%20trunk%3A%20.%20qt&In-Reply-To=%3C200601112200.k0BM0msF032473%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000018.html">
+   <LINK REL="Next"  HREF="000020.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r170 - in trunk: . qt</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r170%20-%20in%20trunk%3A%20.%20qt&In-Reply-To=%3C200601112200.k0BM0msF032473%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r170 - in trunk: . qt">tm243 at berlios.de
+       </A><BR>
+    <I>Wed Jan 11 23:00:48 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000018.html">[Php-qt-svn] r169 - trunk
+</A></li>
+        <LI>Next message: <A HREF="000020.html">[Php-qt-svn] r171 - trunk/qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#19">[ date ]</a>
+              <a href="thread.html#19">[ thread ]</a>
+              <a href="subject.html#19">[ subject ]</a>
+              <a href="author.html#19">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-01-11 23:00:44 +0100 (Wed, 11 Jan 2006)
+New Revision: 170
+
+Modified:
+   trunk/config.m4
+   trunk/qt/ag_php_qt_cpp.h
+   trunk/qt/php_qt.cpp
+   trunk/qt/php_qt.h
+   trunk/qt/zend_php_qt.h
+Log:
+class Qt removed. Pointer bug fix from revision 159 restored.
+
+Modified: trunk/config.m4
+===================================================================
+--- trunk/config.m4	2006-01-10 14:08:51 UTC (rev 169)
++++ trunk/config.m4	2006-01-11 22:00:44 UTC (rev 170)
+@@ -100,15 +100,13 @@
+   qt/layout_management/qhboxlayout.cpp \
+   qt/layout_management/qvboxlayout.cpp \
+   qt/object_model/qobject.cpp \
+-  qt/qobject_model/qinternal.cpp \ 
+-  qt/qobject_model/qt.cpp \ 
+   qt/text_related/qstring.cpp \
+   qt/text_related/qlatin1string.cpp \
+   qt/text_related/qchar.cpp \
+   qt/event/qevent.cpp \
+-  qt/classes/qdate.cpp \ 
+-  qt/classes/qdatetime.cpp \ 
+-  qt/classes/qtime.cpp \ 
++  qt/classes/qdate.cpp \
++  qt/classes/qdatetime.cpp \
++  qt/classes/qtime.cpp \
+   qt/php_qt.cpp,$ext_shared)
+ 
+   PHP_ADD_BUILD_DIR($ext_builddir/qt)
+
+Modified: trunk/qt/ag_php_qt_cpp.h
+===================================================================
+--- trunk/qt/ag_php_qt_cpp.h	2006-01-10 14:08:51 UTC (rev 169)
++++ trunk/qt/ag_php_qt_cpp.h	2006-01-11 22:00:44 UTC (rev 170)
+@@ -11,7 +11,6 @@
+ 	ZEND_ME(QDate,gregorianToJulian,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+ 	ZEND_ME(QDate,longMonthName,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+ 	ZEND_ME(QDate,julianToGregorian,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QDate,QDate,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDate,shortDayName,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+ 	ZEND_ME(QDate,fromString,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+ 	ZEND_ME(QDate,fromString,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+@@ -41,8 +40,6 @@
+ 	ZEND_ME(QDateTime,fromString,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+ 	ZEND_ME(QDateTime,setTime,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDateTime,addMonths,NULL,ZEND_ACC_PUBLIC)
+-	ZEND_ME(QDateTime,QDateTime,NULL,ZEND_ACC_PUBLIC)
+-	ZEND_ME(QDateTime,QDateTime,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDateTime,addSecs,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDateTime,setDate,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDateTime,daysTo,NULL,ZEND_ACC_PUBLIC)
+@@ -66,7 +63,6 @@
+ 	ZEND_ME(QTime,secsTo,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QTime,fromString,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+ 	ZEND_ME(QTime,fromString,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QTime,QTime,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QTime,addSecs,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QTime,addMSecs,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QTime,setHMS,NULL,ZEND_ACC_PUBLIC)
+
+Modified: trunk/qt/php_qt.cpp
+===================================================================
+--- trunk/qt/php_qt.cpp	2006-01-10 14:08:51 UTC (rev 169)
++++ trunk/qt/php_qt.cpp	2006-01-11 22:00:44 UTC (rev 170)
+@@ -63,10 +63,7 @@
+ zend_class_entry *QLineEdit_ce_ptr;
+ zend_class_entry *QFrame_ce_ptr;
+ zend_class_entry *QLCDNumber_ce_ptr;
+-zend_class_entry *QInternal_ce_ptr;
+-zend_class_entry *Qt_ce_ptr;
+ 
+-
+ #include &quot;ag_zend_class_entry.h&quot;
+ 
+ /* {{{ php_qt_functions[]
+@@ -336,7 +333,6 @@
+         REGISTER_LONG_CONSTANT(&quot;QLCDNUMBER_SEGMENTSTYLE_FLAT&quot;, QLCDNumber::Flat, CONST_CS | CONST_PERSISTENT);
+ 
+ // handfixed:
+-	_register_QInternal(TSRMLS_C);
+ 	  REGISTER_LONG_CONSTANT(&quot;QINTERNAL_PAINTDEVICEFLAGS_UNKNOWNDEVICE&quot;, QInternal::UnknownDevice, CONST_CS | CONST_PERSISTENT);
+ 	  REGISTER_LONG_CONSTANT(&quot;QINTERNAL_PAINTDEVICEFLAGS_WIDGET&quot;, QInternal::Widget, CONST_CS | CONST_PERSISTENT);
+ 	  REGISTER_LONG_CONSTANT(&quot;QINTERNAL_PAINTDEVICEFLAGS_PIXMAP&quot;, QInternal::Pixmap, CONST_CS | CONST_PERSISTENT);
+@@ -348,7 +344,6 @@
+ 	  REGISTER_LONG_CONSTANT(&quot;QINTERNAL_RELAYOUTTYPE_RELAYOUTDRAGGING&quot;, QInternal::RelayoutDragging, CONST_CS | CONST_PERSISTENT);
+ 	  REGISTER_LONG_CONSTANT(&quot;QINTERNAL_RELAYOUTTYPE_RELAYOUTDROPPED&quot;, QInternal::RelayoutDropped, CONST_CS | CONST_PERSISTENT);
+ 
+-	_register_Qt(TSRMLS_C);
+ 	  REGISTER_LONG_CONSTANT(&quot;QT_GLOBALCOLOR_COLOR0&quot;, Qt::color0, CONST_CS | CONST_PERSISTENT);
+ 	  REGISTER_LONG_CONSTANT(&quot;QT_GLOBALCOLOR_COLOR1&quot;, Qt::color1, CONST_CS | CONST_PERSISTENT);
+ 	  REGISTER_LONG_CONSTANT(&quot;QT_GLOBALCOLOR_BLACK&quot;, Qt::black, CONST_CS | CONST_PERSISTENT);
+@@ -1124,7 +1119,7 @@
+ PHP_FUNCTION(SIGNAL)
+ {
+     const char* string;
+-    int* string_len;
++    int string_len;
+     if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s&quot;,&amp;string,&amp;string_len)) {
+         return;
+     }
+@@ -1144,7 +1139,7 @@
+ PHP_FUNCTION(SLOT)
+ {
+     const char* string;
+-    int* string_len;
++    int string_len;
+     if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s&quot;,&amp;string,&amp;string_len)) {
+         return;
+     }
+@@ -2079,38 +2074,6 @@
+ 
+ }
+ 
+-static zend_function_entry QInternal_methods[] = {
+-
+-    {NULL,NULL,NULL}
+-};
+-
+-void _register_QInternal(TSRMLS_D)
+-{
+-    zend_class_entry ce;
+-    INIT_CLASS_ENTRY(ce,&quot;QInternal&quot;,QInternal_methods);
+-    QInternal_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
+-
+-}
+-static zend_function_entry Qt_methods[] = {
+-	ZEND_ME(Qt,tr,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(Qt,qt_invoke,NULL,ZEND_ACC_PUBLIC)
+-	ZEND_ME(Qt,qt_emit,NULL,ZEND_ACC_PUBLIC)
+-	ZEND_ME(Qt,trUtf8,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(Qt,qt_property,NULL,ZEND_ACC_PUBLIC)
+-	ZEND_ME(Qt,qt_cast,NULL,ZEND_ACC_PUBLIC)
+-
+-    {NULL,NULL,NULL}
+-};
+-
+-void _register_Qt(TSRMLS_D)
+-{
+-    zend_class_entry ce;
+-    INIT_CLASS_ENTRY(ce,&quot;Qt&quot;,Qt_methods);
+-    Qt_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
+-
+-}
+-
+-
+ #include &quot;ag_php_qt_cpp.h&quot;
+ 
+ /* }}} */
+
+Modified: trunk/qt/php_qt.h
+===================================================================
+--- trunk/qt/php_qt.h	2006-01-10 14:08:51 UTC (rev 169)
++++ trunk/qt/php_qt.h	2006-01-11 22:00:44 UTC (rev 170)
+@@ -381,10 +381,5 @@
+ extern zend_class_entry *QFrame_ce_ptr;
+ extern zend_class_entry *QLCDNumber_ce_ptr;
+ 
+-extern zend_class_entry *QInternal_ce_ptr;
+-void 	_register_QInternal();
+-extern zend_class_entry *Qt_ce_ptr;
+-void 	_register_Qt();
+ 
+-
+ #include &quot;ag_extern_zend_class_entry.h&quot;
+
+Modified: trunk/qt/zend_php_qt.h
+===================================================================
+--- trunk/qt/zend_php_qt.h	2006-01-10 14:08:51 UTC (rev 169)
++++ trunk/qt/zend_php_qt.h	2006-01-11 22:00:44 UTC (rev 170)
+@@ -570,14 +570,6 @@
+ ZEND_METHOD(QLCDNumber, tr);
+ ZEND_METHOD(QLCDNumber, trUtf8);
+ 
+-/* internals */
+-ZEND_METHOD(Qt, tr);
+-ZEND_METHOD(Qt, qt_invoke);
+-ZEND_METHOD(Qt, qt_emit);
+-ZEND_METHOD(Qt, trUtf8);
+-ZEND_METHOD(Qt, qt_property);
+-ZEND_METHOD(Qt, qt_cast);
+-
+ #include &quot;ag_zend_php_qt.h&quot;
+ 
+ /* 
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000018.html">[Php-qt-svn] r169 - trunk
+</A></li>
+	<LI>Next message: <A HREF="000020.html">[Php-qt-svn] r171 - trunk/qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#19">[ date ]</a>
+              <a href="thread.html#19">[ thread ]</a>
+              <a href="subject.html#19">[ subject ]</a>
+              <a href="author.html#19">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

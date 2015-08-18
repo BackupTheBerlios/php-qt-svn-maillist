@@ -1,0 +1,129 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r271 - trunk/admin
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-July/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r271%20-%20trunk/admin&In-Reply-To=%3C200607221644.k6MGiO9u023030%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000114.html">
+   <LINK REL="Next"  HREF="000116.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r271 - trunk/admin</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r271%20-%20trunk/admin&In-Reply-To=%3C200607221644.k6MGiO9u023030%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r271 - trunk/admin">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Sat Jul 22 18:44:24 CEST 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000114.html">[Php-qt-svn] r270 - trunk
+</A></li>
+        <LI>Next message: <A HREF="000116.html">[Php-qt-svn] r272 - in trunk: . kalyptus smoke smoke/kde smoke/qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#115">[ date ]</a>
+              <a href="thread.html#115">[ thread ]</a>
+              <a href="subject.html#115">[ subject ]</a>
+              <a href="author.html#115">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-07-22 18:44:23 +0200 (Sat, 22 Jul 2006)
+New Revision: 271
+
+Modified:
+   trunk/admin/acinclude.m4.in
+Log:
+Qt-debug depencies removed.
+
+Modified: trunk/admin/acinclude.m4.in
+===================================================================
+--- trunk/admin/acinclude.m4.in	2006-07-22 16:33:36 UTC (rev 270)
++++ trunk/admin/acinclude.m4.in	2006-07-22 16:44:23 UTC (rev 271)
+@@ -1173,8 +1173,8 @@
+   fi
+ fi
+ 
+-LIBQT=&quot;-lQtGui_debug&quot;
+-kde_int_qt=&quot;-lQtGui_debug&quot;
++LIBQT=&quot;-lQtGui&quot;
++kde_int_qt=&quot;-lQtGui&quot;
+ 
+ AC_REQUIRE([AC_FIND_PNG])
+ AC_REQUIRE([AC_FIND_JPEG])
+@@ -1241,7 +1241,7 @@
+   # if the Qt was given, the chance is too big that libqt.* doesn't exist
+   qt_libdir=
+   for dir in $qt_libdirs; do
+-    try=&quot;ls -1 $dir/libQtCore_debug.la&quot;
++    try=&quot;ls -1 $dir/libQtCore.la&quot;
+     if test -n &quot;`$try 2&gt; /dev/null`&quot;; then qt_libdir=$dir; break; else echo &quot;tried $dir&quot; &gt;&amp;AC_FD_CC ; fi
+   done
+ fi
+@@ -1270,7 +1270,7 @@
+ 
+ KDE_PRINT_QT_PROGRAM
+ 
+-ac_link='$LIBTOOL_SHELL --silent --mode=link ${CXX-g++} -o conftest $CXXFLAGS $all_includes $CPPFLAGS $LDFLAGS $all_libraries conftest.$ac_ext $LIBS -lQtGui_debug -lQtCore_debug $KDE_TEST_RPATH 1&gt;&amp;5'
++ac_link='$LIBTOOL_SHELL --silent --mode=link ${CXX-g++} -o conftest $CXXFLAGS $all_includes $CPPFLAGS $LDFLAGS $all_libraries conftest.$ac_ext $LIBS -lQtGui -lQtCore $KDE_TEST_RPATH 1&gt;&amp;5'
+ 
+ if AC_TRY_EVAL(ac_link) &amp;&amp; test -s conftest; then
+   rm -f conftest*
+@@ -1759,15 +1759,15 @@
+    AC_SUBST(LIB_KSYCOCA, &quot;-lkio&quot;)
+    AC_SUBST(LIB_KFILE, &quot;-lkio&quot;)
+ #these are for Qt4 libs separation
+-   AC_SUBST(LIB_QTCORE, &quot;-lQtCore_debug&quot;)
+-   AC_SUBST(LIB_QTXML, &quot;-lQtXml_debug&quot;)
+-   AC_SUBST(LIB_QTGUI, &quot;-lQtGui_debug&quot;)
+-   AC_SUBST(LIB_QTNETWORK, &quot;-lQtNetwork_debug&quot;)
+-   AC_SUBST(LIB_QTOPENGL, &quot;-lQtOpenGL_debug&quot;)
+-   AC_SUBST(LIB_QTSQL, &quot;-lQtSql_debug&quot;)
+-   AC_SUBST(LIB_QTTESTLIB, &quot;-lQtTest_debug&quot;)
+-   AC_SUBST(LIB_QT3SUPPORT, &quot;-lQt3Support_debug&quot;)
+-   AC_SUBST(LIB_QTDESIGNER, &quot;-lQtDesigner_debug&quot;)
++   AC_SUBST(LIB_QTCORE, &quot;-lQtCore&quot;)
++   AC_SUBST(LIB_QTXML, &quot;-lQtXml&quot;)
++   AC_SUBST(LIB_QTGUI, &quot;-lQtGui&quot;)
++   AC_SUBST(LIB_QTNETWORK, &quot;-lQtNetwork&quot;)
++   AC_SUBST(LIB_QTOPENGL, &quot;-lQtOpenGL&quot;)
++   AC_SUBST(LIB_QTSQL, &quot;-lQtSql&quot;)
++   AC_SUBST(LIB_QTTESTLIB, &quot;-lQtTest&quot;)
++   AC_SUBST(LIB_QT3SUPPORT, &quot;-lQt3Support&quot;)
++   AC_SUBST(LIB_QTDESIGNER, &quot;-lQtDesigner&quot;)
+ ])
+ 
+ AC_DEFUN([AC_PATH_KDE],
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000114.html">[Php-qt-svn] r270 - trunk
+</A></li>
+	<LI>Next message: <A HREF="000116.html">[Php-qt-svn] r272 - in trunk: . kalyptus smoke smoke/kde smoke/qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#115">[ date ]</a>
+              <a href="thread.html#115">[ thread ]</a>
+              <a href="subject.html#115">[ subject ]</a>
+              <a href="author.html#115">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

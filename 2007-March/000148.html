@@ -1,0 +1,155 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r304 - trunk/tests
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-March/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r304%20-%20trunk/tests&In-Reply-To=%3C200703082116.l28LGp0G010614%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000147.html">
+   <LINK REL="Next"  HREF="000149.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r304 - trunk/tests</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r304%20-%20trunk/tests&In-Reply-To=%3C200703082116.l28LGp0G010614%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r304 - trunk/tests">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Thu Mar  8 22:16:51 CET 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000147.html">[Php-qt-svn] r303 - trunk/php_qt
+</A></li>
+        <LI>Next message: <A HREF="000149.html">[Php-qt-svn] r305 - in trunk: . examples/calculator php_qt tests
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#148">[ date ]</a>
+              <a href="thread.html#148">[ thread ]</a>
+              <a href="subject.html#148">[ subject ]</a>
+              <a href="author.html#148">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2007-03-08 22:16:51 +0100 (Thu, 08 Mar 2007)
+New Revision: 304
+
+Added:
+   trunk/tests/QStringTestCase.php
+Log:
+* test case for QString
+
+
+
+Added: trunk/tests/QStringTestCase.php
+===================================================================
+--- trunk/tests/QStringTestCase.php	2007-03-06 20:58:02 UTC (rev 303)
++++ trunk/tests/QStringTestCase.php	2007-03-08 21:16:51 UTC (rev 304)
+@@ -0,0 +1,76 @@
++&lt;?php
++
++    /**
++     *	This file contains a couple of QString tests
++     */
++
++    require_once('PHPUnit/Framework/TestCase.php');
++    require_once('PHPUnit/Framework/TestSuite.php');
++
++    class QStringTestCase extends PHPUnit_Framework_TestCase {
++    
++	public function __construct($name) {
++	    parent::__construct($name);
++	}
++
++	function test_construct() {
++	    $s1 = new QString(&quot;bird&quot;);
++	    $s2 = new QString($s1);	   // QString ( const QString &amp; other ) 
++	    $this-&gt;assertEquals($s2-&gt;__toString(), &quot;bird&quot;, &quot;Could not construct QString!&quot;);
++	    $s3 = new QString(40);	   // QString ( QChar ch ) 
++	    $this-&gt;assertEquals($s3-&gt;__toString(), &quot;(&quot;, &quot;Could not construct QString!&quot;);
++	    $s4 = new QString(&quot;helicopter&quot;);
++	    $this-&gt;assertEquals($s4-&gt;__toString(), &quot;helicopter&quot;, &quot;Could not construct QString!&quot;);
++//	    $s5 = new QString(40,3);
++//	    $this-&gt;assertEquals($s5-&gt;__toString(), &quot;(((&quot;, &quot;Could not construct QString!&quot;);
++	    echo &quot;\ntesting QString::__construct() passed&quot;;
++	}
++
++	function test_append() {
++	    $s1 = new QString(&quot;bird&quot;);
++	    $s2 = new QString(&quot; plug&quot;);
++	    $s1-&gt;append($s2);
++	    $this-&gt;assertEquals($s1-&gt;__toString(), &quot;bird plug&quot;, &quot;Could not append QString to QString!&quot;);
++	    $s1-&gt;append(&quot; helicopter&quot;);
++	    $this-&gt;assertEquals($s1-&gt;__toString(), &quot;bird plug helicopter&quot;, &quot;Could not append string to QString!&quot;);
++	    $s1-&gt;append(40);
++	    $this-&gt;assertEquals($s1-&gt;__toString(), &quot;bird plug helicopter(&quot;, &quot;Could not append QChar to QString!&quot;);
++	    echo &quot;\ntesting QString::append() passed&quot;;
++	}
++
++	function test_toInt() {
++	    $s1 = new QString(&quot;24&quot;);
++	    $this-&gt;assertEquals($s1-&gt;toInt(), 24, &quot;Could not get integer!&quot;);
++	    echo &quot;\ntesting QString::toInt() passed&quot;;
++	}
++
++	function test_toDouble() {
++	    $s1 = new QString(&quot;24.3&quot;);
++	    $this-&gt;assertEquals($s1-&gt;toDouble(), 24.3, &quot;Could not get double!&quot;);
++	    echo &quot;\ntesting QString::toDouble() passed&quot;;
++	}
++
++	function test_number() {
++	    $this-&gt;assertEquals(QString::number(24)-&gt;__toString(), &quot;24&quot;, &quot;Could not get string version of integer!&quot;);
++	    $this-&gt;assertEquals(QString::number(24.3)-&gt;__toString(), &quot;24.3&quot;, &quot;Could not get string version of double!&quot;);
++	    echo &quot;\ntesting QString::number() passed&quot;;
++	}
++
++	function test_isEmpty() {
++	    $s1 = new QString();
++	    $this-&gt;assertTrue($s1-&gt;isEmpty(), &quot;Could not ask isEmpty()!&quot;);
++	    $s1-&gt;append(&quot;I&quot;);
++	    $this-&gt;assertFalse($s1-&gt;isEmpty(), &quot;Could not ask isEmpty()!&quot;);
++	    echo &quot;\ntesting QString::isEmpty() passed&quot;;
++	}
++
++	function test_clear() {
++	    $s1 = new QString(&quot;hello&quot;);
++	    $s1-&gt;clear();
++	    $this-&gt;assertEquals($s1-&gt;__toString(), &quot;&quot;, &quot;Could not clear()!&quot;);
++	    echo &quot;\ntesting QString::clear() passed&quot;;
++	}
++
++    }    
++    
++?&gt;
+\ No newline at end of file
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000147.html">[Php-qt-svn] r303 - trunk/php_qt
+</A></li>
+	<LI>Next message: <A HREF="000149.html">[Php-qt-svn] r305 - in trunk: . examples/calculator php_qt tests
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#148">[ date ]</a>
+              <a href="thread.html#148">[ thread ]</a>
+              <a href="subject.html#148">[ subject ]</a>
+              <a href="author.html#148">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

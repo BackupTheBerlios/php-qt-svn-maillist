@@ -1,0 +1,270 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r238 - trunk/qt/classes
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-May/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r238%20-%20trunk/qt/classes&In-Reply-To=%3C200605151018.k4FAIT9U030169%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000081.html">
+   <LINK REL="Next"  HREF="000083.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r238 - trunk/qt/classes</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r238%20-%20trunk/qt/classes&In-Reply-To=%3C200605151018.k4FAIT9U030169%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r238 - trunk/qt/classes">tm243 at berlios.de
+       </A><BR>
+    <I>Mon May 15 12:18:29 CEST 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000081.html">[Php-qt-svn] r237 - in trunk/qt: . text_related
+</A></li>
+        <LI>Next message: <A HREF="000083.html">[Php-qt-svn] r239 - in trunk: . qt qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#82">[ date ]</a>
+              <a href="thread.html#82">[ thread ]</a>
+              <a href="subject.html#82">[ subject ]</a>
+              <a href="author.html#82">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-05-15 12:18:29 +0200 (Mon, 15 May 2006)
+New Revision: 238
+
+Modified:
+   trunk/qt/classes/qabstractbutton.cpp
+   trunk/qt/classes/qgridlayout.cpp
+   trunk/qt/classes/qlineedit.cpp
+Log:
+argument handling improved (addWidget(),text(),setText(),constructor),  bughunting.
+
+Modified: trunk/qt/classes/qabstractbutton.cpp
+===================================================================
+--- trunk/qt/classes/qabstractbutton.cpp	2006-05-14 14:10:30 UTC (rev 237)
++++ trunk/qt/classes/qabstractbutton.cpp	2006-05-15 10:18:29 UTC (rev 238)
+@@ -484,20 +484,18 @@
+ 		/* o public*/
+ 
+ 		/* const QString&amp; text,  */
+-
+ 	if (ZEND_NUM_ARGS() == 1){
+ 		zval *z_0; // define ZVAL
+ 		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
+ 			if(Z_TYPE_P(z_0) == IS_OBJECT){
+-			QAbstractButton *obj = (QAbstractButton*) PHP_QT_FETCH();
+-			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
+ 
++			    QAbstractButton *obj = static_cast&lt;QAbstractButton*&gt;(PHP_QT_FETCH());
++			    QObject* obj_z_0 = static_cast&lt;QObject*&gt;(php_qt_fetch(z_0));
+ 
+-			if(Z_OBJCE_P(z_0)-&gt;name == &quot;QString&quot;) {
+-				obj-&gt;setText((const QString&amp;) obj_z_0);
+-			RETURN_NULL();
++		        obj-&gt;setText((const QString&amp;) *obj_z_0);
++			    RETURN_NULL();
++
+ 			}
+-			}
+ 		}
+ 	}
+ }
+@@ -511,11 +509,12 @@
+ ZEND_METHOD(QAbstractButton, text){
+ 	if (ZEND_NUM_ARGS() == 0){
+ 			QAbstractButton *obj = (QAbstractButton*) PHP_QT_FETCH();
+-				QString return_object = (QString) obj-&gt;text();
++            QString *return_object = new QString;
++				*return_object = (QString) obj-&gt;text();
+ 				zend_class_entry *ce;                                   
+-				object_init_ex(return_value, QAbstractButton_ce_ptr);     
++				object_init_ex(return_value, QString_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+-				le.ptr = (void*) &amp;return_object;                                       
++				le.ptr = (void*) return_object;                                       
+ 				php_qt_register(return_value,le);                   
+ 				return;                                             
+ 	}
+
+Modified: trunk/qt/classes/qgridlayout.cpp
+===================================================================
+--- trunk/qt/classes/qgridlayout.cpp	2006-05-14 14:10:30 UTC (rev 237)
++++ trunk/qt/classes/qgridlayout.cpp	2006-05-15 10:18:29 UTC (rev 238)
+@@ -518,20 +518,42 @@
+ ZEND_METHOD(QGridLayout, addWidget)
+ {
+ ///QWidget*
++	if (ZEND_NUM_ARGS() == 5){
++		zval *z_0; // define ZVAL
++		zval *z_1; // define ZVAL
++		zval *z_2; // define ZVAL
++        zval *z_3; // define ZVAL
++        zval *z_4; // define ZVAL
++        
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zzzzz&quot;, &amp;z_0, &amp;z_1, &amp;z_2, &amp;z_3, &amp;z_4) == SUCCESS) {
++
++//			if(Z_TYPE_P(z_0) == IS_OBJECT &amp;&amp; Z_TYPE_P(z_1) == IS_LONG &amp;&amp; Z_TYPE_P(z_2) == IS_LONG &amp;&amp; Z_TYPE_P(z_3) == IS_LONG &amp;&amp; Z_TYPE_P(z_4) == IS_LONG){
++
++			    QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
++			    QWidget* obj_z_0 = static_cast&lt;QWidget*&gt;(php_qt_fetch(z_0));
++
++			    if(obj_z_0-&gt;inherits(&quot;QWidget&quot;)) {
++				    obj-&gt;addWidget(obj_z_0, (int) Z_LVAL_P(z_1), (int) Z_LVAL_P(z_2), (int) Z_LVAL_P(z_3), (Qt::Alignment) Z_LVAL_P(z_4));
++			        RETURN_NULL();
++			    } else { php_error(E_ERROR,&quot;argument is no QWidget&quot;); }
++//			} else { php_error(E_ERROR,&quot;argument not allowed&quot;); }
++		}
++	}
++///QWidget*
+ 	if (ZEND_NUM_ARGS() == 3){
+ 		zval *z_0; // define ZVAL
+ 		zval *z_1; // define ZVAL
+ 		zval *z_2; // define ZVAL
+ 		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zzz&quot;, &amp;z_0, &amp;z_1, &amp;z_2) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_OBJECT &amp;&amp; Z_TYPE_P(z_1) == IS_LONG &amp;&amp; Z_TYPE_P(z_2) == IS_LONG){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-			QWidget* obj_z_0 = static_cast&lt;QWidget*&gt;(php_qt_fetch(z_0));
++//			if(Z_TYPE_P(z_0) == IS_OBJECT &amp;&amp; Z_TYPE_P(z_1) == IS_LONG &amp;&amp; Z_TYPE_P(z_2) == IS_LONG){
++			    QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
++			    QWidget* obj_z_0 = static_cast&lt;QWidget*&gt;(php_qt_fetch(z_0));
+ 
+-			if(obj_z_0-&gt;inherits(&quot;QWidget&quot;)) {
+-				obj-&gt;addWidget(obj_z_0, (int) Z_LVAL_P(z_1), (Qt::Alignment) Z_LVAL_P(z_2));
+-			    RETURN_NULL();
+-			} else { php_error(E_ERROR,&quot;argument is no QWidget&quot;); }
+-			} else { php_error(E_ERROR,&quot;argument not allowed&quot;); }
++			    if(obj_z_0-&gt;inherits(&quot;QWidget&quot;)) {
++				    obj-&gt;addWidget(obj_z_0, (int) Z_LVAL_P(z_1), (Qt::Alignment) Z_LVAL_P(z_2));
++			        RETURN_NULL();
++			    } else { php_error(E_ERROR,&quot;argument is no QWidget&quot;); }
++//			} else { php_error(E_ERROR,&quot;argument not allowed&quot;); }
+ 		}
+ 	}
+ /*! o public*/
+
+Modified: trunk/qt/classes/qlineedit.cpp
+===================================================================
+--- trunk/qt/classes/qlineedit.cpp	2006-05-14 14:10:30 UTC (rev 237)
++++ trunk/qt/classes/qlineedit.cpp	2006-05-15 10:18:29 UTC (rev 238)
+@@ -276,7 +276,7 @@
+ 	if (ZEND_NUM_ARGS() == 1){
+ 		zval *z_0; // define ZVAL
+ 		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_LONG){
++			if(Z_TYPE_P(z_0) == IS_BOOL){
+ 			QLineEdit *obj = (QLineEdit*) PHP_QT_FETCH();
+ 
+ 
+@@ -446,15 +446,34 @@
+ 		zval *z_0; // define ZVAL
+ 		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
+ 			if(Z_TYPE_P(z_0) == IS_OBJECT){
+-			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
++			    QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
+ 
+ 
+-			if(obj_z_0-&gt;inherits(&quot;QWidget&quot;)) {
+-				QLineEdit *QLineEdit_ptr = new QLineEdit((QWidget*) obj_z_0);
++			    if(obj_z_0-&gt;inherits(&quot;QWidget&quot;)) {
++				    QLineEdit *QLineEdit_ptr = new QLineEdit((QWidget*) obj_z_0);
++				    PHP_QT_REGISTER(QLineEdit_ptr);
++
++				    RETURN_NULL();
++			    }
++			} else if(Z_TYPE_P(z_0) == IS_STRING){
++
++			    QString *str = new QString(&quot;&quot;);
++			    *str = QString(QString::fromUtf8(Z_STRVAL_P(z_0)));
++
++			    zend_class_entry *ce;                                   
++			    object_init_ex(z_0, QString_ce_ptr);
++			    zend_rsrc_list_entry le_;                            
++			    le_.ptr = str;
++			    php_qt_register(z_0,le_);                                 
++
++			    QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
++
++				QLineEdit *QLineEdit_ptr = new QLineEdit((const QString&amp;) *obj_z_0);
+ 				PHP_QT_REGISTER(QLineEdit_ptr);
+ 				RETURN_NULL();
++
+ 			}
+-			}
++            
+ 		}
+ 	}
+ 		/* oo public*/
+@@ -480,7 +499,6 @@
+ 
+ 			}
+ 
+-
+ 			if(Z_TYPE_P(z_0) == IS_OBJECT &amp;&amp; Z_TYPE_P(z_1) == IS_OBJECT){
+ 			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
+ 			QObject* obj_z_1 = (QObject*) php_qt_fetch(z_1);
+@@ -567,9 +585,9 @@
+ 				php_error(E_ERROR,&quot;Object not found&quot;);
+ 			}
+ 				zend_class_entry *ce;                                   
+-				object_init_ex(return_value, QLineEdit_ce_ptr);     
++				object_init_ex(return_value, QString_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+-				le.ptr = return_object;                                       
++				le.ptr = return_object;
+ 				php_qt_register(return_value,le);                   
+ 				return;                                             
+ 	}
+@@ -1153,10 +1171,20 @@
+ 
+ 			if(!strcmp(Z_OBJCE_P(z_0)-&gt;name,&quot;QString&quot;)) {
+ 				obj-&gt;setText((const QString&amp;) *obj_z_0);
+-			RETURN_NULL();
++			    RETURN_NULL();
+ 			}
+ 			}
++			if(Z_TYPE_P(z_0) == IS_STRING){
++
++			    QLineEdit *obj = (QLineEdit*) PHP_QT_FETCH();
++
++				obj-&gt;setText(Z_STRVAL_P(z_0));
++			    RETURN_NULL();
++			}
++			
++
+ 		}
++
+ 	}
+ }
+ 
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000081.html">[Php-qt-svn] r237 - in trunk/qt: . text_related
+</A></li>
+	<LI>Next message: <A HREF="000083.html">[Php-qt-svn] r239 - in trunk: . qt qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#82">[ date ]</a>
+              <a href="thread.html#82">[ thread ]</a>
+              <a href="subject.html#82">[ subject ]</a>
+              <a href="author.html#82">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

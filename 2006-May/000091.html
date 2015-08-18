@@ -1,0 +1,275 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r247 - trunk/tools
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-May/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r247%20-%20trunk/tools&In-Reply-To=%3C200605250922.k4P9Mrkc010330%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000090.html">
+   <LINK REL="Next"  HREF="000092.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r247 - trunk/tools</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r247%20-%20trunk/tools&In-Reply-To=%3C200605250922.k4P9Mrkc010330%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r247 - trunk/tools">tm243 at berlios.de
+       </A><BR>
+    <I>Thu May 25 11:22:53 CEST 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000090.html">[Php-qt-svn] r246 - trunk/tools
+</A></li>
+        <LI>Next message: <A HREF="000092.html">[Php-qt-svn] r248 - trunk/tools
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#91">[ date ]</a>
+              <a href="thread.html#91">[ thread ]</a>
+              <a href="subject.html#91">[ subject ]</a>
+              <a href="author.html#91">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-05-25 11:22:52 +0200 (Thu, 25 May 2006)
+New Revision: 247
+
+Modified:
+   trunk/tools/kalyptusCxxToPHP.pm
+Log:
+a lot of bugfixes were done.
+
+Modified: trunk/tools/kalyptusCxxToPHP.pm
+===================================================================
+--- trunk/tools/kalyptusCxxToPHP.pm	2006-05-24 15:31:29 UTC (rev 246)
++++ trunk/tools/kalyptusCxxToPHP.pm	2006-05-25 09:22:52 UTC (rev 247)
+@@ -50,6 +50,7 @@
+     *HEADER
+ 
+     *AG_ZEND_CLASS_ENTRY
++    *AG_DEFINES
+     *AG_EXTERN_ZEND_CLASS_ENTRY
+     *AG_VOID_REGISTER
+     *AG_ZEND_PHP_QT
+@@ -167,6 +168,11 @@
+     my ( $method ) = @_;
+ 
+     my $methodname = $method-&gt;{astNodeName};
++
++    if(IshouldSkip($method)){
++        return;
++    }
++
+     $methodname = &quot;__construct&quot; if($methodname eq $classname);
+ 
+     print CLASS &quot;ZEND_METHOD(&quot;.$classname.&quot;,&quot;.$methodname.&quot;){&quot;;
+@@ -303,14 +309,16 @@
+     my ( $params, $return, $flags, $methodname ) = @_;
+ 
+     my $returnType = cplusplusToZVAL($return);      # example: BOOL, LONG, DOUBLE, STRING, OBJECT
++    my $is_constructor = ($method-&gt;{astNodeName} eq $classname);
++
+     if($returnType eq &quot;unknown&quot;){
+         print CLASS &quot;php_error(E_ERROR,\&quot;unsupported return type &quot;.$return.&quot;\&quot;);&quot;;
+         return;
+     }
+ 
+-    if($flags =~ /s/){
++    if($flags =~ /s/){  # static
+     } else {
+-        print CLASS &quot;if(getThis() == NULL){php_error(E_ERROR,\&quot;method '&quot;.$methodname.&quot;' is not static\&quot;); RETURN_NULL;}&quot;;
++        print CLASS &quot;if(getThis() == NULL){php_error(E_ERROR,\&quot;method '&quot;.$methodname.&quot;' is not static\&quot;); RETURN_NULL();}&quot;;
+     }
+ 
+ 
+@@ -320,7 +328,9 @@
+     my @cargs = kdocUtil::splitUnnested(&quot;,&quot;, $params);  # fetch args
+ 
+     $preparation .= &quot;\n\t/// try &quot;.$params.&quot;\n&quot;;
+-    $preparation .= &quot;if(getThis != NULL){&quot;.$classname.&quot; *selfpointer = static_cast&lt;&quot;.$classname.&quot;*&gt;(PHP_QT_FETCH());}&quot;;
++    if(!$is_constructor){   # fetch self pointer
++        $preparation .= &quot;&quot;.$classname.&quot; *selfpointer; if(getThis() != NULL){selfpointer = static_cast&lt;&quot;.$classname.&quot;*&gt;(PHP_QT_FETCH());}&quot;;
++    }
+ 
+     # argument handling
+     foreach $arg (@cargs) {
+@@ -341,6 +351,7 @@
+         if(checkRPN($arg) eq &quot;reference&quot;){
+             $postfix = &quot;&amp;&quot;; # cast (old c cast)
+             $prefix = &quot;*&quot;;  # dereferencing the pointer
++            $prefix_ZVAL = &quot;&quot;;
+         } elsif (checkRPN($arg) eq &quot;pointer&quot;){
+             $postfix = &quot;*&quot;; # cast
+             $prefix = &quot;&quot;;   # nothing, is already a pointer
+@@ -348,6 +359,7 @@
+         } elsif (checkRPN($arg) eq &quot;normal&quot;){
+             $prefix = &quot;*&quot;;  # dereferencing the pointer
+             $postfix = &quot;&quot;;  # nothing to do here
++            $prefix_ZVAL = &quot;&quot;;
+         }
+ 
+         $cpp_call_params .= &quot;(&quot;.checkConst($arg).&quot; &quot;.$classType.$postfix.&quot;)&quot;;
+@@ -387,8 +399,9 @@
+     }
+ 
+     if($returnType eq &quot;OBJECT&quot;){
+-        if($flags =~ /s/){
+-            print CLASS &quot;if(getThis() == NULL){&quot;.$prefix.&quot; return_object = static_cast&lt;&quot;                .$returnClassName.$infix.&quot;&gt;(&quot;.$classname.&quot;::&quot;.$method-&gt;{astNodeName}.&quot;(&quot;.$cpp_call_params.&quot;));} else {print CLASS &quot;                .$prefix.&quot; return_object = static_cast&lt;&quot;               .$returnClassName.$infix.&quot;&gt;(selfpointer-&gt;&quot;.$method-&gt;{astNodeName}.&quot;(&quot;.$cpp_call_params.&quot;));}&quot;;
++        if($flags =~ /s/){  # static
++            print CLASS &quot;if(getThis() == NULL){&quot;.$prefix.&quot; return_object = static_cast&lt;&quot;                .$returnClassName.$infix.&quot;&gt;(&quot;.$classname.&quot;::&quot;.$method-&gt;{astNodeName}.&quot;(&quot;.$cpp_call_params.&quot;));} else {&quot;
++            .$prefix.&quot; return_object = static_cast&lt;&quot;               .$returnClassName.$infix.&quot;&gt;(selfpointer-&gt;&quot;.$method-&gt;{astNodeName}.&quot;(&quot;.$cpp_call_params.&quot;));}&quot;;
+         } else {
+             print CLASS $prefix.&quot; return_object = static_cast&lt;&quot;
+                 .$returnClassName.$infix.&quot;&gt;(selfpointer-&gt;&quot;.$method-&gt;{astNodeName}.&quot;(&quot;.$cpp_call_params.&quot;));&quot;;
+@@ -400,15 +413,20 @@
+         print CLASS &quot;php_qt_register(return_value,le);&quot;;
+         print CLASS &quot;return;&quot;;
+     } else {
+-        if($method-&gt;{astNodeName} eq $classname){
+-            print CLASS &quot;PHP_QT_REGISTER(selfpointer-&gt;&quot;.$method-&gt;{astNodeName}.&quot;(&quot;.$cpp_call_params.&quot;));&quot;;
++        my $for_string;
++        if($returnType eq &quot;STRING&quot;){    # RETURN_STRING macro needs 2 params
++            $for_string = &quot;, 1&quot;;
++        }
++        if($is_constructor){   # constructor
++            print CLASS $classname.&quot; *selfpointer = new &quot;.$classname.&quot;(&quot;.$cpp_call_params.&quot;);&quot;;
++            print CLASS &quot;PHP_QT_REGISTER(selfpointer);&quot;;
+         } else {
+-            if($flags =~ /s/){
++            if($flags =~ /s/){  # static
+                 print CLASS &quot;if(getThis() == NULL){RETURN_&quot;.$returnType.&quot;(&quot;.$classname.&quot;::&quot;
+-                    .$method-&gt;{astNodeName}.&quot;(&quot;.$cpp_call_params.&quot;));} else {RETURN_&quot;
+-                    .$returnType.&quot;(selfpointer-&gt;&quot;.$method-&gt;{astNodeName}.&quot;(&quot;.$cpp_call_params.&quot;));}&quot;;
++                    .$method-&gt;{astNodeName}.&quot;(&quot;.$cpp_call_params.&quot;)&quot;.$for_string.&quot;);} else {RETURN_&quot;
++                    .$returnType.&quot;(selfpointer-&gt;&quot;.$method-&gt;{astNodeName}.&quot;(&quot;.$cpp_call_params.&quot;)&quot;.$for_string.&quot;);}&quot;;
+             } else {
+-                print CLASS &quot;RETURN_&quot;.$returnType.&quot;(selfpointer-&gt;&quot;.$method-&gt;{astNodeName}.&quot;(&quot;.$cpp_call_params.&quot;));&quot;;
++                print CLASS &quot;RETURN_&quot;.$returnType.&quot;(selfpointer-&gt;&quot;.$method-&gt;{astNodeName}.&quot;(&quot;.$cpp_call_params.&quot;)&quot;.$for_string.&quot;);&quot;;
+             }
+         }
+     }
+@@ -493,6 +511,11 @@
+     open( AG_ZEND_CLASS_ENTRY, &quot;&gt;$file_ag_zend_class_entry&quot; ) || die &quot;Couldn't create $file_ag_zend_class_entry\n&quot;;
+     $file_ag_zend_class_entry =~ s/\.h/.h/;
+ 
++    # AG_ZEND_CLASS_ENTRY
++    my $file_ag_defines = &quot;$outputdir/defined.h&quot;;
++    open( AG_DEFINES, &quot;&gt;$file_ag_defines&quot; ) || die &quot;Couldn't create $file_ag_defines\n&quot;;
++    $file_ag_defines =~ s/\.h/.h/;
++
+     # AG_EXTERN_ZEND_CLASS_ENTRY
+     my $file_ag_extern_zend_class_entry = &quot;$outputdir/ag_extern_zend_class_entry.inc&quot;;
+     open( AG_EXTERN_ZEND_CLASS_ENTRY, &quot;&gt;$file_ag_extern_zend_class_entry&quot; ) || die &quot;Couldn't create $file_ag_extern_zend_class_entry\n&quot;;
+@@ -572,7 +595,7 @@
+     my ($node) = @_;
+ 
+     print AG_ZEND_CLASS_ENTRY &quot;zend_class_entry *&quot;,$node-&gt;{astNodeName},&quot;_ce_ptr;\n&quot;;
+-    print AG_ZEND_CLASS_ENTRY &quot;#ifndef PHP_QT_&quot;.$classname.&quot;\n#define PHP_QT_&quot;.$classname.&quot;\n\n&quot;;
++    print AG_DEFINES &quot;#ifndef PHP_QT_&quot;.$classname.&quot;\n#define PHP_QT_&quot;.$classname.&quot;\n#endif\n\n&quot;;
+ 
+     print AG_CONFIGM4 &quot;\tqt/classes/&quot;,lc($node-&gt;{astNodeName}),&quot;.cpp \\ \n&quot;;
+     print AG_EXTERN_ZEND_CLASS_ENTRY &quot;extern zend_class_entry *&quot;,$node-&gt;{astNodeName},&quot;_ce_ptr;\n&quot;;
+@@ -608,6 +631,7 @@
+     &quot;;
+ 
+     close AG_ZEND_CLASS_ENTRY;
++    close AG_DEFINES;
+     close AG_EXTERN_ZEND_CLASS_ENTRY;
+     close AG_ZEND_PHP_QT;
+     close AG_CONFIGM4;
+@@ -704,7 +728,7 @@
+         const QMetaObject* metaObject() const;
+         int qt_metacall(QMetaObject::Call _c, int _id, void **_a);
+     };
+-    PHP_QT_MOC(&quot;.$classname.&quot;);
++    //PHP_QT_MOC(&quot;.$classname.&quot;);
+ &quot;;
+ # TODO:
+ # virtual and private classes
+@@ -778,10 +802,14 @@
+ {
+ 	my ( $cplusplusType )  = @_;
+ 
++    if($cplusplusType eq &quot;&quot;){
++        return &quot;&quot;;
++    }
++
+ 	if ( $cplusplusType =~ /bool/) {
+ 		return &quot;BOOL&quot;;
+ 	} elsif ( $cplusplusType =~ /\s*void\s*\**/ ) {
+-		return &quot;NULL&quot;;
++		return &quot;VOID&quot;;
+ 	} elsif ( $cplusplusType =~ /\s*::\s*/) {
+ 		return &quot;LONG&quot;;
+ 	} elsif ( $cplusplusType =~ /\s*\bint\s*\&amp;*/) {
+@@ -904,4 +932,40 @@
+     return $endif;
+ }
+ 
++# flags:
++# virtual           v
++# static            's'
++# pure              p
++# const             c
++# slots             l
++# inline            i
++# signal            n
++# k_dcop            d
++# k_dcop_signals    z
++# k_dcop_hidden     y
++# explicit          t
++
++sub IshouldSkip
++{
++    my ($method) = @_;
++
++    if($method-&gt;{astNodeName} =~ /qt_/)
++    {   # skip qt_cast, ...
++        return 1;
++    }
++#    if($method-&gt;{Flags} =~ /n|v|t/){    # skip slots
++    if($method-&gt;{Flags} =~ /n|v/){    # skip slots
++        return 1;
++    }
++    if($method-&gt;{Access} eq &quot;protected&quot;){
++        return 1;
++    }
++    if($method-&gt;{astNodeName} eq &quot;className&quot;
++        || $method-&gt;{astNodeName} eq &quot;qObject&quot;)
++    {
++        return 1;
++    }
++
++}
++
+ 1;
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000090.html">[Php-qt-svn] r246 - trunk/tools
+</A></li>
+	<LI>Next message: <A HREF="000092.html">[Php-qt-svn] r248 - trunk/tools
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#91">[ date ]</a>
+              <a href="thread.html#91">[ thread ]</a>
+              <a href="subject.html#91">[ subject ]</a>
+              <a href="author.html#91">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

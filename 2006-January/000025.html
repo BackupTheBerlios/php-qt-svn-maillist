@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r176 - trunk/qt
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-January/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r176%20-%20trunk/qt&In-Reply-To=%3C200601141541.k0EFf6p4013558%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000024.html">
+   <LINK REL="Next"  HREF="000026.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r176 - trunk/qt</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r176%20-%20trunk/qt&In-Reply-To=%3C200601141541.k0EFf6p4013558%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r176 - trunk/qt">tm243 at berlios.de
+       </A><BR>
+    <I>Sat Jan 14 16:41:06 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000024.html">[Php-qt-svn] r175 - trunk
+</A></li>
+        <LI>Next message: <A HREF="000026.html">[Php-qt-svn] r177 - in trunk: . qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#25">[ date ]</a>
+              <a href="thread.html#25">[ thread ]</a>
+              <a href="subject.html#25">[ subject ]</a>
+              <a href="author.html#25">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-01-14 16:41:05 +0100 (Sat, 14 Jan 2006)
+New Revision: 176
+
+Modified:
+   trunk/qt/ag_php_qt_cpp.inc
+Log:
+fixed wrong linking of qchar.
+
+Modified: trunk/qt/ag_php_qt_cpp.inc
+===================================================================
+--- trunk/qt/ag_php_qt_cpp.inc	2006-01-14 15:39:16 UTC (rev 175)
++++ trunk/qt/ag_php_qt_cpp.inc	2006-01-14 15:41:05 UTC (rev 176)
+@@ -584,7 +584,7 @@
+ 	ZEND_ME(QLabel,qt_cast,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QLabel,metaObject,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QLabel,setScaledContents,NULL,ZEND_ACC_PUBLIC)
+-	ZEND_ME(QLabel,event,NULL,ZEND_ACC_PROTECTED)
++	ZEND_ME(QLabel,event,NULL,ZEND_ACC_PUBLI)	// changed manually
+ 	ZEND_ME(QLabel,indent,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QLabel,qt_emit,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QLabel,pixmap,NULL,ZEND_ACC_PUBLIC)
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000024.html">[Php-qt-svn] r175 - trunk
+</A></li>
+	<LI>Next message: <A HREF="000026.html">[Php-qt-svn] r177 - in trunk: . qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#25">[ date ]</a>
+              <a href="thread.html#25">[ thread ]</a>
+              <a href="subject.html#25">[ subject ]</a>
+              <a href="author.html#25">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

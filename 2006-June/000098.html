@@ -1,0 +1,364 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r255 - in trunk: tests tutorials/calculator tutorials/t1 tutorials/t2 tutorials/t3 tutorials/t4 tutorials/t5 tutorials/t6 tutorials/t7
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-June/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r255%20-%20in%20trunk%3A%20tests%20tutorials/calculator%20tutorials/t1%20tutorials/t2%20tutorials/t3%20tutorials/t4%20tutorials/t5%20tutorials/t6%20tutorials/t7&In-Reply-To=%3C200606062052.k56KqWRP031631%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000099.html">
+   <LINK REL="Next"  HREF="000100.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r255 - in trunk: tests tutorials/calculator tutorials/t1 tutorials/t2 tutorials/t3 tutorials/t4 tutorials/t5 tutorials/t6 tutorials/t7</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r255%20-%20in%20trunk%3A%20tests%20tutorials/calculator%20tutorials/t1%20tutorials/t2%20tutorials/t3%20tutorials/t4%20tutorials/t5%20tutorials/t6%20tutorials/t7&In-Reply-To=%3C200606062052.k56KqWRP031631%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r255 - in trunk: tests tutorials/calculator tutorials/t1 tutorials/t2 tutorials/t3 tutorials/t4 tutorials/t5 tutorials/t6 tutorials/t7">tm243 at berlios.de
+       </A><BR>
+    <I>Tue Jun  6 22:52:32 CEST 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000099.html">[Php-qt-svn] r254 - in trunk/qt: . classes
+</A></li>
+        <LI>Next message: <A HREF="000100.html">[Php-qt-svn] r256 - trunk/qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#98">[ date ]</a>
+              <a href="thread.html#98">[ thread ]</a>
+              <a href="subject.html#98">[ subject ]</a>
+              <a href="author.html#98">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-06-06 22:52:31 +0200 (Tue, 06 Jun 2006)
+New Revision: 255
+
+Modified:
+   trunk/tests/box2buttons.php
+   trunk/tests/instances.php
+   trunk/tests/unicode.php
+   trunk/tutorials/calculator/calculator.php
+   trunk/tutorials/calculator/main.php
+   trunk/tutorials/t1/main.php
+   trunk/tutorials/t2/main.php
+   trunk/tutorials/t3/main.php
+   trunk/tutorials/t4/main.php
+   trunk/tutorials/t5/main.php
+   trunk/tutorials/t6/main.php
+   trunk/tutorials/t7/main.php
+Log:
+constructor of QApplication has been changed, adjusted; two bugs in calculator with 'this' pointer.
+
+Modified: trunk/tests/box2buttons.php
+===================================================================
+--- trunk/tests/box2buttons.php	2006-06-06 20:44:55 UTC (rev 254)
++++ trunk/tests/box2buttons.php	2006-06-06 20:52:31 UTC (rev 255)
+@@ -32,7 +32,7 @@
+ 	}
+ 	
+ 	
+-	$app = new QApplication();
++	$app = new QApplication($argc,$argv);
+ 
+ 	$box = new Box();
+ 	$box-&gt;show();
+
+Modified: trunk/tests/instances.php
+===================================================================
+--- trunk/tests/instances.php	2006-06-06 20:44:55 UTC (rev 254)
++++ trunk/tests/instances.php	2006-06-06 20:52:31 UTC (rev 255)
+@@ -3,7 +3,7 @@
+     dl('php_qt.' . PHP_SHLIB_SUFFIX);
+   }
+  
+-  $app = new QCoreApplication();
++  $app = new QCoreApplication($argc,$argv);
+ 
+   echo $app.&quot; app\n&quot;;  
+ 
+
+Modified: trunk/tests/unicode.php
+===================================================================
+--- trunk/tests/unicode.php	2006-06-06 20:44:55 UTC (rev 254)
++++ trunk/tests/unicode.php	2006-06-06 20:52:31 UTC (rev 255)
+@@ -27,6 +27,11 @@
+ 			foreach($dataNodes as $data)
+ 			{
+ 				$this-&gt;buttons[] = new QLineEdit(QString::fromUtf8($data-&gt;nodeValue, -1),$this);
++
++	            foreach($data-&gt;attributes as $attribute){
++                    $this-&gt;layout-&gt;addWidget(new QLabel($attribute-&gt;name.&quot;: &quot;.$attribute-&gt;value));
++                }
++
+ 				$this-&gt;layout-&gt;addWidget($this-&gt;buttons[count($this-&gt;buttons)-1]);
+ 			}
+ 
+@@ -40,7 +45,7 @@
+ 
+ 	}
+ 
+-    $app = new QApplication();
++    $app = new QApplication($argc,$argv);
+ 	$widget = new TestButtons();
+ 	$widget-&gt;show();
+ 	$app-&gt;exec();
+
+Modified: trunk/tutorials/calculator/calculator.php
+===================================================================
+--- trunk/tutorials/calculator/calculator.php	2006-06-06 20:44:55 UTC (rev 254)
++++ trunk/tutorials/calculator/calculator.php	2006-06-06 20:52:31 UTC (rev 255)
+@@ -68,7 +68,7 @@
+             $this-&gt;pendingAdditiveOperator = new QString();
+             $this-&gt;pendingMultiplicativeOperator = new QString();
+ 
+-            $this-&gt;display = new QLineEdit(&quot;0&quot;);
++            $this-&gt;display = new QLineEdit(&quot;Thor&quot;);
+             $this-&gt;display-&gt;setReadOnly(true);
+             $this-&gt;display-&gt;setAlignment(QT_ALIGNMENT_ALIGNRIGHT);
+             $this-&gt;display-&gt;setMaxLength(15);
+@@ -102,13 +102,13 @@
+             $this-&gt;equalButton = $this-&gt;createButton(&quot;=&quot;, SLOT(&quot;equalClicked()&quot;));
+ 
+             $this-&gt;mainLayout = new QGridLayout($this);
++
+ //            $this-&gt;mainLayout-&gt;setSizeConstraint(&quot;QLayout::SetFixedSize&quot;);
+ 
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;display, 0, 0, 1, 6);
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;backspaceButton, 1, 0, 1, 2);
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;clearButton, 1, 2, 1, 2);
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;clearAllButton, 1, 4, 1, 2);
+-
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;clearMemoryButton, 2, 0);
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;readMemoryButton, 3, 0);
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;setMemoryButton, 4, 0);
+@@ -207,7 +207,7 @@
+             $operand = $this-&gt;display-&gt;text()-&gt;toDouble();
+ 
+             if (!$this-&gt;pendingMultiplicativeOperator-&gt;isEmpty()) {
+-                if (!calculate($operand, $this-&gt;pendingMultiplicativeOperator)) {
++                if (!$this-&gt;calculate($operand, $this-&gt;pendingMultiplicativeOperator)) {
+                     $this-&gt;abortOperation();
+                     return;
+                 }
+@@ -218,7 +218,7 @@
+             }
+ 
+             if (!$this-&gt;pendingAdditiveOperator-&gt;isEmpty()) {
+-                if (!calculate(operand, $this-&gt;pendingAdditiveOperator)) {
++                if (!$this-&gt;calculate(operand, $this-&gt;pendingAdditiveOperator)) {
+                     $this-&gt;abortOperation();
+                     return;
+                 }
+
+Modified: trunk/tutorials/calculator/main.php
+===================================================================
+--- trunk/tutorials/calculator/main.php	2006-06-06 20:44:55 UTC (rev 254)
++++ trunk/tutorials/calculator/main.php	2006-06-06 20:52:31 UTC (rev 255)
+@@ -13,7 +13,7 @@
+ 
+     require_once('calculator.php');
+ 
+-    $app = new QApplication($argc,0);
++    $app = new QApplication($argc,$argv);
+ 
+     $calc = new Calculator();
+     $calc-&gt;show();
+
+Modified: trunk/tutorials/t1/main.php
+===================================================================
+--- trunk/tutorials/t1/main.php	2006-06-06 20:44:55 UTC (rev 254)
++++ trunk/tutorials/t1/main.php	2006-06-06 20:52:31 UTC (rev 255)
+@@ -12,7 +12,7 @@
+ 	}
+ 
+ 
+-    $app = new QApplication($argc,0);
++    $app = new QApplication($argc,$argv);
+ 
+     $hello = new QPushButton(&quot;Hello world!&quot;);
+ //    hello.resize(100, 30);
+
+Modified: trunk/tutorials/t2/main.php
+===================================================================
+--- trunk/tutorials/t2/main.php	2006-06-06 20:44:55 UTC (rev 254)
++++ trunk/tutorials/t2/main.php	2006-06-06 20:52:31 UTC (rev 255)
+@@ -13,13 +13,14 @@
+ 	}
+ 
+ 
+-    $app = new QApplication($argc,0);
++    $app = new QApplication($argc,$argv);
+ 
+     $quit = new QPushButton(&quot;Quit&quot;);
+     $quit-&gt;resize(75,30);
+ //    $quit-&gt;setFont();
+ 
+-    QObject::connect($quit,SIGNAL(&quot;clicked()&quot;),$app,SLOT(&quot;quit()&quot;));
++//    QObject::connect($quit,SIGNAL(&quot;clicked()&quot;),$app,SLOT(&quot;quit()&quot;));
++    $quit-&gt;connect($quit,SIGNAL(&quot;clicked()&quot;),$app,SLOT(&quot;quit()&quot;));
+ 
+     $quit-&gt;show();
+ 
+
+Modified: trunk/tutorials/t3/main.php
+===================================================================
+--- trunk/tutorials/t3/main.php	2006-06-06 20:44:55 UTC (rev 254)
++++ trunk/tutorials/t3/main.php	2006-06-06 20:52:31 UTC (rev 255)
+@@ -13,16 +13,20 @@
+ 	}
+ 
+ 
+-    $app = new QApplication($argc,0);
++    $app = new QApplication($argc,$argv);
+ 
+     $window = new QWidget();
+     $window-&gt;resize(200,120);
+ 
++    $window-&gt;setAccessibleName(&quot;Julchen&quot;);
++echo $window-&gt;accessibleName();
++
+     $quit = new QPushButton(&quot;Quit&quot;, $window);
+ //    $quit-&gt;setFont();
+     $quit-&gt;setGeometry(10, 40, 180, 40);
+ 
+-    QObject::connect($quit,SIGNAL(&quot;clicked()&quot;),$app,SLOT(&quot;quit()&quot;));
++//    QObject::connect($quit,SIGNAL(&quot;clicked()&quot;),$app,SLOT(&quot;quit()&quot;));
++    $quit-&gt;connect($quit,SIGNAL(&quot;clicked()&quot;),$app,SLOT(&quot;quit()&quot;));
+ 
+     $window-&gt;show();
+ 
+
+Modified: trunk/tutorials/t4/main.php
+===================================================================
+--- trunk/tutorials/t4/main.php	2006-06-06 20:44:55 UTC (rev 254)
++++ trunk/tutorials/t4/main.php	2006-06-06 20:52:31 UTC (rev 255)
+@@ -35,7 +35,7 @@
+     
+     }
+ 
+-    $app = new QApplication($argc,0);
++    $app = new QApplication($argc,$argv);
+ 
+     $widget = new MyWidget();
+ 
+
+Modified: trunk/tutorials/t5/main.php
+===================================================================
+--- trunk/tutorials/t5/main.php	2006-06-06 20:44:55 UTC (rev 254)
++++ trunk/tutorials/t5/main.php	2006-06-06 20:52:31 UTC (rev 255)
+@@ -47,7 +47,7 @@
+     }
+ 
+ 
+-    $app = new QApplication($argc,0);
++    $app = new QApplication($argc,$argv);
+     $widget = new MyWidget();
+     $widget-&gt;show();
+ 
+
+Modified: trunk/tutorials/t6/main.php
+===================================================================
+--- trunk/tutorials/t6/main.php	2006-06-06 20:44:55 UTC (rev 254)
++++ trunk/tutorials/t6/main.php	2006-06-06 20:52:31 UTC (rev 255)
+@@ -65,7 +65,7 @@
+         }
+     }
+ 
+-    $app = new QApplication($argc,0);
++    $app = new QApplication($argc,$argv);
+     $widget = new MyWidget();
+     $widget-&gt;show();
+     $app-&gt;exec();
+
+Modified: trunk/tutorials/t7/main.php
+===================================================================
+--- trunk/tutorials/t7/main.php	2006-06-06 20:44:55 UTC (rev 254)
++++ trunk/tutorials/t7/main.php	2006-06-06 20:52:31 UTC (rev 255)
+@@ -3,7 +3,7 @@
+     **
+     ** Qt tutorial 7
+     **
+-    ** <A HREF="http://doc.trolltech.com/4.0/tutorial-t7.html">http://doc.trolltech.com/4.0/tutorial-t7.html</A>
++    ** <A HREF="http://doc.trolltech.com/4.0/tutorial-t6.html">http://doc.trolltech.com/4.0/tutorial-t6.html</A>
+     **
+     ****************************************************************/
+ 
+@@ -26,6 +26,7 @@
+ 
+             $this-&gt;lcd = new QLCDNumber(2,$this);
+             $this-&gt;slider = new QSlider($this);
++
+             $this-&gt;slider-&gt;setOrientation(QT_ORIENTATIONS_HORIZONTAL);
+ 
+             $this-&gt;slider-&gt;setRange(0, 99);
+@@ -47,6 +48,10 @@
+             $this-&gt;slider-&gt;setValue($value);
+         }
+ 
++        function meinSlot(){
++            echo &quot;meinSlot&quot;;
++        }
++
+     };
+ 
+     class MyWidget extends QWidget
+@@ -60,9 +65,10 @@
+             parent::__construct();
+ 
+             $this-&gt;quit = new QPushButton(&quot;Quit&quot;);
+-    //        $this-&gt;quit-&gt;setFont(QFont(&quot;Times&quot;, 18, QFont::Bold));
++            $this-&gt;quit-&gt;setFont(new QFont(&quot;Times&quot;, 18, 1));
+             $this-&gt;connect($this-&gt;quit, SIGNAL(&quot;clicked()&quot;), QApplication::instance(), SLOT(&quot;quit()&quot;));
+ 
++
+             $this-&gt;grid = new QGridLayout();
+             for ($row = 0; $row &lt; 3; ++$row) {
+                 for ($column = 0; $column &lt; 3; ++$column) {
+@@ -72,6 +78,7 @@
+                         $this-&gt;connect($lcdRange, SIGNAL(&quot;valueChanged(int)&quot;), $previousRange, SLOT(&quot;setValue(int)&quot;));
+                     $previousRange = $lcdRange;
+                 }
++
+             }
+ 
+             $this-&gt;layout = new QVBoxLayout($this);
+@@ -81,7 +88,7 @@
+         }
+     }
+ 
+-    $app = new QApplication($argc,0);
++    $app = new QApplication($argc,$argv);
+     $widget = new MyWidget();
+     $widget-&gt;show();
+     $app-&gt;exec();
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000099.html">[Php-qt-svn] r254 - in trunk/qt: . classes
+</A></li>
+	<LI>Next message: <A HREF="000100.html">[Php-qt-svn] r256 - trunk/qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#98">[ date ]</a>
+              <a href="thread.html#98">[ thread ]</a>
+              <a href="subject.html#98">[ subject ]</a>
+              <a href="author.html#98">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

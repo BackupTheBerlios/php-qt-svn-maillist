@@ -1,0 +1,124 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r338 - trunk/php_qt
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-June/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r338%20-%20trunk/php_qt&In-Reply-To=%3C200706062140.l56LekvJ005013%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000181.html">
+   <LINK REL="Next"  HREF="000183.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r338 - trunk/php_qt</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r338%20-%20trunk/php_qt&In-Reply-To=%3C200706062140.l56LekvJ005013%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r338 - trunk/php_qt">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Wed Jun  6 23:40:46 CEST 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000181.html">[Php-qt-svn] r337 - trunk/php_qt
+</A></li>
+        <LI>Next message: <A HREF="000183.html">[Php-qt-svn] r339 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#182">[ date ]</a>
+              <a href="thread.html#182">[ thread ]</a>
+              <a href="subject.html#182">[ subject ]</a>
+              <a href="author.html#182">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2007-06-06 23:40:45 +0200 (Wed, 06 Jun 2007)
+New Revision: 338
+
+Modified:
+   trunk/php_qt/functions.cpp
+   trunk/php_qt/handlers.cpp
+   trunk/php_qt/php_qt.h
+Log:
+* #include statements cleaned up
+
+
+
+Modified: trunk/php_qt/functions.cpp
+===================================================================
+--- trunk/php_qt/functions.cpp	2007-06-06 21:30:22 UTC (rev 337)
++++ trunk/php_qt/functions.cpp	2007-06-06 21:40:45 UTC (rev 338)
+@@ -24,6 +24,8 @@
+ #include &quot;php_qt.h&quot;
+ #include &quot;phpqt_internals.h&quot;
+ 
++#include &lt;QtCore/QObject&gt;
++
+ extern Smoke *qt_Smoke;
+ extern Smoke::Index qstring;
+ extern zend_class_entry* qstring_ce;
+
+Modified: trunk/php_qt/handlers.cpp
+===================================================================
+--- trunk/php_qt/handlers.cpp	2007-06-06 21:30:22 UTC (rev 337)
++++ trunk/php_qt/handlers.cpp	2007-06-06 21:40:45 UTC (rev 338)
+@@ -7,6 +7,7 @@
+  *                                                                         *
+  ***************************************************************************/
+ 
++#include &lt;QtGui/QWidget&gt;
+ #include &lt;QtCore/qprocess.h&gt;
+ #include &lt;QtCore/qtextcodec.h&gt;
+ 
+
+Modified: trunk/php_qt/php_qt.h
+===================================================================
+--- trunk/php_qt/php_qt.h	2007-06-06 21:30:22 UTC (rev 337)
++++ trunk/php_qt/php_qt.h	2007-06-06 21:40:45 UTC (rev 338)
+@@ -47,16 +47,8 @@
+ 
+ #include &lt;QtCore/QStack&gt;
+ #include &lt;QtCore/QHash&gt;
+-#include &lt;QtCore/QTextStream&gt;
+-#include &lt;QtCore/QVariant&gt;
+ #include &lt;QtCore/QString&gt;
+-#include &lt;QtCore/QCoreApplication&gt;
+-#include &lt;QtGui/QWidget&gt;
+-#include &lt;QtGui/QApplication&gt;
+-#include &lt;QtGui/QLayout&gt;
+-#include &lt;QtGui/QLCDNumber&gt;
+-#include &lt;QtGui/QFont&gt;
+-#include &lt;QtCore/QDebug&gt;
++#include &lt;QtCore/QMetaObject&gt;
+ 
+ // for older php versions
+ #ifndef ZEND_MN
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000181.html">[Php-qt-svn] r337 - trunk/php_qt
+</A></li>
+	<LI>Next message: <A HREF="000183.html">[Php-qt-svn] r339 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#182">[ date ]</a>
+              <a href="thread.html#182">[ thread ]</a>
+              <a href="subject.html#182">[ subject ]</a>
+              <a href="author.html#182">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

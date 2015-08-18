@@ -1,0 +1,242 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r319 - trunk/php_qt
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-May/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r319%20-%20trunk/php_qt&In-Reply-To=%3C200705222148.l4MLm7D3013121%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000162.html">
+   <LINK REL="Next"  HREF="000164.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r319 - trunk/php_qt</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r319%20-%20trunk/php_qt&In-Reply-To=%3C200705222148.l4MLm7D3013121%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r319 - trunk/php_qt">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Tue May 22 23:48:07 CEST 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000162.html">[Php-qt-svn] r318 - trunk/tests
+</A></li>
+        <LI>Next message: <A HREF="000164.html">[Php-qt-svn] r320 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#163">[ date ]</a>
+              <a href="thread.html#163">[ thread ]</a>
+              <a href="subject.html#163">[ subject ]</a>
+              <a href="author.html#163">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2007-05-22 23:48:06 +0200 (Tue, 22 May 2007)
+New Revision: 319
+
+Modified:
+   trunk/php_qt/functions.cpp
+   trunk/php_qt/marshall_basetypes.h
+   trunk/php_qt/marshall_types.cpp
+   trunk/php_qt/php_qt.cpp
+   trunk/php_qt/smokephp.cpp
+Log:
+* worked on a memory problem at VirtualMethodCall
+
+
+
+Modified: trunk/php_qt/functions.cpp
+===================================================================
+--- trunk/php_qt/functions.cpp	2007-05-22 08:59:26 UTC (rev 318)
++++ trunk/php_qt/functions.cpp	2007-05-22 21:48:06 UTC (rev 319)
+@@ -173,12 +173,13 @@
+ 		cout &lt;&lt; &quot;PHP Object \n(&quot; &lt;&lt; endl;
+ 
+ 		cout &lt;&lt; &quot;\t       zval =&gt; &quot; &lt;&lt; zobject &lt;&lt; endl;
+-// 		cout &lt;&lt; &quot;\tclass entry =&gt; &quot; &lt;&lt; Z_OBJCE_P(zobject)-&gt;name &lt;&lt; endl;
++		if(Z_TYPE_P(zobject) == IS_OBJECT)
++			cout &lt;&lt; &quot;\tclass entry =&gt; &quot; &lt;&lt; Z_OBJCE_P(zobject)-&gt;name &lt;&lt; endl;
+ 		cout &lt;&lt; &quot;\t  ref count =&gt; &quot; &lt;&lt; zobject-&gt;refcount &lt;&lt; endl;
+ 		cout &lt;&lt; &quot;\t     is_ref =&gt; &quot; &lt;&lt; (int) zobject-&gt;is_ref &lt;&lt; endl;
+ 		cout &lt;&lt; &quot;\t       type =&gt; &quot; &lt;&lt; printType(Z_TYPE_P(zobject)) &lt;&lt; endl;
+ 
+-		if(Z_TYPE_P(zobject) == 5)
++		if(Z_TYPE_P(zobject) == IS_OBJECT)
+ 		{
+ 		 cout &lt;&lt;&quot;\t obj-handle =&gt; &quot; &lt;&lt; zobject-&gt;value.obj.handle &lt;&lt; endl;
+ 		}
+@@ -192,7 +193,7 @@
+ 		cout &lt;&lt; &quot;PHP-Qt object \n(&quot; &lt;&lt; endl;
+ 
+ 		cout &lt;&lt; &quot;\t       zval =&gt; &quot; &lt;&lt; zobject &lt;&lt; endl;
+-	// 	cout &lt;&lt; &quot;\tclass entry =&gt; &quot; &lt;&lt; Z_OBJCE_P(zobject)-&gt;name &lt;&lt; endl;
++// 		cout &lt;&lt; &quot;\tclass entry =&gt; &quot; &lt;&lt; Z_OBJCE_P(zobject)-&gt;name &lt;&lt; endl;
+ 		cout &lt;&lt; &quot;\tclass entry =&gt; &quot; &lt;&lt; o-&gt;ce_ptr-&gt;name &lt;&lt; endl;
+ 		cout &lt;&lt; &quot;\t  ref count =&gt; &quot; &lt;&lt; zobject-&gt;refcount &lt;&lt; endl;
+ 		cout &lt;&lt; &quot;\t     is_ref =&gt; &quot; &lt;&lt; (int) zobject-&gt;is_ref &lt;&lt; endl;
+
+Modified: trunk/php_qt/marshall_basetypes.h
+===================================================================
+--- trunk/php_qt/marshall_basetypes.h	2007-05-22 08:59:26 UTC (rev 318)
++++ trunk/php_qt/marshall_basetypes.h	2007-05-22 21:48:06 UTC (rev 319)
+@@ -97,7 +97,7 @@
+ 			php_error(E_WARNING, &quot;References can't be nil\n&quot;);
+ 			m-&gt;unsupported();
+ 		}
+-					
++
+ 		m-&gt;item().s_class = 0;
+ 		return;
+ 	}
+@@ -119,8 +119,9 @@
+ 		o-&gt;classId,			// from
+ 		o-&gt;smoke-&gt;idClass(cl.className)	// to
+ 		);
++	
++	m-&gt;item().s_class = ptr;
+ 
+-	m-&gt;item().s_class = ptr;
+ 	return;
+ }
+ 
+@@ -146,7 +147,7 @@
+ 		}
+ 		return;
+ 
+-	//create a new PHP obnject (return_value):
++	//create a new PHP object (return_value):
+ 	} else {
+ 		void* __p = m-&gt;item().s_class;
+ 	    QObject* __qo = ((QObject*) __p);
+
+Modified: trunk/php_qt/marshall_types.cpp
+===================================================================
+--- trunk/php_qt/marshall_types.cpp	2007-05-22 08:59:26 UTC (rev 318)
++++ trunk/php_qt/marshall_types.cpp	2007-05-22 21:48:06 UTC (rev 319)
+@@ -387,16 +387,16 @@
+  */
+ 
+ VirtualMethodCall::VirtualMethodCall(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval* obj, zval ***sp) :
+-	MethodCallBase(smoke,meth,stack), _obj(obj), _sp(sp)
++	MethodCallBase(smoke,meth,stack), _obj(obj)
+ {
+ 	identifier = &quot;VirtualMethodCall&quot;;
+-	_sp = sp;
+-	_args = _smoke-&gt;argumentList + method().args;
++ 	_sp = sp;
++  	_args = _smoke-&gt;argumentList + method().args;
+ }
+ 
+ VirtualMethodCall::~VirtualMethodCall() 
+ {
+-//    delete[] _stack;
++    delete[] _stack;
+ }
+ 
+ Marshall::Action 
+@@ -407,11 +407,9 @@
+ 
+ zval*
+ VirtualMethodCall::var() 
+-{ 
+-    if(*_sp[_cur] == NULL) {
+-	MAKE_STD_ZVAL(*_sp[_cur]);
+-    }
+-    return (zval*) *_sp[_cur]; 
++{
++	*_sp[_cur] = (zval*) emalloc(sizeof(zval));
++    return (zval*) *_sp[_cur];
+ }
+ 
+ int 
+@@ -426,10 +424,10 @@
+ 	if (_called) return;
+ 	_called = true;
+ 
+-	phpqt_callPHPMethod(_obj, (char*) _smoke-&gt;methodNames[method().name], method().numArgs, _sp);
++	phpqt_callPHPMethod(_obj, (char*) _smoke-&gt;methodNames[method().name], items(), _sp);
+ 
+ 	zval _retval;
+-	VirtualMethodReturnValue r(_smoke, _method, _stack, _retval);
++ 	VirtualMethodReturnValue r(_smoke, _method, _stack, _retval);
+ }
+ 
+ bool 
+@@ -445,6 +443,7 @@
+ MethodCall::MethodCall(Smoke *smoke, Smoke::Index method, zval* target, zval ***sp, int items, zval *retval, zval** return_value_ptr) :
+ 	MethodCallBase(smoke,method), _target(target), _current_object(0), _sp(sp), _items(items), _retval(retval), _return_value_ptr(return_value_ptr)
+ {
++
+ 	identifier = &quot;MethodCall&quot;;
+     if(target != NULL)
+     {
+
+Modified: trunk/php_qt/php_qt.cpp
+===================================================================
+--- trunk/php_qt/php_qt.cpp	2007-05-22 08:59:26 UTC (rev 318)
++++ trunk/php_qt/php_qt.cpp	2007-05-22 21:48:06 UTC (rev 319)
+@@ -282,11 +282,11 @@
+     smokephp_prepareMethodName(args, argc, methodNameStack);	// #, $, ?
+     Smoke::Index method = smokephp_getMethod(ce-&gt;name, methodNameStack.top()-&gt;constData(), ZEND_NUM_ARGS(), args);
+ 
+-	MethodCall c(PQ::smoke(), method, getThis(), args, argc-1, getThis(), return_value_ptr);
++ 	MethodCall c(PQ::smoke(), method, getThis(), args, argc-1, getThis(), return_value_ptr);
+     c.next();
+ 
+ 	// smokephp_object is created above in c.next()
+-     smokephp_object* o = phpqt_getSmokePHPObjectFromZval(getThis());
++    smokephp_object* o = phpqt_getSmokePHPObjectFromZval(getThis());
+     o-&gt;parent_ce_ptr = ce_parent; // = ce if no parent
+ 
+ 	// if QObject
+
+Modified: trunk/php_qt/smokephp.cpp
+===================================================================
+--- trunk/php_qt/smokephp.cpp	2007-05-22 08:59:26 UTC (rev 318)
++++ trunk/php_qt/smokephp.cpp	2007-05-22 21:48:06 UTC (rev 319)
+@@ -81,11 +81,12 @@
+ 
+ 		if(phpqt_methodExists(o-&gt;ce_ptr, (char*) methodName)){
+ 		    Smoke::Method &amp; meth = smoke-&gt;methods[method];
+-		    zval*** sp = (zval ***) safe_emalloc((int) meth.numArgs, sizeof(zval **), 0);
++		    zval*** sp = (zval ***) safe_emalloc((int) meth.numArgs, sizeof(zval), 0);
+ 
+ 		    VirtualMethodCall c(smoke, method, args, o-&gt;zval_ptr, sp);
+-//		    c.next();
+-		    efree(sp);
++		    c.next();
++
++  		    efree(sp);
+ 		}
+ 		
+ 		return false;
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000162.html">[Php-qt-svn] r318 - trunk/tests
+</A></li>
+	<LI>Next message: <A HREF="000164.html">[Php-qt-svn] r320 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#163">[ date ]</a>
+              <a href="thread.html#163">[ thread ]</a>
+              <a href="subject.html#163">[ subject ]</a>
+              <a href="author.html#163">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

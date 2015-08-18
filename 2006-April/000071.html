@@ -1,0 +1,2132 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r227 - trunk/qt/classes
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-April/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r227%20-%20trunk/qt/classes&In-Reply-To=%3C200604272137.k3RLb2vI003995%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000070.html">
+   <LINK REL="Next"  HREF="000072.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r227 - trunk/qt/classes</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r227%20-%20trunk/qt/classes&In-Reply-To=%3C200604272137.k3RLb2vI003995%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r227 - trunk/qt/classes">tm243 at berlios.de
+       </A><BR>
+    <I>Thu Apr 27 23:37:02 CEST 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000070.html">[Php-qt-svn] r226 - trunk/qt/object_model
+</A></li>
+        <LI>Next message: <A HREF="000072.html">[Php-qt-svn] r228 - trunk/qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#71">[ date ]</a>
+              <a href="thread.html#71">[ thread ]</a>
+              <a href="subject.html#71">[ subject ]</a>
+              <a href="author.html#71">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-04-27 23:36:45 +0200 (Thu, 27 Apr 2006)
+New Revision: 227
+
+Modified:
+   trunk/qt/classes/qboxlayout.cpp
+   trunk/qt/classes/qcoreapplication.cpp
+   trunk/qt/classes/qgridlayout.cpp
+   trunk/qt/classes/qlayout.cpp
+   trunk/qt/classes/qvboxlayout.cpp
+   trunk/qt/classes/qwidget.cpp
+Log:
+prepared for tutorials
+
+Modified: trunk/qt/classes/qboxlayout.cpp
+===================================================================
+--- trunk/qt/classes/qboxlayout.cpp	2006-04-27 21:28:37 UTC (rev 226)
++++ trunk/qt/classes/qboxlayout.cpp	2006-04-27 21:36:45 UTC (rev 227)
+@@ -322,6 +322,21 @@
+ 			} else { php_error(E_ERROR,&quot;argument not allowed&quot;); }
+ 		}
+ 	}
++    if (ZEND_NUM_ARGS() == 1){
++		zval *z_0; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_OBJECT){
++
++			    QBoxLayout *obj = static_cast&lt;QBoxLayout*&gt;(PHP_QT_FETCH());
++			    QWidget* obj_z_0 = static_cast&lt;QWidget*&gt;(php_qt_fetch(z_0));
++
++//			if(obj_z_0-&gt;inherits(&quot;QWidget&quot;)) {
++				obj-&gt;addWidget(obj_z_0);
++			    RETURN_NULL();
++//			}
++			} else { php_error(E_ERROR,&quot;argument not allowed&quot;); }
++		}
++	}
+ }
+ 
+ /*********************************
+
+Modified: trunk/qt/classes/qcoreapplication.cpp
+===================================================================
+--- trunk/qt/classes/qcoreapplication.cpp	2006-04-27 21:28:37 UTC (rev 226)
++++ trunk/qt/classes/qcoreapplication.cpp	2006-04-27 21:36:45 UTC (rev 227)
+@@ -406,20 +406,22 @@
+  */
+ ZEND_METHOD(QCoreApplication, instance){
+ 	if (ZEND_NUM_ARGS() == 0){
+-			QCoreApplication *obj = (QCoreApplication*) PHP_QT_FETCH();
++
+ 			QCoreApplication ** return_object;
+ 			// check whether method call is static.
+ 			if(getThis() != NULL){
+-				*return_object = (QCoreApplication *) obj-&gt;instance();
++			    QCoreApplication *obj = (QCoreApplication*) PHP_QT_FETCH();
++				*return_object = static_cast&lt;QCoreApplication*&gt;(obj-&gt;instance());
+ 			} else {
+-				*return_object = (QCoreApplication *) QCoreApplication::instance();
++                return_object = (QCoreApplication **) malloc(sizeof(QCoreApplication::instance()));
++				*return_object = static_cast&lt;QCoreApplication *&gt;(QCoreApplication::instance());
+ 			}
+-				zend_class_entry *ce;                                   
+-				object_init_ex(return_value, QCoreApplication_ce_ptr);     
+-				zend_rsrc_list_entry le;                            
+-				le.ptr = return_object;                                       
+-				php_qt_register(return_value,le);                   
+-				return;                                             
++			zend_class_entry *ce;                                   
++			object_init_ex(return_value, QCoreApplication_ce_ptr);     
++			zend_rsrc_list_entry le;                            
++			le.ptr = return_object[0];
++			php_qt_register(return_value,le);                   
++			return;                                             
+ 	}
+ }
+ 
+
+Modified: trunk/qt/classes/qgridlayout.cpp
+===================================================================
+--- trunk/qt/classes/qgridlayout.cpp	2006-04-27 21:28:37 UTC (rev 226)
++++ trunk/qt/classes/qgridlayout.cpp	2006-04-27 21:36:45 UTC (rev 227)
+@@ -20,959 +20,1166 @@
+  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  *
+  * QGridLayout.cpp - QGridLayout PHP implementation.
+- * begin           : Sun Jan 22 19:46:39 2006
++ * begin           : Tue Apr 11 10:33:13 2006
+  * generated by    : moni using kalyptus 0.9.
+  */
+ 
+ #include &lt;iostream&gt;
+ using namespace std;
+ 
+-#include &lt;QGridLayout&gt;
+ #include &quot;../php_qt.h&quot;
+ 
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  tr
+- *    flags:    s
++#include &lt;QGridLayout&gt;
++#include &lt;QWidget&gt;
++
++/*!
++ *    @class     QGridLayout
++ *    @function  tr
++ *
++ *    @flags    s
++ *    @access    public
++ *    @return    QString
++ *    @param     const char *, const char * = 0 
+  */
+-ZEND_METHOD(QGridLayout, tr){
+-		/* ss public*/
++ZEND_METHOD(QGridLayout, tr)
++{
++/*! ss public*/
++/*! const char* , const char* ,  */
++  if (ZEND_NUM_ARGS() == 2) {
++    zval *z_0;                  /// define ZVAL
++    zval *z_1;                  /// define ZVAL
+ 
+-		/* const char* , const char* ,  */
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_STRING &amp;&amp; Z_TYPE_P(z_1) == IS_STRING) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
+ 
+-	if (ZEND_NUM_ARGS() == 2){
+-		zval *z_0; // define ZVAL
+-		zval *z_1; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_STRING &amp;&amp; Z_TYPE_P(z_1) == IS_STRING){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
++        QString *return_object;
+ 
++        if (getThis() != NULL) {
++/// return value is object: QString
++          *return_object = static_cast &lt; QString &gt; (obj-&gt;tr((const char *)Z_STRVAL_P(z_0), (const char *)Z_STRVAL_P(z_1)));
++/// check whether method call is static.
++        } else {
++          return_object = (QString *) malloc(sizeof (QGridLayout::tr((const char *)Z_STRVAL_P(z_0), (const char *)Z_STRVAL_P(z_1))));   /// memory allocation
++          *return_object = static_cast &lt; QString &gt; (QGridLayout::tr((const char *)Z_STRVAL_P(z_0), (const char *)Z_STRVAL_P(z_1)));
++        } zend_class_entry *ce;
+ 
+-				QString return_object = (QString) obj-&gt;tr( (const char*) Z_STRVAL_P(z_0) , (const char*) Z_STRVAL_P(z_1));
+-				zend_class_entry *ce;                                   
+-				object_init_ex(return_value, QGridLayout_ce_ptr);     
+-				zend_rsrc_list_entry le;                            
+-				le.ptr = (void*) &amp;return_object;                                       
+-				php_qt_register(return_value,le);                   
+-				return;                                             
+-			}
+-		}
+-	}
++        object_init_ex(return_value, QGridLayout_ce_ptr);
++        zend_rsrc_list_entry le;
++
++        le.ptr = return_object;
++        php_qt_register(return_value, le);
++        return;
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  addLayout
+- *    flags:    
++/*!
++ *    @class     QGridLayout
++ *    @function  addLayout
++ *
++ *    @flags    
++ *    @access    public
++ *    @return    void
++ *    @param    QLayout *, int row, int column, Qt::Alignment = 0
+  */
+-ZEND_METHOD(QGridLayout, addLayout){
+-		/* olll public*/
++ZEND_METHOD(QGridLayout, addLayout)
++{
++///qt_QLayout*
++/*! olll public*/
++/*! qt_QLayout* , int row, int column, int ,  */
++  if (ZEND_NUM_ARGS() == 4) {
++    zval *z_0;                  /// define ZVAL
++    zval *z_1;                  /// define ZVAL
++    zval *z_2;                  /// define ZVAL
++    zval *z_3;                  /// define ZVAL
+ 
+-		/* qt_QLayout* , int row, int column, int ,  */
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;zzzz&quot;, &amp;z_0, &amp;z_1, &amp;z_2, &amp;z_3) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_OBJECT &amp;&amp; Z_TYPE_P(z_1) == IS_LONG &amp;&amp; Z_TYPE_P(z_2) == IS_LONG &amp;&amp; Z_TYPE_P(z_3) == IS_LONG) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
++        QObject *obj_z_0 = (QObject *) php_qt_fetch(z_0);
+ 
+-	if (ZEND_NUM_ARGS() == 4){
+-		zval *z_0; // define ZVAL
+-		zval *z_1; // define ZVAL
+-		zval *z_2; // define ZVAL
+-		zval *z_3; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zzzz&quot;, &amp;z_0, &amp;z_1, &amp;z_2, &amp;z_3) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_OBJECT &amp;&amp; Z_TYPE_P(z_1) == IS_LONG &amp;&amp; Z_TYPE_P(z_2) == IS_LONG &amp;&amp; Z_TYPE_P(z_3) == IS_LONG){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
++        if (obj_z_0-&gt;inherits(&quot;QLayout&quot;)) {
++          void *return_object;
+ 
+-
+-			if(obj_z_0-&gt;inherits(&quot;QLayout&quot;)) {
+-				obj-&gt;addLayout((QLayout*) obj_z_0, (int) Z_LVAL_P(z_1), (int) Z_LVAL_P(z_2), (Qt::Alignment) Z_LVAL_P(z_3));
+-			RETURN_NULL();
+-			}
+-			}
+-		}
+-	}
+-		/* olllll public*/
+-
+-		/* qt_QLayout* , int row, int column, int rowSpan, int columnSpan, int ,  */
+-
+-	if (ZEND_NUM_ARGS() == 6){
+-		zval *z_0; // define ZVAL
+-		zval *z_1; // define ZVAL
+-		zval *z_2; // define ZVAL
+-		zval *z_3; // define ZVAL
+-		zval *z_4; // define ZVAL
+-		zval *z_5; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zzzzzz&quot;, &amp;z_0, &amp;z_1, &amp;z_2, &amp;z_3, &amp;z_4, &amp;z_5) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_OBJECT &amp;&amp; Z_TYPE_P(z_1) == IS_LONG &amp;&amp; Z_TYPE_P(z_2) == IS_LONG &amp;&amp; Z_TYPE_P(z_3) == IS_LONG &amp;&amp; Z_TYPE_P(z_4) == IS_LONG &amp;&amp; Z_TYPE_P(z_5) == IS_LONG){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
+-
+-
+-			if(obj_z_0-&gt;inherits(&quot;QLayout&quot;)) {
+-				obj-&gt;addLayout((QLayout*) obj_z_0, (int) Z_LVAL_P(z_1), (int) Z_LVAL_P(z_2), (int) Z_LVAL_P(z_3), (int) Z_LVAL_P(z_4), (Qt::Alignment) Z_LVAL_P(z_5));
+-			RETURN_NULL();
+-			}
+-			}
+-		}
+-	}
++          if (getThis() != NULL) {
++            obj-&gt;addLayout((QLayout *) obj_z_0, (int)Z_LVAL_P(z_1), (int)Z_LVAL_P(z_2), (Qt::Alignment) Z_LVAL_P(z_3));
++            RETURN_NULL();
++          }                     /// END getThis(), NULL
++        }
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  QGridLayout
+- *    flags:    t
++/*!
++ *    @class     QGridLayout
++ *    @function  QGridLayout
++ *
++ *    @flags    t
++ *    @access    public
++ *    @return    
++ *    @param    QWidget *parent
+  */
+-ZEND_METHOD(QGridLayout, __construct){
++ZEND_METHOD(QGridLayout, __construct)
++{
++///QWidget*
+ 	if (ZEND_NUM_ARGS() == 0){
+ 			QGridLayout *QGridLayout_ptr = new QGridLayout();
+ 				PHP_QT_REGISTER(QGridLayout_ptr);
+ 				RETURN_NULL();
+ 	}
+-		/* o public*/
++/*! o public*/
++/*! QWidget* parent,  */
++  if (ZEND_NUM_ARGS() == 1) {
++    zval *z_0;                  /// define ZVAL
+ 
+-		/* qt_QWidget* parent,  */
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;z&quot;, &amp;z_0) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_OBJECT) {
++        QObject *obj_z_0 = (QObject *) php_qt_fetch(z_0);
+ 
+-	if (ZEND_NUM_ARGS() == 1){
+-		zval *z_0; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_OBJECT){
+-			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
++        if (obj_z_0-&gt;inherits(&quot;QWidget&quot;)) {
++          QGridLayout *QGridLayout_ptr = new QGridLayout((QWidget *) obj_z_0);
+ 
+-
+-			if(obj_z_0-&gt;inherits(&quot;QWidget&quot;)) {
+-				QGridLayout *QGridLayout_ptr = new QGridLayout((QWidget*) obj_z_0);
+-				PHP_QT_REGISTER(QGridLayout_ptr);
+-				RETURN_NULL();
+-			}
+-			}
+-		}
+-	}
++          PHP_QT_REGISTER(QGridLayout_ptr);
++          RETURN_NULL();
++        }
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  qt_invoke
+- *    flags:    v
++/*!
++ *    @class     QGridLayout
++ *    @function  addItem
++ *
++ *    @flags    
++ *    @access    public
++ *    @return    void
++ *    @param    QLayoutItem *item, int row, int column, int rowSpan = 1, int columnSpan = 1, Qt::Alignment = 0
+  */
+-ZEND_METHOD(QGridLayout, qt_invoke){
+-}
++ZEND_METHOD(QGridLayout, addItem)
++{
++///qt_QLayoutItem*
++/*! olllll public*/
++/*! qt_QLayoutItem* item, int row, int column, int rowSpan, int columnSpan, int ,  */
++  if (ZEND_NUM_ARGS() == 6) {
++    zval *z_0;                  /// define ZVAL
++    zval *z_1;                  /// define ZVAL
++    zval *z_2;                  /// define ZVAL
++    zval *z_3;                  /// define ZVAL
++    zval *z_4;                  /// define ZVAL
++    zval *z_5;                  /// define ZVAL
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  addItem
+- *    flags:    
+- */
+-ZEND_METHOD(QGridLayout, addItem){
+-		/* o protected*/
+-		/* olllll public*/
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;zzzzzz&quot;, &amp;z_0, &amp;z_1, &amp;z_2, &amp;z_3, &amp;z_4, &amp;z_5) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_OBJECT &amp;&amp; Z_TYPE_P(z_1) == IS_LONG &amp;&amp; Z_TYPE_P(z_2) == IS_LONG &amp;&amp; Z_TYPE_P(z_3) == IS_LONG &amp;&amp; Z_TYPE_P(z_4) == IS_LONG &amp;&amp;
++          Z_TYPE_P(z_5) == IS_LONG) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
++        QObject *obj_z_0 = (QObject *) php_qt_fetch(z_0);
+ 
+-		/* qt_QLayoutItem* item, int row, int column, int rowSpan, int columnSpan, int ,  */
++        if (obj_z_0-&gt;inherits(&quot;QLayoutItem&quot;)) {
++          void *return_object;
+ 
+-	if (ZEND_NUM_ARGS() == 6){
+-		zval *z_0; // define ZVAL
+-		zval *z_1; // define ZVAL
+-		zval *z_2; // define ZVAL
+-		zval *z_3; // define ZVAL
+-		zval *z_4; // define ZVAL
+-		zval *z_5; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zzzzzz&quot;, &amp;z_0, &amp;z_1, &amp;z_2, &amp;z_3, &amp;z_4, &amp;z_5) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_OBJECT &amp;&amp; Z_TYPE_P(z_1) == IS_LONG &amp;&amp; Z_TYPE_P(z_2) == IS_LONG &amp;&amp; Z_TYPE_P(z_3) == IS_LONG &amp;&amp; Z_TYPE_P(z_4) == IS_LONG &amp;&amp; Z_TYPE_P(z_5) == IS_LONG){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
+-
+-
+-			if(obj_z_0-&gt;inherits(&quot;QLayoutItem&quot;)) {
+-				obj-&gt;addItem((QLayoutItem*) obj_z_0, (int) Z_LVAL_P(z_1), (int) Z_LVAL_P(z_2), (int) Z_LVAL_P(z_3), (int) Z_LVAL_P(z_4), (Qt::Alignment) Z_LVAL_P(z_5));
+-			RETURN_NULL();
+-			}
+-			}
+-		}
+-	}
++          if (getThis() != NULL) {
++            obj-&gt;addItem((QLayoutItem *) obj_z_0, (int)Z_LVAL_P(z_1), (int)Z_LVAL_P(z_2), (int)Z_LVAL_P(z_3), (int)Z_LVAL_P(z_4),
++                         (Qt::Alignment) Z_LVAL_P(z_5));
++            RETURN_NULL();
++          }                     /// END getThis(), NULL
++        }
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  rowMinimumHeight
+- *    flags:    c
++/*!
++ *    @class     QGridLayout
++ *    @function  rowMinimumHeight
++ *
++ *    @flags    c
++ *    @access    public
++ *    @return    int
++ *    @param    int row
+  */
+-ZEND_METHOD(QGridLayout, rowMinimumHeight){
+-		/* l public*/
++ZEND_METHOD(QGridLayout, rowMinimumHeight)
++{
++/*! l public*/
++/*! int row,  */
++  if (ZEND_NUM_ARGS() == 1) {
++    zval *z_0;                  /// define ZVAL
+ 
+-		/* int row,  */
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;z&quot;, &amp;z_0) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_LONG) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
+ 
+-	if (ZEND_NUM_ARGS() == 1){
+-		zval *z_0; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_LONG){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
++        int *return_object;
+ 
+-
+-			RETURN_LONG(obj-&gt;rowMinimumHeight((int) Z_LVAL_P(z_0)));
+-			}
+-		}
+-	}
++        if (getThis() != NULL) {
++          RETURN_LONG(obj-&gt;rowMinimumHeight((int)Z_LVAL_P(z_0)));
++        }                       /// 5 END getThis(), simple types
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  setOriginCorner
+- *    flags:    
++/*!
++ *    @class     QGridLayout
++ *    @function  setOriginCorner
++ *
++ *    @flags    
++ *    @access    public
++ *    @return    void
++ *    @param    Qt::Corner
+  */
+-ZEND_METHOD(QGridLayout, setOriginCorner){
+-		/* l public*/
++ZEND_METHOD(QGridLayout, setOriginCorner)
++{
++/*! l public*/
++/*! int ,  */
++  if (ZEND_NUM_ARGS() == 1) {
++    zval *z_0;                  /// define ZVAL
+ 
+-		/* int ,  */
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;z&quot;, &amp;z_0) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_LONG) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
+ 
+-	if (ZEND_NUM_ARGS() == 1){
+-		zval *z_0; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_LONG){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
++        void *return_object;
+ 
+-
+-			obj-&gt;setOriginCorner((Qt::Corner) Z_LVAL_P(z_0));
+-			RETURN_NULL();
+-			}
+-		}
+-	}
++        if (getThis() != NULL) {
++          obj-&gt;setOriginCorner((Qt::Corner) Z_LVAL_P(z_0));
++          RETURN_NULL();
++        }                       /// END getThis(), NULL
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  qt_cast
+- *    flags:    v
++/*!
++ *    @class     QGridLayout
++ *    @function  count
++ *
++ *    @flags    c
++ *    @access    public
++ *    @return    int
++ *    @param    
+  */
+-ZEND_METHOD(QGridLayout, qt_cast){
+-}
++ZEND_METHOD(QGridLayout, count)
++{
++  if (ZEND_NUM_ARGS() == 0) {
++    int *return_object;
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  metaObject
+- *    flags:    cv
+- */
+-ZEND_METHOD(QGridLayout, metaObject){
+-	if (ZEND_NUM_ARGS() == 0){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-				QMetaObject * return_object = (QMetaObject *) obj-&gt;metaObject();
+-				zend_class_entry *ce;                                   
+-				object_init_ex(return_value, QGridLayout_ce_ptr);     
+-				zend_rsrc_list_entry le;                            
+-				le.ptr = (void*) &amp;return_object;                                       
+-				php_qt_register(return_value,le);                   
+-				return;                                             
+-	}
+-}
++    if (getThis() != NULL) {
++      QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  count
+- *    flags:    c
+- */
+-ZEND_METHOD(QGridLayout, count){
+-	if (ZEND_NUM_ARGS() == 0){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-			RETURN_LONG(obj-&gt;count());
+-	}
++      RETURN_LONG(obj-&gt;count());
++    }                           /// 5 END getThis(), simple types
++  }
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  originCorner
+- *    flags:    c
++/*!
++ *    @class     QGridLayout
++ *    @function  originCorner
++ *
++ *    @flags    c
++ *    @access    public
++ *    @return    Qt::Corner
++ *    @param    
+  */
+-ZEND_METHOD(QGridLayout, originCorner){
+-	if (ZEND_NUM_ARGS() == 0){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-			RETURN_LONG(obj-&gt;originCorner());
+-	}
+-}
++ZEND_METHOD(QGridLayout, originCorner)
++{
++  if (ZEND_NUM_ARGS() == 0) {
++    Qt::Corner * return_object;
++    if (getThis() != NULL) {
++      QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  invalidate
+- *    flags:    
+- */
+-ZEND_METHOD(QGridLayout, invalidate){
+-	if (ZEND_NUM_ARGS() == 0){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-			obj-&gt;invalidate();
+-			RETURN_NULL();
+-	}
++      RETURN_LONG(obj-&gt;originCorner());
++    }                           /// 5 END getThis(), simple types
++  }
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  setGeometry
+- *    flags:    
++/*!
++ *    @class     QGridLayout
++ *    @function  invalidate
++ *
++ *    @flags    
++ *    @access    public
++ *    @return    void
++ *    @param    
+  */
+-ZEND_METHOD(QGridLayout, setGeometry){
+-		/* o public*/
++ZEND_METHOD(QGridLayout, invalidate)
++{
++  if (ZEND_NUM_ARGS() == 0) {
++    void *return_object;
+ 
+-		/* const QRect&amp; ,  */
++    if (getThis() != NULL) {
++      QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
+ 
+-	if (ZEND_NUM_ARGS() == 1){
+-		zval *z_0; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_OBJECT){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
+-
+-
+-			if(Z_OBJCE_P(z_0)-&gt;name == &quot;QRect&quot;) {
+-				obj-&gt;setGeometry((const QRect&amp;) obj_z_0);
+-			RETURN_NULL();
+-			}
+-			}
+-		}
+-	}
++      obj-&gt;invalidate();
++      RETURN_NULL();
++    }                           /// END getThis(), NULL
++  }
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  qt_emit
+- *    flags:    v
++/*!
++ *    @class     QGridLayout
++ *    @function  setGeometry
++ *
++ *    @flags    
++ *    @access    public
++ *    @return    void
++ *    @param    const QRect&amp;
+  */
+-ZEND_METHOD(QGridLayout, qt_emit){
+-}
++ZEND_METHOD(QGridLayout, setGeometry)
++{
++///const QRect&amp;
++/*! o public*/
++/*! const QRect&amp; ,  */
++  if (ZEND_NUM_ARGS() == 1) {
++    zval *z_0;                  /// define ZVAL
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  setRowStretch
+- *    flags:    
+- */
+-ZEND_METHOD(QGridLayout, setRowStretch){
+-		/* ll public*/
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;z&quot;, &amp;z_0) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_OBJECT) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
++        QObject *obj_z_0 = (QObject *) php_qt_fetch(z_0);
+ 
+-		/* int row, int stretch,  */
++        if (!strcmp(Z_OBJCE_P(z_0)-&gt;name, &quot;QRect&quot;)) {
++          void *return_object;
+ 
+-	if (ZEND_NUM_ARGS() == 2){
+-		zval *z_0; // define ZVAL
+-		zval *z_1; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-
+-
+-			obj-&gt;setRowStretch((int) Z_LVAL_P(z_0) ,(int) Z_LVAL_P(z_1));
+-			RETURN_NULL();
+-			}
+-		}
+-	}
++          if (getThis() != NULL) {
++            obj-&gt;setGeometry((const QRect &amp;)*obj_z_0);
++            RETURN_NULL();
++          }                     /// END getThis(), NULL
++        }
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  getItemPosition
+- *    flags:    
++/*!
++ *    @class     QGridLayout
++ *    @function  setRowStretch
++ *
++ *    @flags    
++ *    @access    public
++ *    @return    void
++ *    @param    int row, int stretch
+  */
+-ZEND_METHOD(QGridLayout, getItemPosition){
+-		/* lllll public*/
++ZEND_METHOD(QGridLayout, setRowStretch)
++{
++/*! ll public*/
++/*! int row, int stretch,  */
++  if (ZEND_NUM_ARGS() == 2) {
++    zval *z_0;                  /// define ZVAL
++    zval *z_1;                  /// define ZVAL
+ 
+-		/* int idx, int* row, int* column, int* rowSpan, int* columnSpan,  */
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
+ 
+-	if (ZEND_NUM_ARGS() == 5){
+-		zval *z_0; // define ZVAL
+-		zval *z_1; // define ZVAL
+-		zval *z_2; // define ZVAL
+-		zval *z_3; // define ZVAL
+-		zval *z_4; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zzzzz&quot;, &amp;z_0, &amp;z_1, &amp;z_2, &amp;z_3, &amp;z_4) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG &amp;&amp; Z_TYPE_P(z_2) == IS_LONG &amp;&amp; Z_TYPE_P(z_3) == IS_LONG &amp;&amp; Z_TYPE_P(z_4) == IS_LONG){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
++        void *return_object;
+ 
+-
+-			obj-&gt;getItemPosition((int) Z_LVAL_P(z_0) ,(int*) Z_LVAL_P(z_1) ,(int*) Z_LVAL_P(z_2) ,(int*) Z_LVAL_P(z_3) ,(int*) Z_LVAL_P(z_4));
+-			RETURN_NULL();
+-			}
+-		}
+-	}
++        if (getThis() != NULL) {
++          obj-&gt;setRowStretch((int)Z_LVAL_P(z_0), (int)Z_LVAL_P(z_1));
++          RETURN_NULL();
++        }                       /// END getThis(), NULL
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  setDefaultPositioning
+- *    flags:    
++/*!
++ *    @class     QGridLayout
++ *    @function  getItemPosition
++ *
++ *    @flags    
++ *    @access    public
++ *    @return    void
++ *    @param    int idx, int *row, int *column, int *rowSpan, int *columnSpan
+  */
+-ZEND_METHOD(QGridLayout, setDefaultPositioning){
+-		/* ll public*/
++ZEND_METHOD(QGridLayout, getItemPosition)
++{
++/*! lllll public*/
++/*! int idx, int* row, int* column, int* rowSpan, int* columnSpan,  */
++  if (ZEND_NUM_ARGS() == 5) {
++    zval *z_0;                  /// define ZVAL
++    zval *z_1;                  /// define ZVAL
++    zval *z_2;                  /// define ZVAL
++    zval *z_3;                  /// define ZVAL
++    zval *z_4;                  /// define ZVAL
+ 
+-		/* int n, int orient,  */
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;zzzzz&quot;, &amp;z_0, &amp;z_1, &amp;z_2, &amp;z_3, &amp;z_4) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG &amp;&amp; Z_TYPE_P(z_2) == IS_LONG &amp;&amp; Z_TYPE_P(z_3) == IS_LONG &amp;&amp; Z_TYPE_P(z_4) == IS_LONG) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
+ 
+-	if (ZEND_NUM_ARGS() == 2){
+-		zval *z_0; // define ZVAL
+-		zval *z_1; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
++        void *return_object;
+ 
+-
+-			obj-&gt;setDefaultPositioning((int) Z_LVAL_P(z_0) ,(Qt::Orientation) Z_LVAL_P(z_1));
+-			RETURN_NULL();
+-			}
+-		}
+-	}
++        if (getThis() != NULL) {
++          obj-&gt;getItemPosition((int)Z_LVAL_P(z_0), (int *)Z_LVAL_P(z_1), (int *)Z_LVAL_P(z_2), (int *)Z_LVAL_P(z_3), (int *)Z_LVAL_P(z_4));
++          RETURN_NULL();
++        }                       /// END getThis(), NULL
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  className
+- *    flags:    cv
++/*!
++ *    @class     QGridLayout
++ *    @function  setDefaultPositioning
++ *
++ *    @flags    
++ *    @access    public
++ *    @return    void
++ *    @param    int n, Qt::Orientation orient
+  */
+-ZEND_METHOD(QGridLayout, className){
+-}
++ZEND_METHOD(QGridLayout, setDefaultPositioning)
++{
++/*! ll public*/
++/*! int n, int orient,  */
++  if (ZEND_NUM_ARGS() == 2) {
++    zval *z_0;                  /// define ZVAL
++    zval *z_1;                  /// define ZVAL
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  columnStretch
+- *    flags:    c
+- */
+-ZEND_METHOD(QGridLayout, columnStretch){
+-		/* l public*/
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
+ 
+-		/* int column,  */
++        void *return_object;
+ 
+-	if (ZEND_NUM_ARGS() == 1){
+-		zval *z_0; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_LONG){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-
+-
+-			RETURN_LONG(obj-&gt;columnStretch((int) Z_LVAL_P(z_0)));
+-			}
+-		}
+-	}
++        if (getThis() != NULL) {
++          obj-&gt;setDefaultPositioning((int)Z_LVAL_P(z_0), (Qt::Orientation) Z_LVAL_P(z_1));
++          RETURN_NULL();
++        }                       /// END getThis(), NULL
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  addWidget
+- *    flags:    
++/*!
++ *    @class     QGridLayout
++ *    @function  columnStretch
++ *
++ *    @flags    c
++ *    @access    public
++ *    @return    int
++ *    @param    int column
+  */
+-ZEND_METHOD(QGridLayout, addWidget){
+-		/* o public*/
++ZEND_METHOD(QGridLayout, columnStretch)
++{
++/*! l public*/
++/*! int column,  */
++  if (ZEND_NUM_ARGS() == 1) {
++    zval *z_0;                  /// define ZVAL
+ 
+-		/* qt_QWidget* w,  */
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;z&quot;, &amp;z_0) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_LONG) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
+ 
+-	if (ZEND_NUM_ARGS() == 1){
+-		zval *z_0; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_OBJECT){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
++        int *return_object;
+ 
++        if (getThis() != NULL) {
++          RETURN_LONG(obj-&gt;columnStretch((int)Z_LVAL_P(z_0)));
++        }                       /// 5 END getThis(), simple types
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
++}
+ 
+-			if(obj_z_0-&gt;inherits(&quot;QWidget&quot;)) {
+-				obj-&gt;addWidget((QWidget*) obj_z_0);
+-			RETURN_NULL();
+-			}
+-			}
+-		}
+-	}
+-		/* olll public*/
+-
+-		/* qt_QWidget* , int row, int column, int ,  */
+-
+-	if (ZEND_NUM_ARGS() == 4){
++/*!
++ *    @class     QGridLayout
++ *    @function  addWidget
++ *
++ *    @flags    
++ *    @access    public
++ *    @return    void
++ *    @param    QWidget *w
++ */
++ZEND_METHOD(QGridLayout, addWidget)
++{
++///QWidget*
++	if (ZEND_NUM_ARGS() == 3){
+ 		zval *z_0; // define ZVAL
+ 		zval *z_1; // define ZVAL
+ 		zval *z_2; // define ZVAL
+-		zval *z_3; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zzzz&quot;, &amp;z_0, &amp;z_1, &amp;z_2, &amp;z_3) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_OBJECT &amp;&amp; Z_TYPE_P(z_1) == IS_LONG &amp;&amp; Z_TYPE_P(z_2) == IS_LONG &amp;&amp; Z_TYPE_P(z_3) == IS_LONG){
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zzz&quot;, &amp;z_0, &amp;z_1, &amp;z_2) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_OBJECT &amp;&amp; Z_TYPE_P(z_1) == IS_LONG &amp;&amp; Z_TYPE_P(z_2) == IS_LONG){
+ 			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
++			QWidget* obj_z_0 = static_cast&lt;QWidget*&gt;(php_qt_fetch(z_0));
+ 
+-
+ 			if(obj_z_0-&gt;inherits(&quot;QWidget&quot;)) {
+-				obj-&gt;addWidget((QWidget*) obj_z_0, (int) Z_LVAL_P(z_1), (int) Z_LVAL_P(z_2), (Qt::Alignment) Z_LVAL_P(z_3));
+-			RETURN_NULL();
+-			}
+-			}
++				obj-&gt;addWidget(obj_z_0, (int) Z_LVAL_P(z_1), (Qt::Alignment) Z_LVAL_P(z_2));
++			    RETURN_NULL();
++			} else { php_error(E_ERROR,&quot;argument is no QWidget&quot;); }
++			} else { php_error(E_ERROR,&quot;argument not allowed&quot;); }
+ 		}
+ 	}
+-		/* olllll public*/
++/*! o public*/
++/*! QWidget* w,  */
++  if (ZEND_NUM_ARGS() == 1) {
++    zval *z_0;                  /// define ZVAL
+ 
+-		/* qt_QWidget* , int row, int column, int rowSpan, int columnSpan, int ,  */
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;z&quot;, &amp;z_0) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_OBJECT) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
++        QObject *obj_z_0 = (QObject *) php_qt_fetch(z_0);
+ 
+-	if (ZEND_NUM_ARGS() == 6){
+-		zval *z_0; // define ZVAL
+-		zval *z_1; // define ZVAL
+-		zval *z_2; // define ZVAL
+-		zval *z_3; // define ZVAL
+-		zval *z_4; // define ZVAL
+-		zval *z_5; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zzzzzz&quot;, &amp;z_0, &amp;z_1, &amp;z_2, &amp;z_3, &amp;z_4, &amp;z_5) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_OBJECT &amp;&amp; Z_TYPE_P(z_1) == IS_LONG &amp;&amp; Z_TYPE_P(z_2) == IS_LONG &amp;&amp; Z_TYPE_P(z_3) == IS_LONG &amp;&amp; Z_TYPE_P(z_4) == IS_LONG &amp;&amp; Z_TYPE_P(z_5) == IS_LONG){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
++        if (obj_z_0-&gt;inherits(&quot;QWidget&quot;)) {
++          void *return_object;
+ 
+-
+-			if(obj_z_0-&gt;inherits(&quot;QWidget&quot;)) {
+-				obj-&gt;addWidget((QWidget*) obj_z_0, (int) Z_LVAL_P(z_1), (int) Z_LVAL_P(z_2), (int) Z_LVAL_P(z_3), (int) Z_LVAL_P(z_4), (Qt::Alignment) Z_LVAL_P(z_5));
+-			RETURN_NULL();
+-			}
+-			}
+-		}
+-	}
++          if (getThis() != NULL) {
++            obj-&gt;addWidget((QWidget *) obj_z_0);
++            RETURN_NULL();
++          }                     /// END getThis(), NULL
++        }
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  takeAt
+- *    flags:    
++/*!
++ *    @class     QGridLayout
++ *    @function  takeAt
++ *
++ *    @flags    
++ *    @access    public
++ *    @return    QLayoutItem *
++ *    @param    int
+  */
+-ZEND_METHOD(QGridLayout, takeAt){
+-		/* l public*/
++ZEND_METHOD(QGridLayout, takeAt)
++{
++/*! l public*/
++/*! int ,  */
++  if (ZEND_NUM_ARGS() == 1) {
++    zval *z_0;                  /// define ZVAL
+ 
+-		/* int ,  */
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;z&quot;, &amp;z_0) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_LONG) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
+ 
+-	if (ZEND_NUM_ARGS() == 1){
+-		zval *z_0; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_LONG){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
++        QLayoutItem **return_object;
+ 
++        if (getThis() != NULL) {
++/// return: pointer
+ 
+-				QLayoutItem * return_object = (QLayoutItem *) obj-&gt;takeAt((int) Z_LVAL_P(z_0));
+-				zend_class_entry *ce;                                   
+-				object_init_ex(return_value, QGridLayout_ce_ptr);     
+-				zend_rsrc_list_entry le;                            
+-				le.ptr = (void*) &amp;return_object;                                       
+-				php_qt_register(return_value,le);                   
+-				return;                                             
+-			}
+-		}
+-	}
++/// return value is object: QLayoutItem *
++          *return_object = static_cast &lt; QLayoutItem * &gt;(obj-&gt;takeAt((int)Z_LVAL_P(z_0)));
++        } else {                /// END getThis(), static
++          php_error(E_ERROR, &quot;Object not found&quot;);
++        }
++        zend_class_entry *ce;
++
++        object_init_ex(return_value, QGridLayout_ce_ptr);
++        zend_rsrc_list_entry le;
++
++        le.ptr = return_object[0];
++        php_qt_register(return_value, le);
++        return;
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  staticMetaObject
+- *    flags:    s
++/*!
++ *    @class     QGridLayout
++ *    @function  staticMetaObject
++ *
++ *    @flags    s
++ *    @access    public
++ *    @return    QMetaObject*
++ *    @param    
+  */
+-ZEND_METHOD(QGridLayout, staticMetaObject){
++ZEND_METHOD(QGridLayout, staticMetaObject)
++{
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  itemAt
+- *    flags:    c
++/*!
++ *    @class     QGridLayout
++ *    @function  itemAt
++ *
++ *    @flags    c
++ *    @access    public
++ *    @return    QLayoutItem *
++ *    @param    int
+  */
+-ZEND_METHOD(QGridLayout, itemAt){
+-		/* l public*/
++ZEND_METHOD(QGridLayout, itemAt)
++{
++/*! l public*/
++/*! int ,  */
++  if (ZEND_NUM_ARGS() == 1) {
++    zval *z_0;                  /// define ZVAL
+ 
+-		/* int ,  */
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;z&quot;, &amp;z_0) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_LONG) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
+ 
+-	if (ZEND_NUM_ARGS() == 1){
+-		zval *z_0; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_LONG){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
++        QLayoutItem **return_object;
+ 
++        if (getThis() != NULL) {
++/// return: pointer
+ 
+-				QLayoutItem * return_object = (QLayoutItem *) obj-&gt;itemAt((int) Z_LVAL_P(z_0));
+-				zend_class_entry *ce;                                   
+-				object_init_ex(return_value, QGridLayout_ce_ptr);     
+-				zend_rsrc_list_entry le;                            
+-				le.ptr = (void*) &amp;return_object;                                       
+-				php_qt_register(return_value,le);                   
+-				return;                                             
+-			}
+-		}
+-	}
++/// return value is object: QLayoutItem *
++          *return_object = static_cast &lt; QLayoutItem * &gt;(obj-&gt;itemAt((int)Z_LVAL_P(z_0)));
++        } else {                /// END getThis(), static
++          php_error(E_ERROR, &quot;Object not found&quot;);
++        }
++        zend_class_entry *ce;
++
++        object_init_ex(return_value, QGridLayout_ce_ptr);
++        zend_rsrc_list_entry le;
++
++        le.ptr = return_object[0];
++        php_qt_register(return_value, le);
++        return;
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  qObject
+- *    flags:    
++/*!
++ *    @class     QGridLayout
++ *    @function  qObject
++ *
++ *    @flags    
++ *    @access    public
++ *    @return    QObject*
++ *    @param    
+  */
+-ZEND_METHOD(QGridLayout, qObject){
++ZEND_METHOD(QGridLayout, qObject)
++{
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  minimumSize
+- *    flags:    c
++/*!
++ *    @class     QGridLayout
++ *    @function  minimumSize
++ *
++ *    @flags    c
++ *    @access    public
++ *    @return    QSize
++ *    @param    
+  */
+-ZEND_METHOD(QGridLayout, minimumSize){
+-	if (ZEND_NUM_ARGS() == 0){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-				QSize return_object = (QSize) obj-&gt;minimumSize();
+-				zend_class_entry *ce;                                   
+-				object_init_ex(return_value, QGridLayout_ce_ptr);     
+-				zend_rsrc_list_entry le;                            
+-				le.ptr = (void*) &amp;return_object;                                       
+-				php_qt_register(return_value,le);                   
+-				return;                                             
+-	}
++ZEND_METHOD(QGridLayout, minimumSize)
++{
++  if (ZEND_NUM_ARGS() == 0) {
++    QSize *return_object;
++
++    if (getThis() != NULL) {
++      QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
++
++/// return value is object: QSize
++      *return_object = static_cast &lt; QSize &gt; (obj-&gt;minimumSize());
++    } else {                    /// END getThis(), static
++      php_error(E_ERROR, &quot;Object not found&quot;);
++    }
++    zend_class_entry *ce;
++
++    object_init_ex(return_value, QGridLayout_ce_ptr);
++    zend_rsrc_list_entry le;
++
++    le.ptr = return_object;
++    php_qt_register(return_value, le);
++    return;
++  }
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  sizeHint
+- *    flags:    c
++/*!
++ *    @class     QGridLayout
++ *    @function  sizeHint
++ *
++ *    @flags    c
++ *    @access    public
++ *    @return    QSize
++ *    @param    
+  */
+-ZEND_METHOD(QGridLayout, sizeHint){
+-	if (ZEND_NUM_ARGS() == 0){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-				QSize return_object = (QSize) obj-&gt;sizeHint();
+-				zend_class_entry *ce;                                   
+-				object_init_ex(return_value, QGridLayout_ce_ptr);     
+-				zend_rsrc_list_entry le;                            
+-				le.ptr = (void*) &amp;return_object;                                       
+-				php_qt_register(return_value,le);                   
+-				return;                                             
+-	}
++ZEND_METHOD(QGridLayout, sizeHint)
++{
++  if (ZEND_NUM_ARGS() == 0) {
++    QSize *return_object;
++
++    if (getThis() != NULL) {
++      QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
++
++/// return value is object: QSize
++      *return_object = static_cast &lt; QSize &gt; (obj-&gt;sizeHint());
++    } else {                    /// END getThis(), static
++      php_error(E_ERROR, &quot;Object not found&quot;);
++    }
++    zend_class_entry *ce;
++
++    object_init_ex(return_value, QGridLayout_ce_ptr);
++    zend_rsrc_list_entry le;
++
++    le.ptr = return_object;
++    php_qt_register(return_value, le);
++    return;
++  }
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  setColumnMinimumWidth
+- *    flags:    
++/*!
++ *    @class     QGridLayout
++ *    @function  setColumnMinimumWidth
++ *
++ *    @flags    
++ *    @access    public
++ *    @return    void
++ *    @param    int column, int minSize
+  */
+-ZEND_METHOD(QGridLayout, setColumnMinimumWidth){
+-		/* ll public*/
++ZEND_METHOD(QGridLayout, setColumnMinimumWidth)
++{
++/*! ll public*/
++/*! int column, int minSize,  */
++  if (ZEND_NUM_ARGS() == 2) {
++    zval *z_0;                  /// define ZVAL
++    zval *z_1;                  /// define ZVAL
+ 
+-		/* int column, int minSize,  */
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
+ 
+-	if (ZEND_NUM_ARGS() == 2){
+-		zval *z_0; // define ZVAL
+-		zval *z_1; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
++        void *return_object;
+ 
+-
+-			obj-&gt;setColumnMinimumWidth((int) Z_LVAL_P(z_0) ,(int) Z_LVAL_P(z_1));
+-			RETURN_NULL();
+-			}
+-		}
+-	}
++        if (getThis() != NULL) {
++          obj-&gt;setColumnMinimumWidth((int)Z_LVAL_P(z_0), (int)Z_LVAL_P(z_1));
++          RETURN_NULL();
++        }                       /// END getThis(), NULL
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  heightForWidth
+- *    flags:    c
++/*!
++ *    @class     QGridLayout
++ *    @function  heightForWidth
++ *
++ *    @flags    c
++ *    @access    public
++ *    @return    int
++ *    @param    int
+  */
+-ZEND_METHOD(QGridLayout, heightForWidth){
+-		/* l public*/
++ZEND_METHOD(QGridLayout, heightForWidth)
++{
++/*! l public*/
++/*! int ,  */
++  if (ZEND_NUM_ARGS() == 1) {
++    zval *z_0;                  /// define ZVAL
+ 
+-		/* int ,  */
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;z&quot;, &amp;z_0) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_LONG) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
+ 
+-	if (ZEND_NUM_ARGS() == 1){
+-		zval *z_0; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_LONG){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
++        int *return_object;
+ 
+-
+-			RETURN_LONG(obj-&gt;heightForWidth((int) Z_LVAL_P(z_0)));
+-			}
+-		}
+-	}
++        if (getThis() != NULL) {
++          RETURN_LONG(obj-&gt;heightForWidth((int)Z_LVAL_P(z_0)));
++        }                       /// 5 END getThis(), simple types
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  hasHeightForWidth
+- *    flags:    c
++/*!
++ *    @class     QGridLayout
++ *    @function  hasHeightForWidth
++ *
++ *    @flags    c
++ *    @access    public
++ *    @return    bool
++ *    @param    
+  */
+-ZEND_METHOD(QGridLayout, hasHeightForWidth){
+-	if (ZEND_NUM_ARGS() == 0){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-			RETURN_BOOL(obj-&gt;hasHeightForWidth());
+-	}
++ZEND_METHOD(QGridLayout, hasHeightForWidth)
++{
++  if (ZEND_NUM_ARGS() == 0) {
++    bool *return_object;
++
++    if (getThis() != NULL) {
++      QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
++
++      RETURN_BOOL(obj-&gt;hasHeightForWidth());
++    }                           /// 5 END getThis(), simple types
++  }
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  setColumnStretch
+- *    flags:    
++/*!
++ *    @class     QGridLayout
++ *    @function  setColumnStretch
++ *
++ *    @flags    
++ *    @access    public
++ *    @return    void
++ *    @param    int column, int stretch
+  */
+-ZEND_METHOD(QGridLayout, setColumnStretch){
+-		/* ll public*/
++ZEND_METHOD(QGridLayout, setColumnStretch)
++{
++/*! ll public*/
++/*! int column, int stretch,  */
++  if (ZEND_NUM_ARGS() == 2) {
++    zval *z_0;                  /// define ZVAL
++    zval *z_1;                  /// define ZVAL
+ 
+-		/* int column, int stretch,  */
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
+ 
+-	if (ZEND_NUM_ARGS() == 2){
+-		zval *z_0; // define ZVAL
+-		zval *z_1; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
++        void *return_object;
+ 
+-
+-			obj-&gt;setColumnStretch((int) Z_LVAL_P(z_0) ,(int) Z_LVAL_P(z_1));
+-			RETURN_NULL();
+-			}
+-		}
+-	}
++        if (getThis() != NULL) {
++          obj-&gt;setColumnStretch((int)Z_LVAL_P(z_0), (int)Z_LVAL_P(z_1));
++          RETURN_NULL();
++        }                       /// END getThis(), NULL
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  rowCount
+- *    flags:    c
++/*!
++ *    @class     QGridLayout
++ *    @function  rowCount
++ *
++ *    @flags    c
++ *    @access    public
++ *    @return    int
++ *    @param    
+  */
+-ZEND_METHOD(QGridLayout, rowCount){
+-	if (ZEND_NUM_ARGS() == 0){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-			RETURN_LONG(obj-&gt;rowCount());
+-	}
++ZEND_METHOD(QGridLayout, rowCount)
++{
++  if (ZEND_NUM_ARGS() == 0) {
++    int *return_object;
++
++    if (getThis() != NULL) {
++      QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
++
++      RETURN_LONG(obj-&gt;rowCount());
++    }                           /// 5 END getThis(), simple types
++  }
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  columnMinimumWidth
+- *    flags:    c
++/*!
++ *    @class     QGridLayout
++ *    @function  columnMinimumWidth
++ *
++ *    @flags    c
++ *    @access    public
++ *    @return    int
++ *    @param    int column
+  */
+-ZEND_METHOD(QGridLayout, columnMinimumWidth){
+-		/* l public*/
++ZEND_METHOD(QGridLayout, columnMinimumWidth)
++{
++/*! l public*/
++/*! int column,  */
++  if (ZEND_NUM_ARGS() == 1) {
++    zval *z_0;                  /// define ZVAL
+ 
+-		/* int column,  */
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;z&quot;, &amp;z_0) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_LONG) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
+ 
+-	if (ZEND_NUM_ARGS() == 1){
+-		zval *z_0; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_LONG){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
++        int *return_object;
+ 
+-
+-			RETURN_LONG(obj-&gt;columnMinimumWidth((int) Z_LVAL_P(z_0)));
+-			}
+-		}
+-	}
++        if (getThis() != NULL) {
++          RETURN_LONG(obj-&gt;columnMinimumWidth((int)Z_LVAL_P(z_0)));
++        }                       /// 5 END getThis(), simple types
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  cellRect
+- *    flags:    c
++/*!
++ *    @class     QGridLayout
++ *    @function  cellRect
++ *
++ *    @flags    c
++ *    @access    public
++ *    @return    QRect
++ *    @param    int row, int column
+  */
+-ZEND_METHOD(QGridLayout, cellRect){
+-		/* ll public*/
++ZEND_METHOD(QGridLayout, cellRect)
++{
++/*! ll public*/
++/*! int row, int column,  */
++  if (ZEND_NUM_ARGS() == 2) {
++    zval *z_0;                  /// define ZVAL
++    zval *z_1;                  /// define ZVAL
+ 
+-		/* int row, int column,  */
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
+ 
+-	if (ZEND_NUM_ARGS() == 2){
+-		zval *z_0; // define ZVAL
+-		zval *z_1; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
++        QRect *return_object;
+ 
++        if (getThis() != NULL) {
++/// return value is object: QRect
++          *return_object = static_cast &lt; QRect &gt; (obj-&gt;cellRect((int)Z_LVAL_P(z_0), (int)Z_LVAL_P(z_1)));
++        } else {                /// END getThis(), static
++          php_error(E_ERROR, &quot;Object not found&quot;);
++        }
++        zend_class_entry *ce;
+ 
+-				QRect return_object = (QRect) obj-&gt;cellRect((int) Z_LVAL_P(z_0) ,(int) Z_LVAL_P(z_1));
+-				zend_class_entry *ce;                                   
+-				object_init_ex(return_value, QGridLayout_ce_ptr);     
+-				zend_rsrc_list_entry le;                            
+-				le.ptr = (void*) &amp;return_object;                                       
+-				php_qt_register(return_value,le);                   
+-				return;                                             
+-			}
+-		}
+-	}
++        object_init_ex(return_value, QGridLayout_ce_ptr);
++        zend_rsrc_list_entry le;
++
++        le.ptr = return_object;
++        php_qt_register(return_value, le);
++        return;
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  columnCount
+- *    flags:    c
++/*!
++ *    @class     QGridLayout
++ *    @function  columnCount
++ *
++ *    @flags    c
++ *    @access    public
++ *    @return    int
++ *    @param    
+  */
+-ZEND_METHOD(QGridLayout, columnCount){
+-	if (ZEND_NUM_ARGS() == 0){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-			RETURN_LONG(obj-&gt;columnCount());
+-	}
++ZEND_METHOD(QGridLayout, columnCount)
++{
++  if (ZEND_NUM_ARGS() == 0) {
++    int *return_object;
++
++    if (getThis() != NULL) {
++      QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
++
++      RETURN_LONG(obj-&gt;columnCount());
++    }                           /// 5 END getThis(), simple types
++  }
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  setRowMinimumHeight
+- *    flags:    
++/*!
++ *    @class     QGridLayout
++ *    @function  setRowMinimumHeight
++ *
++ *    @flags    
++ *    @access    public
++ *    @return    void
++ *    @param    int row, int minSize
+  */
+-ZEND_METHOD(QGridLayout, setRowMinimumHeight){
+-		/* ll public*/
++ZEND_METHOD(QGridLayout, setRowMinimumHeight)
++{
++/*! ll public*/
++/*! int row, int minSize,  */
++  if (ZEND_NUM_ARGS() == 2) {
++    zval *z_0;                  /// define ZVAL
++    zval *z_1;                  /// define ZVAL
+ 
+-		/* int row, int minSize,  */
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
+ 
+-	if (ZEND_NUM_ARGS() == 2){
+-		zval *z_0; // define ZVAL
+-		zval *z_1; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
++        void *return_object;
+ 
+-
+-			obj-&gt;setRowMinimumHeight((int) Z_LVAL_P(z_0) ,(int) Z_LVAL_P(z_1));
+-			RETURN_NULL();
+-			}
+-		}
+-	}
++        if (getThis() != NULL) {
++          obj-&gt;setRowMinimumHeight((int)Z_LVAL_P(z_0), (int)Z_LVAL_P(z_1));
++          RETURN_NULL();
++        }                       /// END getThis(), NULL
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  trUtf8
+- *    flags:    s
++/*!
++ *    @class     QGridLayout
++ *    @function  trUtf8
++ *
++ *    @flags    s
++ *    @access    public
++ *    @return    QString
++ *    @param     const char *, const char * = 0 
+  */
+-ZEND_METHOD(QGridLayout, trUtf8){
+-		/* ss public*/
++ZEND_METHOD(QGridLayout, trUtf8)
++{
++/*! ss public*/
++/*! const char* , const char* ,  */
++  if (ZEND_NUM_ARGS() == 2) {
++    zval *z_0;                  /// define ZVAL
++    zval *z_1;                  /// define ZVAL
+ 
+-		/* const char* , const char* ,  */
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_STRING &amp;&amp; Z_TYPE_P(z_1) == IS_STRING) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
+ 
+-	if (ZEND_NUM_ARGS() == 2){
+-		zval *z_0; // define ZVAL
+-		zval *z_1; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_STRING &amp;&amp; Z_TYPE_P(z_1) == IS_STRING){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
++        QString *return_object;
+ 
++        if (getThis() != NULL) {
++/// return value is object: QString
++          *return_object = static_cast &lt; QString &gt; (obj-&gt;trUtf8((const char *)Z_STRVAL_P(z_0), (const char *)Z_STRVAL_P(z_1)));
++/// check whether method call is static.
++        } else {
++          return_object = (QString *) malloc(sizeof (QGridLayout::trUtf8((const char *)Z_STRVAL_P(z_0), (const char *)Z_STRVAL_P(z_1))));       /// memory allocation
++          *return_object = static_cast &lt; QString &gt; (QGridLayout::trUtf8((const char *)Z_STRVAL_P(z_0), (const char *)Z_STRVAL_P(z_1)));
++        } zend_class_entry *ce;
+ 
+-				QString return_object = (QString) obj-&gt;trUtf8( (const char*) Z_STRVAL_P(z_0) , (const char*) Z_STRVAL_P(z_1));
+-				zend_class_entry *ce;                                   
+-				object_init_ex(return_value, QGridLayout_ce_ptr);     
+-				zend_rsrc_list_entry le;                            
+-				le.ptr = (void*) &amp;return_object;                                       
+-				php_qt_register(return_value,le);                   
+-				return;                                             
+-			}
+-		}
+-	}
++        object_init_ex(return_value, QGridLayout_ce_ptr);
++        zend_rsrc_list_entry le;
++
++        le.ptr = return_object;
++        php_qt_register(return_value, le);
++        return;
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  maximumSize
+- *    flags:    c
++/*!
++ *    @class     QGridLayout
++ *    @function  maximumSize
++ *
++ *    @flags    c
++ *    @access    public
++ *    @return    QSize
++ *    @param    
+  */
+-ZEND_METHOD(QGridLayout, maximumSize){
+-	if (ZEND_NUM_ARGS() == 0){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-				QSize return_object = (QSize) obj-&gt;maximumSize();
+-				zend_class_entry *ce;                                   
+-				object_init_ex(return_value, QGridLayout_ce_ptr);     
+-				zend_rsrc_list_entry le;                            
+-				le.ptr = (void*) &amp;return_object;                                       
+-				php_qt_register(return_value,le);                   
+-				return;                                             
+-	}
+-}
++ZEND_METHOD(QGridLayout, maximumSize)
++{
++  if (ZEND_NUM_ARGS() == 0) {
++    QSize *return_object;
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  qt_property
+- *    flags:    v
+- */
+-ZEND_METHOD(QGridLayout, qt_property){
++    if (getThis() != NULL) {
++      QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
++
++/// return value is object: QSize
++      *return_object = static_cast &lt; QSize &gt; (obj-&gt;maximumSize());
++    } else {                    /// END getThis(), static
++      php_error(E_ERROR, &quot;Object not found&quot;);
++    }
++    zend_class_entry *ce;
++
++    object_init_ex(return_value, QGridLayout_ce_ptr);
++    zend_rsrc_list_entry le;
++
++    le.ptr = return_object;
++    php_qt_register(return_value, le);
++    return;
++  }
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  minimumHeightForWidth
+- *    flags:    c
++/*!
++ *    @class     QGridLayout
++ *    @function  minimumHeightForWidth
++ *
++ *    @flags    c
++ *    @access    public
++ *    @return    int
++ *    @param    int
+  */
+-ZEND_METHOD(QGridLayout, minimumHeightForWidth){
+-		/* l public*/
++ZEND_METHOD(QGridLayout, minimumHeightForWidth)
++{
++/*! l public*/
++/*! int ,  */
++  if (ZEND_NUM_ARGS() == 1) {
++    zval *z_0;                  /// define ZVAL
+ 
+-		/* int ,  */
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;z&quot;, &amp;z_0) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_LONG) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
+ 
+-	if (ZEND_NUM_ARGS() == 1){
+-		zval *z_0; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_LONG){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
++        int *return_object;
+ 
+-
+-			RETURN_LONG(obj-&gt;minimumHeightForWidth((int) Z_LVAL_P(z_0)));
+-			}
+-		}
+-	}
++        if (getThis() != NULL) {
++          RETURN_LONG(obj-&gt;minimumHeightForWidth((int)Z_LVAL_P(z_0)));
++        }                       /// 5 END getThis(), simple types
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  expandingDirections
+- *    flags:    c
++/*!
++ *    @class     QGridLayout
++ *    @function  expandingDirections
++ *
++ *    @flags    c
++ *    @access    public
++ *    @return    Qt::Orientations
++ *    @param    
+  */
+-ZEND_METHOD(QGridLayout, expandingDirections){
+-	if (ZEND_NUM_ARGS() == 0){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-				Qt::Orientations return_object = (Qt::Orientations) obj-&gt;expandingDirections();
+-				zend_class_entry *ce;                                   
+-				object_init_ex(return_value, QGridLayout_ce_ptr);     
+-				zend_rsrc_list_entry le;                            
+-				le.ptr = (void*) &amp;return_object;                                       
+-				php_qt_register(return_value,le);                   
+-				return;                                             
+-	}
++ZEND_METHOD(QGridLayout, expandingDirections)
++{
++  if (ZEND_NUM_ARGS() == 0) {
++    Qt::Orientations * return_object;
++    if (getThis() != NULL) {
++      QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
++
++      obj-&gt;expandingDirections();
++      RETURN_NULL();
++    }                           /// END getThis(), NULL
++  }
+ }
+ 
+-/*********************************
+- *    class     QGridLayout */
+-/*
+- *    function  rowStretch
+- *    flags:    c
++/*!
++ *    @class     QGridLayout
++ *    @function  rowStretch
++ *
++ *    @flags    c
++ *    @access    public
++ *    @return    int
++ *    @param    int row
+  */
+-ZEND_METHOD(QGridLayout, rowStretch){
+-		/* l public*/
++ZEND_METHOD(QGridLayout, rowStretch)
++{
++/*! l public*/
++/*! int row,  */
++  if (ZEND_NUM_ARGS() == 1) {
++    zval *z_0;                  /// define ZVAL
+ 
+-		/* int row,  */
++    if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;z&quot;, &amp;z_0) == SUCCESS) {
++      if (Z_TYPE_P(z_0) == IS_LONG) {
++        QGridLayout *obj = (QGridLayout *) PHP_QT_FETCH();
+ 
+-	if (ZEND_NUM_ARGS() == 1){
+-		zval *z_0; // define ZVAL
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
+-			if(Z_TYPE_P(z_0) == IS_LONG){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
++        int *return_object;
+ 
+-
+-			RETURN_LONG(obj-&gt;rowStretch((int) Z_LVAL_P(z_0)));
+-			}
+-		}
+-	}
++        if (getThis() != NULL) {
++          RETURN_LONG(obj-&gt;rowStretch((int)Z_LVAL_P(z_0)));
++        }                       /// 5 END getThis(), simple types
++      } else {
++        php_error(E_ERROR, &quot;argument not allowed&quot;);
++      }                         /// END check of argument types
++    }                           /// END zend_parse_parameters
++  }                             /// END ZEND_NUM_ARGS
+ }
+ 
+ 
+ PHP_QT_DESTRUCT(QGridLayout);
+-
+
+Modified: trunk/qt/classes/qlayout.cpp
+===================================================================
+--- trunk/qt/classes/qlayout.cpp	2006-04-27 21:28:37 UTC (rev 226)
++++ trunk/qt/classes/qlayout.cpp	2006-04-27 21:36:45 UTC (rev 227)
+@@ -440,19 +440,18 @@
+ 		/* o public*/
+ 
+ 		/* qt_QWidget* w,  */
+-
+ 	if (ZEND_NUM_ARGS() == 1){
+ 		zval *z_0; // define ZVAL
+ 		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
+ 			if(Z_TYPE_P(z_0) == IS_OBJECT){
+-			QLayout *obj = (QLayout*) PHP_QT_FETCH();
+-			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
+ 
++			    QLayout *obj = static_cast&lt;QLayout*&gt;(PHP_QT_FETCH());
++			    QWidget* obj_z_0 = static_cast&lt;QWidget*&gt;(php_qt_fetch(z_0));
+ 
+-			if(obj_z_0-&gt;inherits(&quot;QWidget&quot;)) {
+-				obj-&gt;addWidget((QWidget*) obj_z_0);
+-			RETURN_NULL();
+-			}
++//			if(obj_z_0-&gt;inherits(&quot;QWidget&quot;)) {
++				obj-&gt;addWidget(obj_z_0);
++			    RETURN_NULL();
++//			}
+ 			} else { php_error(E_ERROR,&quot;argument not allowed&quot;); }
+ 		}
+ 	}
+
+Modified: trunk/qt/classes/qvboxlayout.cpp
+===================================================================
+--- trunk/qt/classes/qvboxlayout.cpp	2006-04-27 21:28:37 UTC (rev 226)
++++ trunk/qt/classes/qvboxlayout.cpp	2006-04-27 21:36:45 UTC (rev 227)
+@@ -145,6 +145,16 @@
+ 				PHP_QT_REGISTER(QVBoxLayout_ptr);
+ 				RETURN_NULL();
+ 	}
++/// handmade
++    if (ZEND_NUM_ARGS() == 1){
++    	zval *z_0; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
++            QWidget *qw = static_cast&lt;QWidget*&gt;(php_qt_fetch(z_0));
++			QVBoxLayout *QVBoxLayout_ptr = new QVBoxLayout(qw);
++			PHP_QT_REGISTER(QVBoxLayout_ptr);
++			RETURN_NULL();
++        }
++	}
+ }
+ 
+ 
+
+Modified: trunk/qt/classes/qwidget.cpp
+===================================================================
+--- trunk/qt/classes/qwidget.cpp	2006-04-27 21:28:37 UTC (rev 226)
++++ trunk/qt/classes/qwidget.cpp	2006-04-27 21:36:45 UTC (rev 227)
+@@ -4968,7 +4968,13 @@
+         php_error(E_ERROR, &quot;argument not allowed&quot;);
+       }                         /// END check of argument types
+     }                           /// END zend_parse_parameters
++    else {
++        php_error(E_ERROR, &quot;arg parse error.&quot;);
++    }
+   }                             /// END ZEND_NUM_ARGS
++  else {
++    php_error(E_ERROR, &quot;wrong arg count.&quot;);
++  }
+ }
+ 
+ /*!
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000070.html">[Php-qt-svn] r226 - trunk/qt/object_model
+</A></li>
+	<LI>Next message: <A HREF="000072.html">[Php-qt-svn] r228 - trunk/qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#71">[ date ]</a>
+              <a href="thread.html#71">[ thread ]</a>
+              <a href="subject.html#71">[ subject ]</a>
+              <a href="author.html#71">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

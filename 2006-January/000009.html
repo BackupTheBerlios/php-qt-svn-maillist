@@ -1,0 +1,485 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r160 - trunk/tools
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-January/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r160%20-%20trunk/tools&In-Reply-To=%3C200601081041.k08AfFhs029335%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000008.html">
+   <LINK REL="Next"  HREF="000010.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r160 - trunk/tools</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r160%20-%20trunk/tools&In-Reply-To=%3C200601081041.k08AfFhs029335%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r160 - trunk/tools">tm243 at berlios.de
+       </A><BR>
+    <I>Sun Jan  8 11:41:15 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000008.html">[Php-qt-svn] r159 - in trunk/qt: . object_model text_related
+</A></li>
+        <LI>Next message: <A HREF="000010.html">[Php-qt-svn] r161 - in trunk/playground: . classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#9">[ date ]</a>
+              <a href="thread.html#9">[ thread ]</a>
+              <a href="subject.html#9">[ subject ]</a>
+              <a href="author.html#9">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-01-08 11:41:14 +0100 (Sun, 08 Jan 2006)
+New Revision: 160
+
+Modified:
+   trunk/tools/kalyptusCxxToPHP.pm
+Log:
+some bugfixes were done.
+
+Modified: trunk/tools/kalyptusCxxToPHP.pm
+===================================================================
+--- trunk/tools/kalyptusCxxToPHP.pm	2006-01-08 02:09:14 UTC (rev 159)
++++ trunk/tools/kalyptusCxxToPHP.pm	2006-01-08 10:41:14 UTC (rev 160)
+@@ -14,11 +14,15 @@
+ # *                                                                         *
+ #***************************************************************************/
+ 
++#   - multiple inherits
++#   - method overloading, marshalling
++#   - return values
++
+ # TODO
+ #   - support for all types in method calls
+ #   - fit cplusplusToZEND, cplusplusToInvoke, cplusplusToMacro
+ #   - setter methods support only one php property (adequate, I believe)
+-#   - snippets for the config.m4 file and the QDate_ce_ptr pointer
++#   - marshalling in constructor, destructor
+ 
+ package kalyptusCxxToPHP;
+ 
+@@ -37,7 +41,7 @@
+ 
+ use vars qw/ @clist $host $who $now $gentext %functionId $docTop
+ 	$lib $rootnode $outputdir $opt $debug $typeprefix $eventHandlerCount
+-	$pastaccess $pastname $pastreturn $pastparams $nullctor $ctorCount @properties @functions @constructors %methods *CLASS *ZEND_PHP_QT *HEADER *AG_ZEND_CLASS_ENTRY *AG_EXTERN_ZEND_CLASS_ENTRY *AG_VOID_REGISTER *AG_ZEND_PHP_QT *AG_CONFIGM4 *AG_QT_MINIT *AG_PHP_QT_CPP *QTCTYPES *KDETYPES /;
++	$pastaccess $pastname $pastreturn $pastparams $nullctor $ctorCount @properties @functions @constructors %methods *CLASS *HEADER *AG_ZEND_CLASS_ENTRY *AG_EXTERN_ZEND_CLASS_ENTRY *AG_VOID_REGISTER *AG_ZEND_PHP_QT *AG_CONFIGM4 *AG_QT_MINIT *AG_PHP_QT_CPP *QTCTYPES *KDETYPES /;
+ 
+ BEGIN
+ {
+@@ -390,6 +394,7 @@
+ 	}
+ }
+ 
++# deprecated
+ sub cplusplusToMacro
+ {
+ 	my ( $class, $cnode )  = @_;
+@@ -590,7 +595,7 @@
+     $access = uc($access);
+     $access =~ s/_SLOTS//;
+     $access =~ s/_SIGNALS//;
+-#    print PHP_QT_CPP &quot;\tZEND_ME(&quot;,$classname,&quot;,&quot;,$functionname,&quot;,NULL,ZEND_ACC_&quot;,$access,&quot;)\n&quot;;
++
+     print AG_PHP_QT_CPP &quot;\tZEND_ME(&quot;,$classname,&quot;,&quot;,$functionname,&quot;,NULL,ZEND_ACC_&quot;,$access,&quot;)\n&quot;;
+ 
+ }
+@@ -602,13 +607,9 @@
+ 	$debug = $main::debuggen;
+ 
+ 	mkpath( $outputdir ) unless -f $outputdir;
+-    mkpath( $outputdir.&quot;/generated/&quot; ) unless -f $outputdir.&quot;/generated/&quot;;
++    mkpath( $outputdir.&quot;/classes/&quot; ) unless -f $outputdir.&quot;/classes/&quot;;
+ 
+ # open files
+-    # make zend_php_qt.h header file
+-	my $file_zend_php_qt = &quot;$outputdir/zend_php_qt.h&quot;;
+-	open( ZEND_PHP_QT, &quot;&gt;$file_zend_php_qt&quot; ) || die &quot;Couldn't create $file_zend_php_qt\n&quot;;
+-	$file_zend_php_qt =~ s/\.h/.h/;
+ 
+     # AG_ZEND_CLASS_ENTRY
+     my $file_ag_zend_class_entry = &quot;$outputdir/ag_zend_class_entry.h&quot;;
+@@ -620,11 +621,6 @@
+     open( AG_EXTERN_ZEND_CLASS_ENTRY, &quot;&gt;$file_ag_extern_zend_class_entry&quot; ) || die &quot;Couldn't create $file_ag_extern_zend_class_entry\n&quot;;
+     $file_ag_extern_zend_class_entry =~ s/\.h/.h/;
+ 
+-#     # AG_VOID_REGISTER
+-#     my $file_ag_void_register = &quot;$outputdir/ag_void_register.h&quot;;
+-#     open( AG_VOID_REGISTER, &quot;&gt;$file_ag_void_register&quot; ) || die &quot;Couldn't create $file_ag_void_register\n&quot;;
+-#     $file_ag_void_register =~ s/\.h/.h/;
+-
+     # AG_ZEND_PHP_QT
+     my $file_ag_zend_php_qt = &quot;$outputdir/ag_zend_php_qt.h&quot;;
+     open( AG_ZEND_PHP_QT, &quot;&gt;$file_ag_zend_php_qt&quot; ) || die &quot;Couldn't create $file_ag_zend_php_qt\n&quot;;
+@@ -693,24 +689,12 @@
+ PHP_FUNCTION(SLOT);
+     \n\n&quot;;
+ 
+-# deprecated
+-    # make zend_php.cpp snippets file
+-# 	my $file_php_qt_cpp = &quot;$outputdir/php_qt.snippets.cpp&quot;;
+-# 	open( PHP_QT_CPP, &quot;&gt;$file_php_qt_cpp&quot; ) || die &quot;Couldn't create $file_php_qt_cpp\n&quot;;
+-# 	$file_php_qt_cpp =~ s/\.h/.h/;
+-
+-#    print PHP_QT_CPP &quot;/**/\n&quot;;
+-
+-# deprecated
+-    # make zend_php.cpp second snippets file PHP_MINIT_FUNCTION
+ 	my $file_php_qt_minit = &quot;$outputdir/php_qt.snippets2.cpp&quot;;
+ 	open( PHP_QT_MINIT, &quot;&gt;$file_php_qt_minit&quot; ) || die &quot;Couldn't create $file_php_qt_minit\n&quot;;
+ 	$file_php_qt_minit =~ s/\.h/.h/;
+ 
+-#    print PHP_QT_CPP &quot;\n&quot;;
+     print PHP_QT_MINIT &quot;\n&quot;;
+ 
+-
+ 	# Document all compound nodes
+ 	Iter::LocalCompounds( $rootnode, sub { writeClassDoc( shift ); } );
+ 
+@@ -754,14 +738,10 @@
+     &quot;;
+ 
+ # close files
+-#    close ZEND_PHP_QT;
+ 
+-#    print PHP_QT_CPP &quot;\n&quot;;
+-#    close PHP_QT_CPP;
+-
+     close AG_ZEND_CLASS_ENTRY;
+     close AG_EXTERN_ZEND_CLASS_ENTRY;
+-#    close AG_VOID_REGISTER;
++
+     close AG_ZEND_PHP_QT;
+     close AG_CONFIGM4;
+     close AG_QT_MINIT;
+@@ -797,7 +777,7 @@
+ 	}
+ # make the class file
+ 	my $file = join(&quot;__&quot;, kdocAstUtil::heritage($node)).&quot;.cpp&quot;;
+-    $file = $outputdir.&quot;generated/&quot;.lc($file);
++    $file = $outputdir.&quot;classes/&quot;.lc($file);
+ 	my $docnode = $node-&gt;{DocNode};
+ 	my @list = ();
+ 	my $version = undef;
+@@ -841,17 +821,16 @@
+ 
+     print CLASS &quot;
+ #include &lt;iostream&gt;
+-using namespace std;
++using namespace std;\n&quot;;
+ 
+-#include \&quot;../php_qt.h\&quot;\n&quot;;
++    print CLASS &quot;\n#include &lt;$node-&gt;{astNodeName}&gt;\n&quot;;
++    print CLASS &quot;#include \&quot;../php_qt.h\&quot;\n\n&quot;;
+ 
+-# php_qt.cpp
+-#    print PHP_QT_CPP &quot;static zend_function_entry &quot;,$node-&gt;{astNodeName},&quot;_methods[] = {\n&quot;;
+     print AG_PHP_QT_CPP &quot;static zend_function_entry &quot;,$node-&gt;{astNodeName},&quot;_methods[] = {\n&quot;;
+ 
+ 
+     print AG_ZEND_CLASS_ENTRY &quot;zend_class_entry *&quot;,$node-&gt;{astNodeName},&quot;_ce_ptr;\n&quot;;
+-    print AG_CONFIGM4 &quot;\tqt/generated/&quot;,uc($node-&gt;{astNodeName}),&quot;.cpp \\ \n&quot;;
++    print AG_CONFIGM4 &quot;\tqt/classes/&quot;,lc($node-&gt;{astNodeName}),&quot;.cpp \\ \n&quot;;
+     print AG_EXTERN_ZEND_CLASS_ENTRY &quot;extern zend_class_entry *&quot;,$node-&gt;{astNodeName},&quot;_ce_ptr;\n&quot;;
+     print AG_EXTERN_ZEND_CLASS_ENTRY &quot;void \t_register_&quot;,$node-&gt;{astNodeName},&quot;();\n&quot;;
+ 
+@@ -912,11 +891,11 @@
+ # CLASS
+ 	} else {
+ 
+-        print CLASS &quot;\n#include &lt;$node-&gt;{astNodeName}&gt;\n\n&quot;;
++        print CLASS &quot;\n#include &lt;&quot;,$node-&gt;{astNodeName},&quot;&gt;\n\n&quot;;
+         print ZEND_PHP_QT &quot;\n\n/* $node-&gt;{astNodeName} */&quot;;
+ 
+ 	}
+-# JNISOURCE? seems to be from JNI
++# JNISOURCE?
+ 	Iter::MembersByType ( $node,
+ 		sub { print CLASS &quot;&quot;, $_[0], &quot;&quot;; print JNISOURCE &quot;&quot;, $_[0], &quot;&quot;;  },
+ 		sub {	my ($node, $kid ) = @_;
+@@ -965,6 +944,7 @@
+         my $first = 1;
+ 
+         foreach my $m_ (@methods_){
++# params
+             foreach my $n_ (@{$m_}){
+ 
+             if($first == 1){
+@@ -976,7 +956,6 @@
+                 print CLASS &quot;ZEND_METHOD(&quot;,$node-&gt;{astNodeName},&quot;, &quot;,$n_-&gt;{astNodeName},&quot;){\n&quot;;
+             }
+ 
+-
+                 my $count = 0;
+                 foreach $b ( @{$n_-&gt;{ParamList}} ) {
+                     $count++;
+@@ -1074,10 +1053,6 @@
+ 	close CLASS;
+ 	$nullctor = 0;
+ 
+-# php_qt.cpp
+-#     print PHP_QT_CPP &quot;
+-# 	{NULL,NULL,NULL}
+-# };\n&quot;;
+     print AG_PHP_QT_CPP &quot;
+     {NULL,NULL,NULL}
+ };\n&quot;;
+@@ -1096,13 +1071,6 @@
+         }
+ 	}
+ 
+-#     print PHP_QT_CPP &quot;
+-# void _register_&quot;,$node-&gt;{astNodeName},&quot;(TSRMLS_D)
+-# {
+-#     zend_class_entry ce;
+-#     INIT_CLASS_ENTRY(ce,\&quot;&quot;,$node-&gt;{astNodeName},&quot;\&quot;,&quot;,$node-&gt;{astNodeName},&quot;_methods);
+-#     &quot;,$zend_inherit,&quot;
+-# &quot;;
+     print AG_PHP_QT_CPP &quot;
+ void _register_&quot;,$node-&gt;{astNodeName},&quot;(TSRMLS_D)
+ {
+@@ -1115,9 +1083,6 @@
+ 		sub { print CLASS &quot;&quot;, $_[0], &quot;&quot;; print CLASS &quot;&quot;, $_[0], &quot;&quot;;  },
+ 		sub {	my ($node, $kid ) = @_;
+             if ($kid-&gt;{NodeType} eq &quot;property&quot;){
+-#                 print PHP_QT_CPP
+-# #                    &quot;zend_declare_property_string(&quot;,$node-&gt;{astNodeName},&quot;_ce_ptr,\&quot;&quot;,$kid-&gt;{astNodeName},&quot;\&quot;,strlen(\&quot;&quot;,$kid-&gt;{astNodeName},&quot;\&quot;),\&quot;\&quot;,ZEND_ACC_PROTECTED TSRMLS_CC);&quot;;
+-#                      &quot;\tPHP_QT_DECLARE_PROPERTY(\&quot;$kid-&gt;{astNodeName}\&quot;);\n&quot;;
+                 print AG_PHP_QT_CPP
+ #                    &quot;zend_declare_property_string(&quot;,$node-&gt;{astNodeName},&quot;_ce_ptr,\&quot;&quot;,$kid-&gt;{astNodeName},&quot;\&quot;,strlen(\&quot;&quot;,$kid-&gt;{astNodeName},&quot;\&quot;),\&quot;\&quot;,ZEND_ACC_PROTECTED TSRMLS_CC);&quot;;
+                      &quot;\tPHP_QT_DECLARE_PROPERTY(\&quot;$kid-&gt;{astNodeName}\&quot;);\n&quot;;
+@@ -1127,8 +1092,6 @@
+ 		sub { print CLASS &quot;&quot;; print JNISOURCE &quot;&quot;; }
+ 	);
+ 
+-#     print PHP_QT_CPP &quot;
+-# }\n&quot;;
+     print AG_PHP_QT_CPP &quot;
+ }\n&quot;;
+ 
+@@ -1165,8 +1128,6 @@
+ 		$name = &quot;~&quot;.$name;
+ 	}
+ 
+-#print_r($m);
+-
+     $function = $name;
+ 
+ 	$function =~ s/~//;
+@@ -1414,7 +1375,7 @@
+     }
+ }
+ 
+-# diese Methode gruppiert alle Argumente nach Anzahl
++# groups arguments regarding argument count
+ 
+ sub mergeNumbers
+ {
+@@ -1452,6 +1413,9 @@
+     foreach my $method (@args){
+         my $paramstring = &quot;&quot;;
+         foreach my $param ( @{$method-&gt;{ParamList}} ) {
++
++            $param = checkEnum($param);
++
+             if ( $param-&gt;{ArgType} =~ /char/ ) {
+                 $paramstring .= &quot;s&quot;;
+             } elsif ( $param-&gt;{ArgType} =~ /int/ ) {
+@@ -1528,6 +1492,7 @@
+         my $access = $method-&gt;{Access};
+         my $object_selection = &quot;&quot;;
+         my $tmp_count = 0;          # helping
++        my $c__ = $c;                # ugly
+ 
+ # informations about return type
+ 
+@@ -1546,56 +1511,59 @@
+                 $param_zend_function .= &quot; ,&quot;;
+             }
+ 
++            $first_param = checkEnum($first_param);
++
+             # the types
+ # char
+             if ( $first_param-&gt;{ArgType} =~ /char/ ) {
+-                $return .= &quot;\t\tchar* var_&quot;.$run.$c.&quot;;   // default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
+-                $return .= &quot;\t\tint* len_&quot;.$run.$c.&quot;;\n\n&quot;;
++                $return .= &quot;\t\tchar* var_&quot;.$run.$c__.&quot;;   // default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
++                $return .= &quot;\t\tint* len_&quot;.$run.$c__.&quot;;\n\n&quot;;
+ 
+-                $paratype .= &quot;, &amp;var_&quot;.$c.&quot;, &amp;len_&quot;.$c;
+-                $param_zend_function .= &quot; var_&quot;.$c;
++                $paratype .= &quot;, &amp;var_&quot;.$run.$c__.&quot;, &amp;len_&quot;.$run.$c__;
++                $param_zend_function .= &quot; (&quot;.$first_param-&gt;{ArgType}.&quot;) var_&quot;.$run.$c__;
+                 $shortstring .= &quot;s&quot;;
+ # int
+             } elsif ( $first_param-&gt;{ArgType} =~ /int/ ) {
+-                $return .= &quot;\t\tlong var_&quot;.$run.$c.&quot;;    // default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
++                $return .= &quot;\t\tlong var_&quot;.$run.$c__.&quot;;    // default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
+ 
+-                $paratype .= &quot;, &amp;var_&quot;.$run.$c;
+-                $param_zend_function .= &quot;(&quot;.$first_param-&gt;{ArgType}.&quot;) var_&quot;.$run.$c;
++                $paratype .= &quot;, &amp;var_&quot;.$run.$c__;
++                $param_zend_function .= &quot;(&quot;.$first_param-&gt;{ArgType}.&quot;) var_&quot;.$run.$c__;
+                 $shortstring .= &quot;l&quot;;
+ # bool
+             } elsif ( $first_param-&gt;{ArgType} =~ /bool/ ) {
+-                $return .= &quot;\t\tbool* var_&quot;.$run.$c.&quot;;   // _default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
++                $return .= &quot;\t\tbool* var_&quot;.$run.$c__.&quot;;   // _default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
+ 
+-                $paratype .= &quot;, &amp;var_&quot;.$run.$c;
+-                $param_zend_function .= &quot;(&quot;.$first_param-&gt;{ArgType}.&quot;) var_&quot;.$run.$c;
++                $paratype .= &quot;, &amp;var_&quot;.$run.$c__;
++                $param_zend_function .= &quot;(&quot;.$first_param-&gt;{ArgType}.&quot;) var_&quot;.$run.$c__;
+                 $shortstring .= &quot;b&quot;;
+ # objects
+             } else {
+ # while overloading, only one object will be created, query for name
+ 
+-                $return .= &quot;\t\tzval* var_&quot;.$run.$c.&quot;;   // default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
++                $return .= &quot;\t\tzval* z_var_&quot;.$run.$c__.&quot;;   // default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
+ 
+-                $paratype .= &quot;, &amp;var_&quot;.$run.$c;
+-                $param_zend_function .= &quot;() var_o_&quot;.$c; # deprecated
++                $paratype .= &quot;, &amp;z_var_&quot;.$run.$c__;
++                $param_zend_function .= &quot;() var_o_&quot;.$c__; # deprecated
+                 $shortstring .= &quot;o&quot;;
+-                push @objects, &quot;var_o_&quot;.$c;   # ?
++                push @objects, &quot;var_&quot;.$run.$c__;   # ?
+                 # name query
+-                $object_selection .= &quot;\t\t\tQString tmp_&quot;.$tmp_count++.&quot;(var_o_&quot;.$c.&quot;-&gt;metaObject()-&gt;className());\n&quot;;
++                $object_selection .= &quot;\t\t\tQString tmp_&quot;.$run.$tmp_count++.&quot;(var_&quot;.$run.$c__.&quot;-&gt;metaObject()-&gt;className());\n&quot;;
+             }
+             if(exists $first_param-&gt;{DefaultValue} != &quot;&quot;){
+                 $shortstring .= &quot;|&quot;;
+             }
+-            $c++;
++            $c__++;
+             $d++;
+         }
+         $return .= &quot;\n&quot;;
+ # add additional objects
+-        
++
+         foreach my $params (@{$method-&gt;{params}}){
+-            
++
+             my $skip_first = 1;
+             $tmp_count = 0;
+-            $c = 0;
++#            $c = $c__;
++            my $c_ = 0;
+ 
+ # skip first, this was already created
+             my $object_test;
+@@ -1604,6 +1572,8 @@
+ # parse the rest
+             foreach my $param ( @{$params-&gt;{ParamList}} ) {
+ 
++                $param = checkEnum($param);
++
+                 if($skip_first == 1){
+                     $object_selection .= &quot;\t\t\t&quot;;
+                     $skip_first = 0;
+@@ -1624,9 +1594,16 @@
+                     } else {
+                         $object_test .= &quot; &amp;&amp; &quot;;
+                     }
+-                    $object_test .= &quot;tmp_&quot;.$tmp_count++.&quot; == \&quot;&quot;.$param-&gt;{ArgType}.&quot;\&quot;&quot;;
+-                    $object_call .= &quot;(&quot;.$param-&gt;{ArgType}.&quot;) &quot;.$objects[$c++];
++                    $object_test .= &quot;tmp_&quot;.$run.$tmp_count++.&quot; == \&quot;&quot;.$param-&gt;{ArgType}.&quot;\&quot;&quot;;
++# here: check Qt::anymember
++#                     if($param-&gt;{ArgType} =~ /Qt::/){
++#                         $param-&gt;{ArgType} = kalyptusDataDict::ctypemap($param-&gt;{ArgType});
++#                     }
++
++                    $object_call .= &quot;(&quot;.$param-&gt;{ArgType}.&quot;) &quot;.$objects[$c_++];
++
+                 }
++                $c++;
+             } # foreach param
+ 
+             if(!$obj_first){
+@@ -1645,7 +1622,7 @@
+ # objects as return type
+         my $obj;
+         foreach $obj ( @objects ) {
+-            $return .= &quot;\t\t\tQObject* &quot;.$obj.&quot; = (QObject*) php_qt_fetch(&quot;.$obj.&quot;);\n&quot;;
++            $return .= &quot;\t\t\tQObject* &quot;.$obj.&quot; = (QObject*) php_qt_fetch(z_&quot;.$obj.&quot;);\n&quot;;
+         }
+ 
+ # add object handling
+@@ -1680,7 +1657,6 @@
+         $access = uc($access);
+         $access =~ s/_SLOTS//;
+         $access =~ s/_SIGNALS//;
+-#        print PHP_QT_CPP &quot;\tZEND_ME(&quot;,$classname,&quot;,&quot;,$method-&gt;{methodname},&quot;,NULL,ZEND_ACC_&quot;,$access,&quot;)\n&quot;;
+         print AG_PHP_QT_CPP &quot;\tZEND_ME(&quot;,$classname,&quot;,&quot;,$method-&gt;{methodname},&quot;,NULL,ZEND_ACC_&quot;,$access,&quot;)\n&quot;;
+ 
+     } # foreach args
+@@ -1699,8 +1675,8 @@
+     my $return;
+ 
+ # no arguments, no object created
+-    if($param_zend_function == &quot;&quot;){
+-        $return .= &quot;\t\t\t&quot;.$classname.&quot; *obj = (&quot;.$classname.&quot;) PHP_QT_FETCH();\n&quot;;
++    if($param_zend_function eq &quot;&quot;){
++        $return .= &quot;\t\t\t&quot;.$classname.&quot; *obj = (&quot;.$classname.&quot;*) PHP_QT_FETCH();\n&quot;;
+     }
+ 
+     my $methodname;
+@@ -1738,5 +1714,22 @@
+ 
+ }
+ 
++sub checkEnum(){
++    my ($param) = @_;
++
++    if($param-&gt;{ArgType} =~ /Qt::/){
++
++        my $ArgType = kalyptusDataDict::ctypemap($param-&gt;{ArgType});
++
++        if($ArgType eq &quot;&quot;){
++            $ArgType = &quot;int&quot;;
++        }
++
++        $param-&gt;{ArgType} = $ArgType;
++    }
++
++    return $param;
++}
++
+ 1;
+ 
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000008.html">[Php-qt-svn] r159 - in trunk/qt: . object_model text_related
+</A></li>
+	<LI>Next message: <A HREF="000010.html">[Php-qt-svn] r161 - in trunk/playground: . classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#9">[ date ]</a>
+              <a href="thread.html#9">[ thread ]</a>
+              <a href="subject.html#9">[ subject ]</a>
+              <a href="author.html#9">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

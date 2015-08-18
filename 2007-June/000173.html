@@ -1,0 +1,427 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r329 - in trunk: . examples/calculator php_qt
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-June/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r329%20-%20in%20trunk%3A%20.%20examples/calculator%20php_qt&In-Reply-To=%3C200706061843.l56Ihav8022679%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000172.html">
+   <LINK REL="Next"  HREF="000174.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r329 - in trunk: . examples/calculator php_qt</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r329%20-%20in%20trunk%3A%20.%20examples/calculator%20php_qt&In-Reply-To=%3C200706061843.l56Ihav8022679%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r329 - in trunk: . examples/calculator php_qt">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Wed Jun  6 20:43:36 CEST 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000172.html">[Php-qt-svn] r328 - in trunk: examples/calculator php_qt smoke tests
+</A></li>
+        <LI>Next message: <A HREF="000174.html">[Php-qt-svn] r330 - in trunk: . php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#173">[ date ]</a>
+              <a href="thread.html#173">[ thread ]</a>
+              <a href="subject.html#173">[ subject ]</a>
+              <a href="author.html#173">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2007-06-06 20:43:35 +0200 (Wed, 06 Jun 2007)
+New Revision: 329
+
+Removed:
+   trunk/TODO
+   trunk/admin/
+   trunk/config.m4
+   trunk/kdeize
+Modified:
+   trunk/examples/calculator/calculator.php
+   trunk/php_qt/marshall_basetypes.h
+   trunk/php_qt/marshall_types.cpp
+   trunk/php_qt/marshall_types.h
+   trunk/php_qt/php_qt.cpp
+   trunk/php_qt/php_qt.h
+   trunk/php_qt/smokephp.cpp
+   trunk/svn-commit.tmp
+Log:
+* major code cleaning
+
+
+
+Deleted: trunk/TODO
+===================================================================
+--- trunk/TODO	2007-06-06 13:07:07 UTC (rev 328)
++++ trunk/TODO	2007-06-06 18:43:35 UTC (rev 329)
+@@ -1,9 +0,0 @@
+-
+-
+-- virtual and protected methods (already prepared)
+-- storing meta objects in hashtable (already prepared)
+-- returning of right php objects if returntype is reference
+-- support for pecl operators
+-- support for Q_SIGNAL/Q_SLOT macros
+-- classes for tutorial 8-14 and QSvgWidget, QSvgRenderer
+-
+
+Deleted: trunk/config.m4
+===================================================================
+--- trunk/config.m4	2007-06-06 13:07:07 UTC (rev 328)
++++ trunk/config.m4	2007-06-06 18:43:35 UTC (rev 329)
+@@ -1,150 +0,0 @@
+-
+-m4_pattern_allow([AM_INIT_AUTOMAKE])dnl
+-m4_pattern_allow([AC_PACKAGE_TARNAME])dnl
+-m4_pattern_allow([AC_PACKAGE_VERSION])dnl
+-AM_INIT_AUTOMAKE([NO-DEFINE])
+-
+-dnl This is so we can use kde-common
+-
+-dnl includes kde build environment
+-KDE_CREATE_LIBS_ALIASES
+-
+-AC_ENABLE_SHARED(yes)
+-AC_ENABLE_STATIC(no)
+-KDE_PROG_LIBTOOL
+-
+-m4_pattern_allow([AC_PATH_QT])dnl
+-AC_PATH_QT()
+-AC_SUBST(all_includes)
+-AC_SUBST(all_libraries)
+-
+-dnl =======================================================
+-dnl FILE: ./smoke/configure.in.in
+-dnl =======================================================
+-
+-AC_ARG_WITH(
+-   smoke,
+-   [  --with-smoke@&lt;:@=qt|kde@:&gt;@   Smoke: build Smoke for qt+kde or qt only @&lt;:@default:qt@:&gt;@],
+-   [ kde_build_libsmoke=&quot;$withval&quot; ],
+-   [ kde_build_libsmoke=&quot;qt&quot; ]
+-)
+-AC_SUBST(kde_build_libsmoke)
+-
+-dnl =======================================================
+-dnl FILE: ./smoke/kde/configure.in.in
+-dnl =======================================================
+-
+-
+-#AC_HAVE_GL
+-#KDE_HAVE_GL=yes;
+-#if test &quot;X$GLLIB&quot; = &quot;X&quot;; then
+-#    KDE_HAVE_GL=no
+-#fi
+-#
+-#AC_SUBST(KDE_HAVE_GL)   
+-#
+-#KDE_PREFIX=`$KDECONFIG --prefix --expandvars`
+-#AC_SUBST(KDE_PREFIX)
+-#
+-#if test &quot;X$kde_build_libsmoke&quot; = &quot;Xkde&quot; -o &quot;X$kde_build_libsmoke&quot; = &quot;Xqt kde&quot;; then
+-#
+-#    AC_CONFIG_FILES([ smoke/kde/qtguess.pl ], [
+-#        cd smoke/kde
+-#        perl qtguess.pl
+-#        cd ../..
+-#    ])
+-#    AC_CONFIG_FILES([ smoke/kde/generate.pl ], [
+-#        cd smoke/kde
+-#        perl generate.pl
+-#        cd ../..
+-#    ])
+-#fi
+-
+-dnl =======================================================
+-dnl FILE: ./smoke/qt/configure.in.in
+-dnl =======================================================
+-
+-
+-#AC_HAVE_GL
+-#KDE_HAVE_GL=yes;
+-#if test &quot;X$GLLIB&quot; = &quot;X&quot;; then
+-#    KDE_HAVE_GL=no
+-#fi
+-
+-#AC_SUBST(KDE_HAVE_GL)   
+-
+-AC_ARG_WITH(
+-   threshold,
+-   [  --with-threshold@&lt;:@=0..15@:&gt;@  Smoke: Qt tests threshold Default:10 Lower=more tests],
+-   [ qt_test_threshold=&quot;$withval&quot; ],
+-   [ qt_test_threshold=10 ]
+-)
+-AC_SUBST(qt_test_threshold)
+-
+-if test &quot;X$kde_build_libsmoke&quot; = &quot;Xqt&quot; -o &quot;X$kde_build_libsmoke&quot; = &quot;Xqt kde&quot;; then
+-
+-    AC_CONFIG_FILES([ smoke/qt/qtguess.pl ], [
+-        cd smoke/qt
+-        perl qtguess.pl
+-        cd ../..
+-    ])
+-    AC_CONFIG_FILES([ smoke/qt/generate.pl ], [
+-        cd smoke/qt
+-        perl generate.pl
+-        cd ../..
+-    ])
+-fi
+-
+-AC_CONFIG_FILES([ smoke/Makefile ])
+-AC_CONFIG_FILES([ smoke/qt/Makefile ])
+-
+-KDE_CREATE_SUBDIRSLIST
+-#AM_CONDITIONAL(smoke_SUBDIR_included, test &quot;x$smoke_SUBDIR_included&quot; = xyes)
+-
+-PHP_ARG_WITH(php_qt, for php_qt,
+-[  --enable-php_qt         Enable PHP-Qt support])
+-
+-if test &quot;$PHP_PHP_QT&quot; != &quot;no&quot;; then
+-
+-  PHP_QT_DIR=&quot;$qt_incdir&quot;;
+-  smoke_libraries=&quot;$LIB_QTCORE \
+-		   $LIB_QTGUI \
+-		   $LIB_QTNETWORK \
+-		   $LIB_QTOPENGL \
+-		   $LIB_QTSQL \
+-		   $LIB_QTCORE \
+-		   $LIB_QTXML \
+-		   $GLLIB \
+-		   $LIBQSCINTILLA \
+-		    -lQtSvg \
+-		    -lQtUiTools&quot;
+-
+-  LDFLAGS=&quot;$LDFLAGS $all_libraries $USER_LDFLAGS $LIBQT $smoke_libraries&quot;
+-  PHP_REQUIRE_CXX
+-
+-  PHP_ADD_INCLUDE($PHP_QT_DIR/include)
+-  PHP_ADD_INCLUDE($PHP_QT_DIR)
+-  PHP_ADD_INCLUDE($PHP_QT_DIR/Qt3Support)
+-  PHP_ADD_INCLUDE($PHP_QT_DIR/QtAssistant)
+-  PHP_ADD_INCLUDE($PHP_QT_DIR/QtCore)
+-  PHP_ADD_INCLUDE($PHP_QT_DIR/QtDesigner)
+-  PHP_ADD_INCLUDE($PHP_QT_DIR/QtGui)
+-  PHP_ADD_INCLUDE($PHP_QT_DIR/QtNetwork)
+-  PHP_ADD_INCLUDE($PHP_QT_DIR/QtOpenGL)
+-  PHP_ADD_INCLUDE($PHP_QT_DIR/QtSql)
+-  PHP_ADD_INCLUDE($PHP_QT_DIR/QtSvg)
+-  PHP_ADD_INCLUDE($PHP_QT_DIR/QtTest)
+-  PHP_ADD_INCLUDE($PHP_QT_DIR/QtUiTools)
+-  PHP_ADD_INCLUDE($PHP_QT_DIR/QtXml)  
+-  PHP_ADD_INCLUDE(smoke/)
+-
+-  PHP_ADD_SOURCES_X(smoke/qt, \
+-    x_1.cpp x_2.cpp x_3.cpp x_4.cpp x_5.cpp x_6.cpp x_7.cpp \
+-    x_8.cpp x_9.cpp x_10.cpp x_11.cpp x_12.cpp x_13.cpp x_14.cpp x_15.cpp \
+-    x_16.cpp x_17.cpp x_18.cpp x_19.cpp x_20.cpp \
+-    smokedata.cpp,,shared_objects_php_qt,yes)
+-
+-  PHP_NEW_EXTENSION(php_qt, php_qt/smokephp.cpp php_qt/php_qt.cpp php_qt/functions.cpp,$ext_shared,cli)
+-  PHP_ADD_BUILD_DIR($ext_builddir/php_qt)
+-
+-fi
+
+Modified: trunk/examples/calculator/calculator.php
+===================================================================
+--- trunk/examples/calculator/calculator.php	2007-06-06 13:07:07 UTC (rev 328)
++++ trunk/examples/calculator/calculator.php	2007-06-06 18:43:35 UTC (rev 329)
+@@ -169,7 +169,7 @@
+                     }
+                     return true;
+                 }
+-            }
++            }//check_qobject($target);
+             return parent::eventFilter($target, $event);
+         }
+ 
+
+Deleted: trunk/kdeize
+===================================================================
+--- trunk/kdeize	2007-06-06 13:07:07 UTC (rev 328)
++++ trunk/kdeize	2007-06-06 18:43:35 UTC (rev 329)
+@@ -1,6 +0,0 @@
+-#!/bin/bash
+-
+-mv -f aclocal.m4 admin/phpize.m4.in
+-admin/cvs.sh cvs
+-
+-
+
+Modified: trunk/php_qt/marshall_basetypes.h
+===================================================================
+--- trunk/php_qt/marshall_basetypes.h	2007-06-06 13:07:07 UTC (rev 328)
++++ trunk/php_qt/marshall_basetypes.h	2007-06-06 18:43:35 UTC (rev 329)
+@@ -144,7 +144,11 @@
+ 			smokephp_object* o = phpqt_createOriginal(m-&gt;var(), p);
+ 			// overwrite the old one:
+ 			*(m-&gt;return_value_ptr()) = o-&gt;zval_ptr;
+-// 			*(m-&gt;var()) = *o-&gt;zval_ptr;
++
++			if(!strcmp(m-&gt;identifier, &quot;VirtualMethodCall&quot;)){
++				// its a copy, not the original but well
++				ZVAL_ZVAL(((VirtualMethodCall*)m)-&gt;object(), o-&gt;zval_ptr, 0, 1);
++			}
+ 		}
+ 		return;
+ 
+
+Modified: trunk/php_qt/marshall_types.cpp
+===================================================================
+--- trunk/php_qt/marshall_types.cpp	2007-06-06 13:07:07 UTC (rev 328)
++++ trunk/php_qt/marshall_types.cpp	2007-06-06 18:43:35 UTC (rev 329)
+@@ -417,11 +417,18 @@
+ zval*
+ VirtualMethodCall::var()
+ {
+-// 	*_sp[_cur] = (zval*) emalloc(sizeof(zval));
+ 	ZVAL_NULL(__sp[_cur]);
+     return __sp[_cur];
+ }
+ 
++zval*
++VirtualMethodCall::object()
++{
++	ZVAL_NULL(__sp[_cur]);
++	__sp[_cur]-&gt;type = IS_OBJECT;
++    return __sp[_cur];
++}
++
+ int
+ VirtualMethodCall::items()
+ {
+
+Modified: trunk/php_qt/marshall_types.h
+===================================================================
+--- trunk/php_qt/marshall_types.h	2007-06-06 13:07:07 UTC (rev 328)
++++ trunk/php_qt/marshall_types.h	2007-06-06 18:43:35 UTC (rev 329)
+@@ -132,10 +132,13 @@
+ 	~VirtualMethodCall();
+ 	Marshall::Action action();
+ 	zval* var();
++	zval* object();
+ 	int items();
+ 	void callMethod();
+ 	bool cleanup();
+ 
++	bool makeObject;
++
+ private:
+ 	zval* _obj;
+  	zval **__sp;
+
+Modified: trunk/php_qt/php_qt.cpp
+===================================================================
+--- trunk/php_qt/php_qt.cpp	2007-06-06 13:07:07 UTC (rev 328)
++++ trunk/php_qt/php_qt.cpp	2007-06-06 18:43:35 UTC (rev 329)
+@@ -431,7 +431,6 @@
+     // nonstaticphp_qt_generic_class_proxyMethod
+     if(getThis()){
+     	activeScope = getThis();
+-
+ 		// if a parent:: call occurs this_ptr has the wrong ce, so we need to
+ 		// correct it here
+ 		if(parentCall)
+@@ -523,6 +522,7 @@
+ 			{
+ 				parentCall = true;
+ 				this_ptr = activeScope;
++//   				this_ptr-&gt;type = IS_OBJECT;
+ 			}
+ 		}
+ 	}
+@@ -1047,5 +1047,6 @@
+ 	Z_OBJ_HT_P(zval_ptr) = &amp;php_qt_handler;
+ 	zval_ptr = o-&gt;zval_ptr;
+ 	zval_add_ref(&amp;zval_ptr);
++
+ 	return o;
+ }
+
+Modified: trunk/php_qt/php_qt.h
+===================================================================
+--- trunk/php_qt/php_qt.h	2007-06-06 13:07:07 UTC (rev 328)
++++ trunk/php_qt/php_qt.h	2007-06-06 18:43:35 UTC (rev 329)
+@@ -297,10 +297,6 @@
+ ZEND_METHOD(php_qt_generic_class, proxyMethod);
+ ZEND_METHOD(php_qt_generic_class, staticProxyMethod);
+ 
+-// smoke stuff
+-
+-
+-
+ // ZEND stuff
+ 
+ static int zend_check_symbol(zval **pz TSRMLS_DC)
+
+Modified: trunk/php_qt/smokephp.cpp
+===================================================================
+--- trunk/php_qt/smokephp.cpp	2007-06-06 13:07:07 UTC (rev 328)
++++ trunk/php_qt/smokephp.cpp	2007-06-06 18:43:35 UTC (rev 329)
+@@ -82,9 +82,10 @@
+ 		}
+ 
+ 		if(phpqt_methodExists(o-&gt;ce_ptr, (char*) methodName)){
+-			zval* zmem = ALLOCA_N(zval, smoke-&gt;methods[method].numArgs);
++// 			zval* zmem = ALLOCA_N(zval, smoke-&gt;methods[method].numArgs);
++			zval* zmem = (zval*) safe_emalloc(sizeof(zval), smoke-&gt;methods[method].numArgs,0);
+ 		    VirtualMethodCall c(smoke, method, args, o-&gt;zval_ptr, &amp;zmem, &amp;o-&gt;zval_ptr);
+-		    c.next();
++			c.next();
+ 		}
+ 
+ 		return false;
+
+Modified: trunk/svn-commit.tmp
+===================================================================
+--- trunk/svn-commit.tmp	2007-06-06 13:07:07 UTC (rev 328)
++++ trunk/svn-commit.tmp	2007-06-06 18:43:35 UTC (rev 329)
+@@ -1,4 +1,15 @@
++* major code cleaning
+ 
+ --This line, and those below, will be ignored--
+ 
+-D    svn+<A HREF="ssh://tm243@svn.berlios.de/svnroot/repos/php-qt/build">ssh://tm243@svn.berlios.de/svnroot/repos/php-qt/build</A>
++D    config.m4
++D    admin
++M    php_qt/php_qt.h
++M    php_qt/smokephp.cpp
++M    php_qt/marshall_basetypes.h
++M    php_qt/marshall_types.cpp
++M    php_qt/php_qt.cpp
++M    php_qt/marshall_types.h
++D    TODO
++D    kdeize
++M    examples/calculator/calculator.php
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000172.html">[Php-qt-svn] r328 - in trunk: examples/calculator php_qt smoke tests
+</A></li>
+	<LI>Next message: <A HREF="000174.html">[Php-qt-svn] r330 - in trunk: . php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#173">[ date ]</a>
+              <a href="thread.html#173">[ thread ]</a>
+              <a href="subject.html#173">[ subject ]</a>
+              <a href="author.html#173">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

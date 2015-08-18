@@ -1,0 +1,131 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r277 - in trunk: . examples/calculator kalyptus qt	tutorials/t2 tutorials/t4 tutorials/t5 tutorials/t6 tutorials/t7
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-November/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r277%20-%20in%20trunk%3A%20.%20examples/calculator%20kalyptus%20qt%0A%09tutorials/t2%20tutorials/t4%20tutorials/t5%20tutorials/t6%20tutorials/t7&In-Reply-To=%3C200611061903.07273.thomas.moenicke%40kdemail.net%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   
+   <LINK REL="Next"  HREF="000122.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r277 - in trunk: . examples/calculator kalyptus qt	tutorials/t2 tutorials/t4 tutorials/t5 tutorials/t6 tutorials/t7</H1>
+    <B>Thomas Moenicke</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r277%20-%20in%20trunk%3A%20.%20examples/calculator%20kalyptus%20qt%0A%09tutorials/t2%20tutorials/t4%20tutorials/t5%20tutorials/t6%20tutorials/t7&In-Reply-To=%3C200611061903.07273.thomas.moenicke%40kdemail.net%3E"
+       TITLE="[Php-qt-svn] r277 - in trunk: . examples/calculator kalyptus qt	tutorials/t2 tutorials/t4 tutorials/t5 tutorials/t6 tutorials/t7">thomas.moenicke at kdemail.net
+       </A><BR>
+    <I>Mon Nov  6 19:03:07 CET 2006</I>
+    <P><UL>
+        
+        <LI>Next message: <A HREF="000122.html">[Php-qt-svn] r278 - in trunk: . qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#121">[ date ]</a>
+              <a href="thread.html#121">[ thread ]</a>
+              <a href="subject.html#121">[ subject ]</a>
+              <a href="author.html#121">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-11-05 21:14:53 +0100 (Sun, 05 Nov 2006)
+New Revision: 277
+
+Removed:
+   trunk/qt/ag_extern_zend_class_entry.inc
+   trunk/qt/ag_php_qt_cpp.inc
+   trunk/qt/ag_qt_minit.inc
+   trunk/qt/ag_zend_class_entry.inc
+   trunk/qt/ag_zend_php_qt.inc
+   trunk/qt/classes/
+   trunk/qt/defined.h
+   trunk/qt/event/
+   trunk/qt/inheritance.cpp
+   trunk/qt/object_model/
+   trunk/qt/text_related/
+   trunk/qt/zend_php_qt.h
+Modified:
+   trunk/COPYING
+   trunk/ChangeLog
+   trunk/config.m4
+   trunk/examples/calculator/button.php
+   trunk/examples/calculator/calculator.php
+   trunk/kalyptus/kalyptusCxxToSmoke.pm
+   trunk/qt/php_qt.cpp
+   trunk/qt/php_qt.h
+   trunk/tutorials/t2/main.php
+   trunk/tutorials/t4/main.php
+   trunk/tutorials/t5/main.php
+   trunk/tutorials/t6/main.php
+   trunk/tutorials/t7/main.php
+Log:
+code rewritten and ported to kdebindings Smoke
+
+Modified: trunk/COPYING
+===================================================================
+--- trunk/COPYING	2006-08-18 03:08:32 UTC (rev 276)
++++ trunk/COPYING	2006-11-05 20:14:53 UTC (rev 277)
+@@ -3,7 +3,7 @@
+ About licensing
+ ===============
+ 
+-PHP-Qt is licensed under the terms of the GNU Lesser General Public License.
++PHP-Qt is licensed under the terms of the GNU General Public License.
+ Qt is dual licensed software. Please note that PHP-Qt is dynamically linked 
+ against the Qt library, Qt header files are neccessary for building PHP-Qt.
+ 
+
+Modified: trunk/ChangeLog
+===================================================================
+--- trunk/ChangeLog	2006-08-18 03:08:32 UTC (rev 276)
++++ trunk/ChangeLog	2006-11-05 20:14:53 UTC (rev 277)
+@@ -1,3 +1,12 @@
++2006-011-5  Thomas Moenicke &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">thomas.moenicke at kdemail.net</A>&gt;
++
++		* Code rewritten and ported to kdebindings::Smoke
++		* all classes and methods are supported with basic argument types and 
+classes
++		* enum values are like eg Qt::Horizontal instead of QT_ALIGNMENT_HORIZONTAL
++		* License: GPL
++		* PHP-Qt objects are casted automatically
++		* QMetaObjects are created in class constructor and related pointers are 
+stored in a hash table
++
+ 2006-06-08  Thomas Moenicke &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">tm at ippfp.org</A>&gt;  (v.0.0.3) &quot;Lilli&quot;
+ 
+ 		* tutorial 7 and an example application
+
+
+-- 
+Thomas
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	
+	<LI>Next message: <A HREF="000122.html">[Php-qt-svn] r278 - in trunk: . qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#121">[ date ]</a>
+              <a href="thread.html#121">[ thread ]</a>
+              <a href="subject.html#121">[ subject ]</a>
+              <a href="author.html#121">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

@@ -1,0 +1,256 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r280 - trunk/kalyptus
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-November/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r280%20-%20trunk/kalyptus&In-Reply-To=%3C200611091102.kA9B2Op0021982%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000123.html">
+   <LINK REL="Next"  HREF="000125.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r280 - trunk/kalyptus</H1>
+    <B>tm243 at mail.berlios.de</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r280%20-%20trunk/kalyptus&In-Reply-To=%3C200611091102.kA9B2Op0021982%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r280 - trunk/kalyptus">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Thu Nov  9 12:02:24 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000123.html">[Php-qt-svn] r279 - trunk/qt
+</A></li>
+        <LI>Next message: <A HREF="000125.html">[Php-qt-svn] r281 - trunk/qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#124">[ date ]</a>
+              <a href="thread.html#124">[ thread ]</a>
+              <a href="subject.html#124">[ subject ]</a>
+              <a href="author.html#124">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-11-09 12:02:22 +0100 (Thu, 09 Nov 2006)
+New Revision: 280
+
+Modified:
+   trunk/kalyptus/kalyptus
+   trunk/kalyptus/kalyptusCxxToSmoke.pm
+Log:
+kalyptus synced with KDE svn.
+
+Modified: trunk/kalyptus/kalyptus
+===================================================================
+--- trunk/kalyptus/kalyptus	2006-11-07 15:47:26 UTC (rev 279)
++++ trunk/kalyptus/kalyptus	2006-11-09 11:02:22 UTC (rev 280)
+@@ -2,7 +2,7 @@
+ 
+ # KDOC -- C++ and CORBA IDL interface documentation tool.
+ # Sirtaj Singh Kang &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">taj at kde.org</A>&gt;, Jan 1999.
+-# $Id: kalyptus 558420 2006-07-05 11:43:10Z rdale $
++# $Id: kalyptus 596521 2006-10-17 19:47:11Z rdale $
+ 
+ # All files in this project are distributed under the GNU General
+ # Public License. This is Free Software.
+@@ -469,13 +469,14 @@
+ 		$p =~ s/QT_MOC_COMPAT//;
+ 		$p =~ s/Q_EXPORT_CODECS_BIG5//;
+ 		$p =~ s/Q_DECL_DEPRECATED//;
++		$p =~ s/Q_SCRIPTABLE//;
+ 		$p =~ s/QT_COMPAT / /;
+ 		$p =~ s/Q_DISABLE_COPY\((\w+)\)/$1(const $1 &amp;);\n$1 &amp;operator=(const $1 &amp;);/;
+ 		$p =~ s/QWIDGETSIZE_MAX/32767/; # Qt/E uses this #define as an enum value - yuck!
+ 		$p =~ s/Q_SIGNALS/signals/;
+ 		$p =~ s/ASYNC/void/;
+-		$p =~ s/[A-Z_]*_EXPORT_DEPRECATED//;
+-		$p =~ s/[A-Z_]*_EXPORT\s/ /;
++		$p =~ s/[A-Z_0-9]*_EXPORT_DEPRECATED//;
++		$p =~ s/[A-Z_0-9]*_EXPORT\s/ /;
+ 		$p =~ s/EXPORT_DOCKCLASS//;
+ 		$p =~ s/DLL_IMP_EXP_KMDICLASS//;
+ 		$p =~ s/KSVG_GET/KJS::Value get();/;
+@@ -496,6 +497,8 @@
+ 		$p =~ s/KDOM_FORWARDPUT/bool putforward();/;
+ 		$p =~ s/KDOM_BASECLASS/virtual KJS::Value cache();/;
+ 		$p =~ s/KDOM_CAST/KJS::Value cast();/;
++		$p =~ s/Q_DECLARE_BUILTIN_METATYPE[^\)]*\)//;
++		$p =~ s/Q_[A-Z]+_EXPORT_INLINE//;
+ 		if ( $p =~ m/KDOM_DEFINE_PROTOTYPE\((\w+)\)/ ) {
+ 			push @inputqueue, split('\n',&quot;namespace KDOM {\nclass $1 {\n};\n};&quot;);
+ 		}
+@@ -574,6 +577,7 @@
+ 				     $p =~ m/^#\s*ifdef\s+Q_MOC_RUN/ or
+ 				     $p =~ m/^#\s*if\s+defined\s*\(QT3_SUPPORT/ or
+ 				     $p =~ m/^#\s*if\s+defined\s*\(qdoc/ or
++				     $p =~ m/^#\s*ifdef\s+qdoc/ or
+ 				     $p =~ m/^#\s*ifndef\s+QT_NO_MEMBER_TEMPLATES/ or
+ 				     $p =~ m/^#if\s*!defined\(Q_NO_USING_KEYWORD\)/ or
+ 				     $p =~ m/^#if\s*defined\(Q_INTERNAL_QAPP_SRC\)/ or
+@@ -706,7 +710,16 @@
+ 		return $l;
+ 	}
+ 	elsif ( $l =~ /Q_PROPERTY/ ) {	# property
+-		return $l;
++		do {
++			$decl .= $l;
++	
++			if ( $l =~ /[)]/ ) {
++				$decl =~ s/\n/ /gs;
++				return $decl;
++			}
++			return undef if !defined ($l = readCxxLine());
++	
++		} while ( 1 );
+ 	}
+ 
+ 	do {
+
+Modified: trunk/kalyptus/kalyptusCxxToSmoke.pm
+===================================================================
+--- trunk/kalyptus/kalyptusCxxToSmoke.pm	2006-11-07 15:47:26 UTC (rev 279)
++++ trunk/kalyptus/kalyptusCxxToSmoke.pm	2006-11-09 11:02:22 UTC (rev 280)
+@@ -229,9 +229,35 @@
+    'QDockWidget::DockWidgetFeatures' =&gt; 'int',
+    'QStyle::SubControls' =&gt; 'int',
+    'RegisterOptions' =&gt; 'int',
++   'BindMode' =&gt; 'int',
++   'ButtonFeatures' =&gt; 'int',
++   'CacheMode' =&gt; 'int',
++   'CheckType' =&gt; 'int',
++   'CornerWidgets' =&gt; 'int',
++   'DockWidgetFeatures' =&gt; 'int',
++   'FileFlags' =&gt; 'int',
++   'FontFilters' =&gt; 'int',
++   'FrameFeatures' =&gt; 'int',
++   'GraphicsItemFlags' =&gt; 'int',
++   'InterfaceFlags' =&gt; 'int',
++   'IteratorFlags' =&gt; 'int',
++   'MenuItemType' =&gt; 'int',
++   'NumberOptions' =&gt; 'int',
++   'PageBreakFlags' =&gt; 'int',
++   'Qt::TextInteractionFlags' =&gt; 'int',
++   'Relation' =&gt; 'int',
++   'SectionPosition' =&gt; 'int',
++   'SelectedPosition' =&gt; 'int',
++   'StandardButtons' =&gt; 'int',
++   'State' =&gt; 'int',
++   'TabPosition' =&gt; 'int',
++   'ToolBarFeatures' =&gt; 'int',
++   'ToolBarPosition' =&gt; 'int',
++   'ToolButtonFeatures' =&gt; 'int',
++   'ViewItemFeatures' =&gt; 'int',
+ );
+ 
+-$headerSubdirectories = &quot;kio/|kdevelop/|kinterfacedesigner/|kontact/|kate/|kparts/|dom/|kabc/|ksettings/|kjs/|ktexteditor/|kdeprint/|kdesu/|knewstuff|dbus-1.0/dbus/&quot;
++$headerSubdirectories = &quot;kio/|dnssd/|solid/|solid/ifaces/|phonon/|sonnet/|kdevelop/|kinterfacedesigner/|kontact/|kate/|kparts/|dom/|kabc/|ksettings/|kjs/|ktexteditor/|kdeprint/|kdesu/|knewstuff|dbus-1.0/dbus/&quot;
+ 
+ }
+ 
+@@ -416,11 +442,16 @@
+ 	    $className eq 'KURL::List' ||
+ 	    $className eq 'KWin::Info' ||
+ 	    $className eq 'TerminalInterface' ||
++	    $className eq 'QAccessibleBridgePlugin' || # Qt4
+ 	    $className eq 'QForeachContainerBase' || # Qt4
+ 	    $className eq 'QInputMethodEvent::Attribute' || # Qt4
++	    $className eq 'QAbstractUndoItem' || # Qt4
+ 	    $className eq 'QAbstractTextDocumentLayout::PaintContext' || # Qt4
+ 	    $className eq 'QAbstractTextDocumentLayout::Selection' || # Qt4
+ 	    $className eq 'QBrushData' || # Qt4
++	    $className eq 'QDBusObjectPath' || # Qt4
++	    $className eq 'QDBusSignature' || # Qt4
++	    $className eq 'QDBusVariant' || # Qt4
+ 	    $className eq 'QIPv6Address' || # Qt4
+ 	    $className eq 'QImageTextKeyLang' || # Qt4
+ 	    $className eq 'QMap' || # Qt4
+@@ -428,6 +459,7 @@
+ 	    $className eq 'QMap::iterator' || # Qt4
+ 	    $className eq 'QMapData' || # Qt4
+ 	    $className eq 'QMapData::Node' || # Qt4
++	    $className eq 'QObjectData' || # Qt4
+ 	    $className eq 'QProxyModel' || # Obsolete Qt4
+ 	    $className eq 'QSharedData' || # Qt4
+ 	    $className eq 'QPainterPath::Element' || # Qt4
+@@ -615,6 +647,10 @@
+ 			|| ($classNode-&gt;{astNodeName} eq 'QwtThermo' and $name eq 'setAlarmColor')
+ 			|| ($classNode-&gt;{astNodeName} eq 'QwtThermo' and $name eq 'alarmColor')
+ 			|| ($classNode-&gt;{astNodeName} eq 'QwtWheel' and $name eq 'getScrollMode')
++			|| ($classNode-&gt;{astNodeName} eq 'QwtSpline' and $name eq 'points')
++			|| ($classNode-&gt;{astNodeName} eq 'QwtPlot' and $name eq 'drawItems')
++			|| ($classNode-&gt;{astNodeName} eq 'QwtPlot' and $name eq 'printCanvas')
++			|| ($classNode-&gt;{astNodeName} eq 'QwtPlot' and $name eq 'drawItems')
+ 			|| ($classNode-&gt;{astNodeName} eq 'QwtPlot' and $name eq 'setCanvasBackground')
+ 			|| ($classNode-&gt;{astNodeName} eq 'QwtPlot' and $name eq 'canvasBackground')
+ 			|| ($classNode-&gt;{astNodeName} eq 'QwtPlotLayout' and $name eq 'expandLineBreaks')
+@@ -663,6 +699,8 @@
+ 			|| ($main::qt4
+ 				&amp;&amp; ( ($classNode-&gt;{astNodeName} eq 'QWidgetListItem' and $name eq 'operator=')
+ 				|| ($classNode-&gt;{astNodeName} eq 'QColormap' and $name eq 'operator=')
++				|| ($classNode-&gt;{astNodeName} eq 'QGraphicsLineItem' and $name eq 'QGraphicsLineItem' and $#{$m-&gt;{ParamList}} == 5)
++				|| ($classNode-&gt;{astNodeName} eq 'QGraphicsEllipseItem' and $name eq 'QGraphicsEllipseItem' and $#{$m-&gt;{ParamList}} == 5)
+ 				|| ($classNode-&gt;{astNodeName} eq 'QListWidget' and $name eq 'setItemPosition')
+ 				|| ($classNode-&gt;{astNodeName} eq 'QFontMetricsF' and $name eq 'operator=')
+ 				|| ($classNode-&gt;{astNodeName} eq 'QFontMetricsF' and $name eq 'QFontMetricsF' 
+@@ -686,6 +724,8 @@
+ 					$m-&gt;{ReturnType} =~ /&lt;/ )
+ 				|| ($classNode-&gt;{astNodeName} eq 'QDBusBusService' and $name eq 'RequestName')
+ 				|| ($classNode-&gt;{astNodeName} eq 'QDBusBusService' and $name eq 'requestName')
++				|| ($classNode-&gt;{astNodeName} eq 'QGLFormat' and $name eq 'openGLVersionFlags')
++				|| ($classNode-&gt;{astNodeName} eq 'QAbstractUndoItem' and $name eq '~QAbstractUndoItem')
+ 				|| ($name eq 'qDBusMetaTypeId')
+ 				|| ($m-&gt;{ReturnType} =~ /QT3_SUPPORT/) ) )
+ 
+@@ -980,13 +1020,6 @@
+ 	    die if $incl eq '';
+ 	    print $fh &quot;#include &lt;$incl&gt;\n&quot;;
+ 	}	
+-	if (	$main::qt4
+-			and (	defined $includes{&quot;qtreewidget.h&quot;} 
+-					or defined $includes{&quot;qlistwidget.h&quot;} 
+-					or defined $includes{&quot;qtablewidget.h&quot;} ) ) 
+-	{
+-	    print $fh &quot;#include \&quot;qwidgetitemdata_p.h\&quot;\n&quot;;
+-	}
+ 	print $fh &quot;\n&quot;;
+         for my $c( 0..$#code )
+         {
+@@ -2594,7 +2627,7 @@
+ 		die &quot;arglist for $t not found&quot; unless defined $arglist;
+ 		if ( $m-&gt;{Flags} =~ &quot;p&quot; ) {
+ 		    # Pure virtuals don't have a {case} number, that's normal
+-		    die if defined $case;
++		    die &quot;pure virtual $className\::$methName has a case number for sig=$sig&quot; if defined $case;
+ 		    $case = -1; # This remains -1, not 0 !
+ 		} else {
+ 		    die &quot;$className\::$methName has no case number for sig=$sig&quot; unless defined $case;
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000123.html">[Php-qt-svn] r279 - trunk/qt
+</A></li>
+	<LI>Next message: <A HREF="000125.html">[Php-qt-svn] r281 - trunk/qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#124">[ date ]</a>
+              <a href="thread.html#124">[ thread ]</a>
+              <a href="subject.html#124">[ subject ]</a>
+              <a href="author.html#124">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

@@ -1,0 +1,3499 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r193 - in trunk: . qt qt/text_related tests
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-January/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r193%20-%20in%20trunk%3A%20.%20qt%20qt/text_related%20tests&In-Reply-To=%3C200601161628.k0GGSlOE021401%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000041.html">
+   <LINK REL="Next"  HREF="000043.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r193 - in trunk: . qt qt/text_related tests</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r193%20-%20in%20trunk%3A%20.%20qt%20qt/text_related%20tests&In-Reply-To=%3C200601161628.k0GGSlOE021401%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r193 - in trunk: . qt qt/text_related tests">tm243 at berlios.de
+       </A><BR>
+    <I>Mon Jan 16 17:28:47 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000041.html">[Php-qt-svn] r192 - in trunk: . qt qt/text_related tests
+</A></li>
+        <LI>Next message: <A HREF="000043.html">[Php-qt-svn] r194 - trunk/qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#42">[ date ]</a>
+              <a href="thread.html#42">[ thread ]</a>
+              <a href="subject.html#42">[ subject ]</a>
+              <a href="author.html#42">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-01-16 17:28:40 +0100 (Mon, 16 Jan 2006)
+New Revision: 193
+
+Modified:
+   trunk/TODO
+   trunk/qt/ag_php_qt_cpp.inc
+   trunk/qt/ag_zend_php_qt.inc
+   trunk/qt/php_qt.cpp
+   trunk/qt/php_qt.h
+   trunk/qt/text_related/qlatin1string.cpp
+   trunk/qt/text_related/qstring.cpp
+   trunk/qt/zend_php_qt.h
+   trunk/tests/qstring.php
+Log:
+QString improved, we have unicode support now.
+
+Modified: trunk/TODO
+===================================================================
+--- trunk/TODO	2006-01-16 12:19:47 UTC (rev 192)
++++ trunk/TODO	2006-01-16 16:28:40 UTC (rev 193)
+@@ -2,4 +2,4 @@
+ - handling of optional method arguments
+ - custom SLOTS/SIGNALS
+ - virtual methods
+-
++- float
+
+Modified: trunk/qt/ag_php_qt_cpp.inc
+===================================================================
+--- trunk/qt/ag_php_qt_cpp.inc	2006-01-16 12:19:47 UTC (rev 192)
++++ trunk/qt/ag_php_qt_cpp.inc	2006-01-16 16:28:40 UTC (rev 193)
+@@ -14,6 +14,7 @@
+ 
+ }
+ static zend_function_entry QChar_methods[] = {
++	ZEND_ME(QChar, __toString,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QChar,combiningClass,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QChar,isUpper,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QChar,joining,NULL,ZEND_ACC_PUBLIC)
+
+Modified: trunk/qt/ag_zend_php_qt.inc
+===================================================================
+--- trunk/qt/ag_zend_php_qt.inc	2006-01-16 12:19:47 UTC (rev 192)
++++ trunk/qt/ag_zend_php_qt.inc	2006-01-16 16:28:40 UTC (rev 193)
+@@ -1,6 +1,7 @@
+ 
+ ZEND_METHOD(QActionEvent, action);
+ ZEND_METHOD(QActionEvent, before);
++ZEND_METHOD(QChar, __toString);
+ ZEND_METHOD(QChar, combiningClass);
+ ZEND_METHOD(QChar, isUpper);
+ ZEND_METHOD(QChar, joining);
+
+Modified: trunk/qt/php_qt.cpp
+===================================================================
+--- trunk/qt/php_qt.cpp	2006-01-16 12:19:47 UTC (rev 192)
++++ trunk/qt/php_qt.cpp	2006-01-16 16:28:40 UTC (rev 193)
+@@ -166,6 +166,17 @@
+ 	REGISTER_LONG_CONSTANT(&quot;QAPPLICATION_TYPE_GUISERVER&quot;,QApplication::GuiServer ,CONST_CS | CONST_PERSISTENT);	
+ 	
+     _register_QString(TSRMLS_C);
++      REGISTER_LONG_CONSTANT(&quot;QSTRING_SECTIONFLAG_SECTIONDEFAULT&quot;, QString::SectionDefault, CONST_CS | CONST_PERSISTENT);
++      REGISTER_LONG_CONSTANT(&quot;QSTRING_SECTIONFLAG_SECTIONSKIPEMPTY&quot;, QString::SectionSkipEmpty, CONST_CS | CONST_PERSISTENT);
++      REGISTER_LONG_CONSTANT(&quot;QSTRING_SECTIONFLAG_SECTIONINCLUDELEADINGSEP&quot;, QString::SectionIncludeLeadingSep, CONST_CS | CONST_PERSISTENT);
++      REGISTER_LONG_CONSTANT(&quot;QSTRING_SECTIONFLAG_SECTIONINCLUDETRAILINGSEP&quot;, QString::SectionIncludeTrailingSep, CONST_CS | CONST_PERSISTENT);
++      REGISTER_LONG_CONSTANT(&quot;QSTRING_SECTIONFLAG_SECTIONCASEINSENSITIVESEPS&quot;, QString::SectionCaseInsensitiveSeps, CONST_CS | CONST_PERSISTENT);
++      REGISTER_LONG_CONSTANT(&quot;QSTRING_SPLITBEHAVIOR_KEEPEMPTYPARTS&quot;, QString::KeepEmptyParts, CONST_CS | CONST_PERSISTENT);
++      REGISTER_LONG_CONSTANT(&quot;QSTRING_SPLITBEHAVIOR_SKIPEMPTYPARTS&quot;, QString::SkipEmptyParts, CONST_CS | CONST_PERSISTENT);
++      REGISTER_LONG_CONSTANT(&quot;QSTRING_NORMALIZATIONFORM_NORMALIZATIONFORM_D&quot;, QString::NormalizationForm_D, CONST_CS | CONST_PERSISTENT);
++      REGISTER_LONG_CONSTANT(&quot;QSTRING_NORMALIZATIONFORM_NORMALIZATIONFORM_C&quot;, QString::NormalizationForm_C, CONST_CS | CONST_PERSISTENT);
++      REGISTER_LONG_CONSTANT(&quot;QSTRING_NORMALIZATIONFORM_NORMALIZATIONFORM_KD&quot;, QString::NormalizationForm_KD, CONST_CS | CONST_PERSISTENT);
++      REGISTER_LONG_CONSTANT(&quot;QSTRING_NORMALIZATIONFORM_NORMALIZATIONFORM_KC&quot;, QString::NormalizationForm_KC, CONST_CS | CONST_PERSISTENT);
+     _register_QLatin1String(TSRMLS_C);
+     _register_QObject(TSRMLS_C);
+     _register_QWidget(TSRMLS_C);
+@@ -1189,17 +1200,103 @@
+ 
+ ///
+ 
++static zend_function_entry QLatin1String_methods[] = {
++    ZEND_ME(QLatin1String, __construct,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QLatin1String,latin1,NULL,ZEND_ACC_PUBLIC)
+ 
++    {NULL,NULL,NULL}
++};
+ 
+-static zend_function_entry QString_methods[] = { 
+-    ZEND_ME(QString,__construct,NULL,ZEND_ACC_PUBLIC)
++void _register_QLatin1String(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QLatin1String&quot;,QLatin1String_methods);
++    QLatin1String_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
++
++}
++static zend_function_entry QString_methods[] = {
+     ZEND_ME(QString,__toString,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,compare,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,utf16,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,constData,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,insert,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,clear,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,setUtf16,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,prepend,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,trimmed,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,chop,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,leftJustified,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,squeeze,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,count,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,fromAscii,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++    ZEND_ME(QString,toLongLong,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,toUpper,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString, __construct,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,normalized,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,fromUtf16,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++    ZEND_ME(QString,isRightToLeft,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,setNum,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,endsWith,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,number,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++    ZEND_ME(QString,localeAwareCompare,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,section,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,isSimpleText,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,size,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,simplified,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,toUInt,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,toUShort,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,truncate,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,toAscii,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,length,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,right,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,push_front,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,toUtf8,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,toULongLong,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,indexOf,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,fromRawData,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++    ZEND_ME(QString,constEnd,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,left,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,fromLocal8Bit,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++    ZEND_ME(QString,startsWith,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,remove,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,isEmpty,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,arg,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,vsprintf,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,toFloat,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,isDetached,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,reserve,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,toULong,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,toShort,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,split,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,setUnicode,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,fromLatin1,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++    ZEND_ME(QString,data,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,toLatin1,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,end,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,contains,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,resize,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,replace,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,fromUtf8,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++    ZEND_ME(QString,toLong,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,detach,NULL,ZEND_ACC_PUBLIC)
+     ZEND_ME(QString,append,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,arg,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,mid,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,toDouble,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,fill,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,rightJustified,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,toLower,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,lastIndexOf,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,unicode,NULL,ZEND_ACC_PUBLIC)
+     ZEND_ME(QString,at,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,begin,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,push_back,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,capacity,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,constBegin,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,toLocal8Bit,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,toInt,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(QString,isNull,NULL,ZEND_ACC_PUBLIC)
+ 
+     {NULL,NULL,NULL}
+-
+ };
+ 
+ void _register_QString(TSRMLS_D)
+@@ -1212,24 +1309,6 @@
+ 
+ }
+ 
+-static zend_function_entry QLatin1String_methods[] = { 
+-    ZEND_ME(QLatin1String,__construct,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QLatin1String,latin1,NULL,ZEND_ACC_PUBLIC)
+-
+-    {NULL,NULL,NULL}
+-
+-};
+-
+-void _register_QLatin1String(TSRMLS_D){
+-
+-    zend_class_entry ce;
+-    INIT_CLASS_ENTRY(ce,&quot;QLatin1String&quot;,QLatin1String_methods);
+-    QLatin1String_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
+-
+-    zend_declare_property_string(QLatin1String_ce_ptr,&quot;QLatin1String&quot;,strlen(&quot;QLatin1String&quot;),&quot;&quot;,ZEND_ACC_PROTECTED TSRMLS_CC);
+-
+-}
+-
+ static zend_function_entry QObject_methods[] = { 
+     ZEND_ME(QObject,__construct,NULL,ZEND_ACC_PUBLIC)
+     ZEND_ME(QObject,test,NULL,ZEND_ACC_PUBLIC)    
+
+Modified: trunk/qt/php_qt.h
+===================================================================
+--- trunk/qt/php_qt.h	2006-01-16 12:19:47 UTC (rev 192)
++++ trunk/qt/php_qt.h	2006-01-16 16:28:40 UTC (rev 193)
+@@ -382,6 +382,11 @@
+ extern zend_class_entry *QLCDNumber_ce_ptr;
+ extern zend_class_entry *QMimeSource_ce_ptr;
+ 
++extern zend_class_entry *QCharRef_ce_ptr;
++void    _register_QCharRef();
++extern zend_class_entry *QLatin1String_ce_ptr;
++void    _register_QLatin1String();
++
+ #include &quot;ag_extern_zend_class_entry.inc&quot;
+ 
+ 
+
+Modified: trunk/qt/text_related/qlatin1string.cpp
+===================================================================
+--- trunk/qt/text_related/qlatin1string.cpp	2006-01-16 12:19:47 UTC (rev 192)
++++ trunk/qt/text_related/qlatin1string.cpp	2006-01-16 16:28:40 UTC (rev 193)
+@@ -1,21 +1,27 @@
+ /*
+  * PHP-Qt - The PHP language bindings for Qt
+  *
+- * Copyright (C) 2005 Thomas Moenicke &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">tm at ippfp.org</A>&gt;
++ * Copyright (C) 2005
++ * Thomas Moenicke &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">tm at ippfp.org</A>&gt;,
++ * Jean-Luc Gyger &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">jean_luc.gyger at freesurf.ch</A>&gt;
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Lesser General Public
+  * License as published by the Free Software Foundation; either
+  * version 2.1 of the License, or (at your option) any later version.
+- * 
++ *
+  * This library is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * Lesser General Public License for more details.
+- * 
++ *
+  * You should have received a copy of the GNU Lesser General Public
+  * License along with this library; if not, write to the Free Software
+  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ *
++ * QLatin1String.cpp - QLatin1String PHP implementation.
++ * begin           : Mon Jan 16 14:47:09 2006
++ * generated by    : moni using kalyptus 0.9.
+  */
+ 
+ #include &lt;iostream&gt;
+@@ -24,33 +30,51 @@
+ #include &lt;QLatin1String&gt;
+ #include &quot;../php_qt.h&quot;
+ 
+-/**
+- *  QLatin1String
++
++/*********************************
++ *    class     QLatin1String */
++/*
++ *    function  QLatin1String
++ *    flags:    t
+  */
++ZEND_METHOD(QLatin1String, __construct){
+ 
+-ZEND_METHOD(QLatin1String,__construct){
++	if (ZEND_NUM_ARGS() == 1){
++		/* s public*/
++		char* var_s_0;   // default: 
++		int len_s_0;
+ 
+-    char *string; int *string_len;
+-    QLatin1String* QLatin1String_ptr;
+ 
+-    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s&quot;, &amp;string, &amp;string_len) == FAILURE) {
+-        return; }
++		/* const char* s,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s&quot;, &amp;var_s_0, len_s_0) == SUCCESS) {
+ 
+-    zend_update_property_string(Z_OBJCE_P(getThis()),getThis(),&quot;QLatin1String&quot;,strlen(&quot;QLatin1String&quot;), string TSRMLS_DC);
++			
++			QLatin1String *QLatin1String_ptr = new QLatin1String( (const char*) var_s_0);
++			PHP_QT_REGISTER(QLatin1String_ptr);
++			RETURN_NULL();
++		}
++	}
++}
+ 
+-    QLatin1String_ptr = new QLatin1String(string);
+-    PHP_QT_REGISTER(QLatin1String_ptr);
+-
++/*********************************
++ *    class     QLatin1String */
++/*
++ *    function  latin1
++ *    flags:    c
++ */
++ZEND_METHOD(QLatin1String, latin1){
++	if (ZEND_NUM_ARGS() == 0){
++			QLatin1String *obj = (QLatin1String*) PHP_QT_FETCH();
++			const char * return_object = (const char *) obj-&gt;latin1();
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QLatin1String_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++	}
+ }
+ 
+-ZEND_METHOD(QLatin1String,latin1){
+ 
+-    zval *string;
+-    QLatin1String* QLatin1String_ptr = (QLatin1String*) PHP_QT_FETCH();;
+-    
+-    string = zend_read_property(Z_OBJCE_P(getThis()),getThis(),&quot;QLatin1String&quot;,strlen(&quot;QLatin1String&quot;),1 TSRMLS_DC);
++PHP_QT_DESTRUCT(QLatin1String);
+ 
+-    RETURN_STRING(Z_STRVAL_P(string),1);
+-
+-}
+-
+
+Modified: trunk/qt/text_related/qstring.cpp
+===================================================================
+--- trunk/qt/text_related/qstring.cpp	2006-01-16 12:19:47 UTC (rev 192)
++++ trunk/qt/text_related/qstring.cpp	2006-01-16 16:28:40 UTC (rev 193)
+@@ -1,21 +1,27 @@
+ /*
+  * PHP-Qt - The PHP language bindings for Qt
+  *
+- * Copyright (C) 2005 Thomas Moenicke &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">tm at ippfp.org</A>&gt;
++ * Copyright (C) 2005
++ * Thomas Moenicke &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">tm at ippfp.org</A>&gt;,
++ * Jean-Luc Gyger &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">jean_luc.gyger at freesurf.ch</A>&gt;
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Lesser General Public
+  * License as published by the Free Software Foundation; either
+  * version 2.1 of the License, or (at your option) any later version.
+- * 
++ *
+  * This library is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * Lesser General Public License for more details.
+- * 
++ *
+  * You should have received a copy of the GNU Lesser General Public
+  * License along with this library; if not, write to the Free Software
+  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ *
++ * QString.cpp - QString PHP implementation.
++ * begin           : Mon Jan 16 14:47:09 2006
++ * generated by    : moni using kalyptus 0.9.
+  */
+ 
+ #include &lt;iostream&gt;
+@@ -24,74 +30,2837 @@
+ #include &lt;QString&gt;
+ #include &quot;../php_qt.h&quot;
+ 
+-/**
+- *  QString
++
++ZEND_METHOD(QString,__toString){
++
++  QString *QString_ptr = (QString *) PHP_QT_FETCH();
++
++  int l = QString_ptr-&gt;size();
++  char* c = (char*) (QString_ptr-&gt;toAscii()).constData();
++  RETURN_STRING(c,l);
++}
++
++
++/*		public enumSectionFlag:long {
++			SectionDefault = 0x00,
++			SectionSkipEmpty = 0x01,
++			SectionIncludeLeadingSep = 0x02,
++			SectionIncludeTrailingSep = 0x04,
++			SectionCaseInsensitiveSeps = 0x08
++		}
++*/
++
++/*		public enumSplitBehavior:long {
++			SplitBehavior = 0,
++			SplitBehavior = 1
++		}
++*/
++
++/*		public enumNormalizationForm:long {
++			NormalizationForm = 0,
++			NormalizationForm = 1,
++			NormalizationForm = 2,
++			NormalizationForm = 3
++		}
++*/
++/*********************************
++ *    class     QString */
++/*
++ *    function  compare
++ *    flags:    c
+  */
++ZEND_METHOD(QString, compare){
+ 
+-ZEND_METHOD(QString,__construct){
++	if (ZEND_NUM_ARGS() == 1){
++		/* o public*/
++		zval* z_var_o_0;   // default: 
+ 
+-    char *string;
+-    int *string_len;
+-    QString *QString_ptr;
++		/* const QString&amp; s,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
+ 
+-    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s&quot;, &amp;string, &amp;string_len) != FAILURE) {
++			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_o_0 == &quot;const QString&quot;) {
++				RETURN_LONG(obj-&gt;compare((const QString&amp;) var_o_0));
++			}
++		}
++	}
+ 
+-        QString_ptr = new QString((const char*) string);
+-        zend_update_property_string(Z_OBJCE_P(getThis()),getThis(),&quot;QString&quot;,strlen(&quot;QString&quot;), string TSRMLS_DC);
+-        PHP_QT_REGISTER(QString_ptr);
++	if (ZEND_NUM_ARGS() == 2){
++		/* oo public*/
++		zval* z_var_oo_0;   // default: 
++		zval* z_var_oo_1;   // default: 
+ 
+-    } else { 
++		/* const QString&amp; s1, const QString&amp; s2,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;oo&quot;, &amp;z_var_oo_0, &amp;z_var_oo_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_oo_0 = (QObject*) php_qt_fetch(z_var_oo_0);
++			QObject* var_oo_1 = (QObject*) php_qt_fetch(z_var_oo_1);
+ 
+-        QString_ptr = new QString();
+-//        zend_update_property_string(Z_OBJCE_P(getThis()),getThis(),&quot;QString&quot;,strlen(&quot;QString&quot;), &quot;&quot;);
+-        PHP_QT_REGISTER(QString_ptr);
++			QString tmp_oo_0(var_oo_0-&gt;metaObject()-&gt;className());
++			QString tmp_oo_1(var_oo_1-&gt;metaObject()-&gt;className());
++			
++			if(tmp_oo_0 == &quot;const QString&quot; &amp;&amp; tmp_oo_1 == &quot;const QString&quot;) {
++				RETURN_LONG(obj-&gt;compare((const QString&amp;) var_oo_0, (const QString&amp;) var_oo_1));
++			}
++		}
++	}
++}
+ 
+-    }
++/*********************************
++ *    class     QString */
++/*
++ *    function  utf16
++ *    flags:    c
++ */
++ZEND_METHOD(QString, utf16){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			const ushort * return_object = (const ushort *) obj-&gt;utf16();
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++	}
++}
+ 
++/*********************************
++ *    class     QString */
++/*
++ *    function  constData
++ *    flags:    c
++ */
++ZEND_METHOD(QString, constData){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			const QChar * return_object = (const QChar *) obj-&gt;constData();
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++	}
+ }
+ 
+-ZEND_METHOD(QString,__toString){
++/*********************************
++ *    class     QString */
++/*
++ *    function  insert
++ *    flags:    
++ */
++ZEND_METHOD(QString, insert){
+ 
+-  QString *QString_ptr = (QString *) PHP_QT_FETCH();
++	if (ZEND_NUM_ARGS() == 2){
++		/* ll public*/
++		long var_ll_0;    // default: 
++		long var_ll_1;    // default: 
+ 
+-  int l = QString_ptr-&gt;size();
+-  char* c = (char*) (QString_ptr-&gt;toAscii()).constData();
+-  RETURN_STRING(c,l);
++		/* int i, char c,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll&quot;, &amp;var_ll_0, &amp;var_ll_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
+ 
++			
++			QString &amp; return_object = (QString &amp;) obj-&gt;insert((int) var_ll_0 ,(char) var_ll_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++		/* lo public*/
++		long var_lo_0;    // default: 
++		zval* z_var_lo_1;   // default: 
++
++		/* int i, const QString&amp; s,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;lo&quot;, &amp;var_lo_0, &amp;z_var_lo_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_lo_1 = (QObject*) php_qt_fetch(z_var_lo_1);
++
++			QString tmp_lo_0(var_lo_1-&gt;metaObject()-&gt;className());
++			
++			if(tmp_lo_0 == &quot;const QString&quot;) {
++				QString &amp; return_object = (QString &amp;) obj-&gt;insert((int) var_lo_0, (const QString&amp;) var_lo_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++	}
++
++	if (ZEND_NUM_ARGS() == 3){
++		/* lol public*/
++		long var_lol_0;    // default: 
++		zval* z_var_lol_1;   // default: 
++		long var_lol_2;    // default: 
++
++		/* int i, const QChar* uc, int len,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;lol&quot;, &amp;var_lol_0, &amp;z_var_lol_1, &amp;var_lol_2) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_lol_1 = (QObject*) php_qt_fetch(z_var_lol_1);
++
++			QString tmp_lol_0(var_lol_1-&gt;metaObject()-&gt;className());
++			
++			if(tmp_lol_0 == &quot;const QChar&quot;) {
++				QString &amp; return_object = (QString &amp;) obj-&gt;insert((int) var_lol_0, (const QChar*) var_lol_1, (int) var_lol_2);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++	}
+ }
+ 
+-ZEND_METHOD(QString,append){
++/*********************************
++ *    class     QString */
++/*
++ *    function  clear
++ *    flags:    
++ */
++ZEND_METHOD(QString, clear){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			obj-&gt;clear();
++			RETURN_NULL();
++	}
++}
+ 
+-    const char *string; int *string_len;
+-    QString *QString_ptr = (QString *) PHP_QT_FETCH();
++/*********************************
++ *    class     QString */
++/*
++ *    function  setUtf16
++ *    flags:    
++ */
++ZEND_METHOD(QString, setUtf16){
+ 
+-    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s&quot;, &amp;string, &amp;string_len) != FAILURE) {
++	if (ZEND_NUM_ARGS() == 2){
++		/* ol public*/
++		long var_ol_0;    // default: 
++		long var_ol_1;    // default: 
+ 
+-        QString_ptr-&gt;append(string);
+-        /* achtung: *2 */
+-        zend_update_property_stringl(Z_OBJCE_P(getThis()),getThis(),&quot;QString&quot;,strlen(&quot;QString&quot;), (char*) QString_ptr-&gt;data(), QString_ptr-&gt;size()*2 TSRMLS_DC);
+-    }
++		/* const ushort* utf16, int size,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll&quot;, &amp;var_ol_0, &amp;var_ol_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
+ 
++			
++			QString &amp; return_object = (QString &amp;) obj-&gt;setUtf16((const ushort*) var_ol_0 ,(int) var_ol_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++	}
+ }
+ 
+-ZEND_METHOD(QString,arg){
+-    NOT_YET_IMPLEMENTED
++/*********************************
++ *    class     QString */
++/*
++ *    function  prepend
++ *    flags:    
++ */
++ZEND_METHOD(QString, prepend){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l public*/
++		long var_l_0;    // default: 
++
++		/* char c,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString &amp; return_object = (QString &amp;) obj-&gt;prepend((char) var_l_0);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++		/* s public*/
++		char* var_s_0;   // default: 
++		int len_s_0;
++
++
++		/* const char* s,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s&quot;, &amp;var_s_0, len_s_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString &amp; return_object = (QString &amp;) obj-&gt;prepend( (const char*) var_s_0);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++		/* o public*/
++		zval* z_var_o_0;   // default: 
++
++		/* const QString&amp; s,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
++
++			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_o_0 == &quot;const QString&quot;) {
++				QString &amp; return_object = (QString &amp;) obj-&gt;prepend((const QString&amp;) var_o_0);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}			
++			if(tmp_o_0 == &quot;const QByteArray&quot;) {
++				QString &amp; return_object = (QString &amp;) obj-&gt;prepend((const QByteArray&amp;) var_o_0);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++	}
+ }
+ 
+-ZEND_METHOD(QString,at){
++/*********************************
++ *    class     QString */
++/*
++ *    function  trimmed
++ *    flags:    c
++ */
++ZEND_METHOD(QString, trimmed){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QString return_object = (QString) obj-&gt;trimmed();
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++	}
++}
+ 
+-    int i;
+-    QString *QString_ptr = (QString *) PHP_QT_FETCH();
++/*********************************
++ *    class     QString */
++/*
++ *    function  chop
++ *    flags:    
++ */
++ZEND_METHOD(QString, chop){
+ 
+-    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;i) != FAILURE) {
+-        if((int) i &gt; QString_ptr-&gt;size()){
+-            php_error(E_ERROR,&quot;QString::at(size) size out of bounds&quot;);
+-            return;
+-        }
++	if (ZEND_NUM_ARGS() == 1){
++		/* l public*/
++		long var_l_0;    // default: 
+ 
+-        char* l = (char *) &amp;QString_ptr-&gt;at((int) i);
+-        RETURN_STRING(l,1);
+-    }
++		/* int n,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
+ 
++			
++			obj-&gt;chop((int) var_l_0);
++			RETURN_NULL();
++		}
++	}
+ }
+ 
++/*********************************
++ *    class     QString */
++/*
++ *    function  leftJustified
++ *    flags:    c
++ */
++ZEND_METHOD(QString, leftJustified){
++
++	if (ZEND_NUM_ARGS() == 3){
++		/* lll public*/
++		long var_lll_0;    // default: 
++		long var_lll_1;    // default: QLatin1Char(' ')
++		long var_lll_2;    // default: false
++
++		/* int width, char fill, int trunc,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll|l|&quot;, &amp;var_lll_0, &amp;var_lll_1, &amp;var_lll_2) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString return_object = (QString) obj-&gt;leftJustified((int) var_lll_0 ,(char) var_lll_1 ,(bool) var_lll_2);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  squeeze
++ *    flags:    
++ */
++ZEND_METHOD(QString, squeeze){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			obj-&gt;squeeze();
++			RETURN_NULL();
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  count
++ *    flags:    c
++ */
++ZEND_METHOD(QString, count){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			RETURN_LONG(obj-&gt;count());
++	}
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* o public*/
++		zval* z_var_o_0;   // default: 
++
++		/* const QRegExp&amp; ,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
++
++			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_o_0 == &quot;const QRegExp&quot;) {
++				RETURN_LONG(obj-&gt;count((const QRegExp&amp;) var_o_0));
++			}
++		}
++	}
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ol public*/
++		zval* z_var_ol_0;   // default: 
++		long var_ol_1;    // default: Qt::CaseSensitive
++
++		/* const QString&amp; s, int cs,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ol|&quot;, &amp;z_var_ol_0, &amp;var_ol_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_ol_0 = (QObject*) php_qt_fetch(z_var_ol_0);
++
++			QString tmp_ol_0(var_ol_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_ol_0 == &quot;const QString&quot;) {
++				RETURN_LONG(obj-&gt;count((const QString&amp;) var_ol_0, (Qt::CaseSensitivity) var_ol_1));
++			}
++		}
++		/* ll public*/
++		long var_ll_0;    // default: 
++		long var_ll_1;    // default: Qt::CaseSensitive
++
++		/* char c, int cs,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll|&quot;, &amp;var_ll_0, &amp;var_ll_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			RETURN_LONG(obj-&gt;count((char) var_ll_0 ,(Qt::CaseSensitivity) var_ll_1));
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  fromAscii
++ *    flags:    s
++ */
++ZEND_METHOD(QString, fromAscii){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* sl public*/
++		char* var_sl_0;   // default: 
++		int len_sl_0;
++
++		long var_sl_1;    // default: -1
++
++		/* const char* , int size,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;sl|&quot;, &amp;var_sl_0, len_sl_0, &amp;var_sl_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString return_object = (QString) obj-&gt;fromAscii( (const char*) var_sl_0 ,(int) var_sl_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  toLongLong
++ *    flags:    c
++ */
++ZEND_METHOD(QString, toLongLong){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ll public*/
++		long var_ll_0;    // default: 0
++		long var_ll_1;    // default: 10
++
++		/* int* ok, int base,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l|l|&quot;, &amp;var_ll_0, &amp;var_ll_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			obj-&gt;toLongLong((bool*) var_ll_0 ,(int) var_ll_1);
++			RETURN_NULL();
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  toUpper
++ *    flags:    c
++ */
++ZEND_METHOD(QString, toUpper){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QString return_object = (QString) obj-&gt;toUpper();
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  QString
++ *    flags:    
++ */
++ZEND_METHOD(QString, __construct){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *QString_ptr = new QString();
++			PHP_QT_REGISTER(QString_ptr);
++			RETURN_NULL();
++	}
++
++	if (ZEND_NUM_ARGS() == 1){
++
++		zval *var_l_0;
++
++		/* s public*/
++		char* var_s_0;   // default: 
++		int len_s_0;
++
++		/* char c,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_DC,&quot;z&quot;, &amp;var_l_0) == SUCCESS) {
++
++		  QString *QString_ptr;
++	
++		  if(Z_TYPE_P(var_l_0) == IS_LONG)
++  		  {		
++			QString_ptr = new QString((char)Z_LVAL_P(var_l_0));
++		  } else if(Z_TYPE_P(var_l_0) == IS_STRING)
++		  {
++			QString_ptr = new QString(Z_STRVAL_P(var_l_0));
++		  }
++
++		  PHP_QT_REGISTER(QString_ptr);
++		  RETURN_NULL();
++		}
++
++		/* const char* ch,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s&quot;, &amp;var_s_0, len_s_0) == FAILURE) {
++
++			
++			QString *QString_ptr = new QString( (const char*) var_s_0);
++			PHP_QT_REGISTER(QString_ptr);
++			RETURN_NULL();
++		}
++		/* o public*/
++		zval* z_var_o_0;   // default: 
++
++		/* const QLatin1String&amp; latin1,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
++
++			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_o_0 == &quot;const QLatin1String&quot;) {
++				QString *QString_ptr = new QString((const QLatin1String&amp;) var_o_0);
++			PHP_QT_REGISTER(QString_ptr);
++			RETURN_NULL();
++			}			
++			if(tmp_o_0 == &quot;const QString&quot;) {
++				QString *QString_ptr = new QString((const QString&amp;) var_o_0);
++			PHP_QT_REGISTER(QString_ptr);
++			RETURN_NULL();
++			}			
++			if(tmp_o_0 == &quot;const QByteArray&quot;) {
++				QString *QString_ptr = new QString((const QByteArray&amp;) var_o_0);
++			PHP_QT_REGISTER(QString_ptr);
++			RETURN_NULL();
++			}			
++			if(tmp_o_0 == &quot;const Null&quot;) {
++/*				QString *QString_ptr = new QString((const Null&amp;) var_o_0);
++			PHP_QT_REGISTER(QString_ptr);
++*/			RETURN_NULL();
++			}
++		}
++	}
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ol public*/
++		zval* z_var_ol_0;   // default: 
++		long var_ol_1;    // default: 
++
++		/* const QChar* unicode, int size,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ol&quot;, &amp;z_var_ol_0, &amp;var_ol_1) == SUCCESS) {
++			QObject* var_ol_0 = (QObject*) php_qt_fetch(z_var_ol_0);
++
++			QString tmp_ol_0(var_ol_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_ol_0 == &quot;const QChar&quot;) {
++				QString *QString_ptr = new QString((const QChar*) var_ol_0, (int) var_ol_1);
++			PHP_QT_REGISTER(QString_ptr);
++			RETURN_NULL();
++			}
++		}
++		/* ll public*/
++		long var_ll_0;    // default: 
++		long var_ll_1;    // default: 
++
++		/* int size, char c,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll&quot;, &amp;var_ll_0, &amp;var_ll_1) == SUCCESS) {
++
++			
++			QString *QString_ptr = new QString((int) var_ll_0 ,(char) var_ll_1);
++			PHP_QT_REGISTER(QString_ptr);
++			RETURN_NULL();
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  normalized
++ *    flags:    c
++ */
++ZEND_METHOD(QString, normalized){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* o public*/
++		long var_o_0;    // default: 
++
++		/* QString::NormalizationForm mode,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_o_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString return_object = (QString) obj-&gt;normalized((QString::NormalizationForm) var_o_0);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++	}
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ol public*/
++		long var_ol_0;    // default: 
++		long var_ol_1;    // default: 
++
++		/* QString::NormalizationForm mode, int version,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll&quot;, &amp;var_ol_0, &amp;var_ol_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString return_object = (QString) obj-&gt;normalized((QString::NormalizationForm) var_ol_0 ,(QChar::UnicodeVersion) var_ol_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  fromUtf16
++ *    flags:    s
++ */
++ZEND_METHOD(QString, fromUtf16){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ol public*/
++		long var_ol_0;    // default: 
++		long var_ol_1;    // default: -1
++
++		/* const ushort* , int size,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll|&quot;, &amp;var_ol_0, &amp;var_ol_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString return_object = (QString) obj-&gt;fromUtf16((const ushort*) var_ol_0 ,(int) var_ol_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  isRightToLeft
++ *    flags:    c
++ */
++ZEND_METHOD(QString, isRightToLeft){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			RETURN_BOOL(obj-&gt;isRightToLeft());
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  setNum
++ *    flags:    
++ */
++ZEND_METHOD(QString, setNum){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ol public*/
++		long var_ol_0;    // default: 
++		long var_ol_1;    // default: 10
++
++		/* short , int base,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll|&quot;, &amp;var_ol_0, &amp;var_ol_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++															
++			QString &amp; return_object = (QString &amp;) obj-&gt;setNum((short) var_ol_0 ,(int) var_ol_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++	}
++
++	if (ZEND_NUM_ARGS() == 3){
++		/* oll public*/
++		long var_oll_0;    // default: 
++		long var_oll_1;    // default: 'g'
++		long var_oll_2;    // default: 6
++
++		/* float , char f, int prec,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll|l|&quot;, &amp;var_oll_0, &amp;var_oll_1, &amp;var_oll_2) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString &amp; return_object = (QString &amp;) obj-&gt;setNum((float) var_oll_0 ,(char) var_oll_1 ,(int) var_oll_2);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++		/* lll public*/
++		long var_lll_0;    // default: 
++		long var_lll_1;    // default: 'g'
++		long var_lll_2;    // default: 6
++
++		/* double , char f, int prec,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll|l|&quot;, &amp;var_lll_0, &amp;var_lll_1, &amp;var_lll_2) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString &amp; return_object = (QString &amp;) obj-&gt;setNum((double) var_lll_0 ,(char) var_lll_1 ,(int) var_lll_2);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  endsWith
++ *    flags:    c
++ */
++ZEND_METHOD(QString, endsWith){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ol public*/
++		zval* z_var_ol_0;   // default: 
++		long var_ol_1;    // default: Qt::CaseSensitive
++
++		/* const QString&amp; s, int cs,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ol|&quot;, &amp;z_var_ol_0, &amp;var_ol_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_ol_0 = (QObject*) php_qt_fetch(z_var_ol_0);
++
++			QString tmp_ol_0(var_ol_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_ol_0 == &quot;const QString&quot;) {
++				RETURN_BOOL(obj-&gt;endsWith((const QString&amp;) var_ol_0, (Qt::CaseSensitivity) var_ol_1));
++			}			
++			if(tmp_ol_0 == &quot;const QChar&quot;) {
++				RETURN_BOOL(obj-&gt;endsWith((const QChar&amp;) var_ol_0, (Qt::CaseSensitivity) var_ol_1));
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  number
++ *    flags:    s
++ */
++ZEND_METHOD(QString, number){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ol public*/
++		long var_ol_0;    // default: 
++		long var_ol_1;    // default: 10
++
++		/* unsigned long , int base,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll|&quot;, &amp;var_ol_0, &amp;var_ol_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++									
++			QString return_object = (QString) obj-&gt;number((ulong) var_ol_0 ,(int) var_ol_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++		/* ll public*/
++		long var_ll_0;    // default: 
++		long var_ll_1;    // default: 10
++
++		/* int , int base,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll|&quot;, &amp;var_ll_0, &amp;var_ll_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString return_object = (QString) obj-&gt;number((int) var_ll_0 ,(int) var_ll_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++	}
++
++	if (ZEND_NUM_ARGS() == 3){
++		/* lll public*/
++		long var_lll_0;    // default: 
++		long var_lll_1;    // default: 'g'
++		long var_lll_2;    // default: 6
++
++		/* double , char f, int prec,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll|l|&quot;, &amp;var_lll_0, &amp;var_lll_1, &amp;var_lll_2) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString return_object = (QString) obj-&gt;number((double) var_lll_0 ,(char) var_lll_1 ,(int) var_lll_2);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  localeAwareCompare
++ *    flags:    c
++ */
++ZEND_METHOD(QString, localeAwareCompare){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* o public*/
++		zval* z_var_o_0;   // default: 
++
++		/* const QString&amp; s,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
++
++			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_o_0 == &quot;const QString&quot;) {
++				RETURN_LONG(obj-&gt;localeAwareCompare((const QString&amp;) var_o_0));
++			}
++		}
++	}
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* oo public*/
++		zval* z_var_oo_0;   // default: 
++		zval* z_var_oo_1;   // default: 
++
++		/* const QString&amp; s1, const QString&amp; s2,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;oo&quot;, &amp;z_var_oo_0, &amp;z_var_oo_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_oo_0 = (QObject*) php_qt_fetch(z_var_oo_0);
++			QObject* var_oo_1 = (QObject*) php_qt_fetch(z_var_oo_1);
++
++			QString tmp_oo_0(var_oo_0-&gt;metaObject()-&gt;className());
++			QString tmp_oo_1(var_oo_1-&gt;metaObject()-&gt;className());
++			
++			if(tmp_oo_0 == &quot;const QString&quot; &amp;&amp; tmp_oo_1 == &quot;const QString&quot;) {
++				RETURN_LONG(obj-&gt;localeAwareCompare((const QString&amp;) var_oo_0, (const QString&amp;) var_oo_1));
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  section
++ *    flags:    c
++ */
++ZEND_METHOD(QString, section){
++
++	if (ZEND_NUM_ARGS() == 4){
++		/* lllo public*/
++		long var_lllo_0;    // default: 
++		long var_lllo_1;    // default: 
++		long var_lllo_2;    // default: -1
++		long var_lllo_3;    // default: SectionDefault
++
++		/* char sep, int start, int end, QString::SectionFlags flags,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;lll|l|&quot;, &amp;var_lllo_0, &amp;var_lllo_1, &amp;var_lllo_2, &amp;var_lllo_3) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString return_object = (QString) obj-&gt;section((char) var_lllo_0 ,(int) var_lllo_1 ,(int) var_lllo_2 ,(QString::SectionFlags) var_lllo_3);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++		/* ollo public*/
++		zval* z_var_ollo_0;   // default: 
++		long var_ollo_1;    // default: 
++		long var_ollo_2;    // default: -1
++		long var_ollo_3;    // default: SectionDefault
++
++		/* const QString&amp; in_sep, int start, int end, QString::SectionFlags flags,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;oll|l|&quot;, &amp;z_var_ollo_0, &amp;var_ollo_1, &amp;var_ollo_2, &amp;var_ollo_3) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_ollo_0 = (QObject*) php_qt_fetch(z_var_ollo_0);
++
++			QString tmp_ollo_0(var_ollo_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_ollo_0 == &quot;const QString&quot;) {
++				QString return_object = (QString) obj-&gt;section((const QString&amp;) var_ollo_0, (int) var_ollo_1, (int) var_ollo_2, (QString::SectionFlags) var_ollo_3);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}			
++			if(tmp_ollo_0 == &quot;const QRegExp&quot;) {
++				QString return_object = (QString) obj-&gt;section((const QRegExp&amp;) var_ollo_0, (int) var_ollo_1, (int) var_ollo_2, (QString::SectionFlags) var_ollo_3);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  isSimpleText
++ *    flags:    c
++ */
++ZEND_METHOD(QString, isSimpleText){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			RETURN_BOOL(obj-&gt;isSimpleText());
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  size
++ *    flags:    c
++ */
++ZEND_METHOD(QString, size){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			RETURN_LONG(obj-&gt;size());
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  simplified
++ *    flags:    c
++ */
++ZEND_METHOD(QString, simplified){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QString return_object = (QString) obj-&gt;simplified();
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  toUInt
++ *    flags:    c
++ */
++ZEND_METHOD(QString, toUInt){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ll public*/
++		long var_ll_0;    // default: 0
++		long var_ll_1;    // default: 10
++
++		/* int* ok, int base,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l|l|&quot;, &amp;var_ll_0, &amp;var_ll_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			RETURN_LONG(obj-&gt;toUInt((bool*) var_ll_0 ,(int) var_ll_1));
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  toUShort
++ *    flags:    c
++ */
++ZEND_METHOD(QString, toUShort){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ll public*/
++		long var_ll_0;    // default: 0
++		long var_ll_1;    // default: 10
++
++		/* int* ok, int base,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l|l|&quot;, &amp;var_ll_0, &amp;var_ll_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			RETURN_LONG(obj-&gt;toUShort((bool*) var_ll_0 ,(int) var_ll_1));
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  truncate
++ *    flags:    
++ */
++ZEND_METHOD(QString, truncate){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l public*/
++		long var_l_0;    // default: 
++
++		/* int pos,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			obj-&gt;truncate((int) var_l_0);
++			RETURN_NULL();
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  toAscii
++ *    flags:    c
++ */
++ZEND_METHOD(QString, toAscii){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++		// bytearray, skipped
++		RETURN_NULL();
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  length
++ *    flags:    c
++ */
++ZEND_METHOD(QString, length){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			RETURN_LONG(obj-&gt;length());
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  right
++ *    flags:    c
++ */
++ZEND_METHOD(QString, right){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l public*/
++		long var_l_0;    // default: 
++
++		/* int len,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString return_object = (QString) obj-&gt;right((int) var_l_0);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  push_front
++ *    flags:    
++ */
++ZEND_METHOD(QString, push_front){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l public*/
++		long var_l_0;    // default: 
++
++		/* char c,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			obj-&gt;push_front((char) var_l_0);
++			RETURN_NULL();
++		}
++		/* o public*/
++		zval* z_var_o_0;   // default: 
++
++		/* const QString&amp; s,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
++
++			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_o_0 == &quot;const QString&quot;) {
++				obj-&gt;push_front((const QString&amp;) var_o_0);
++			RETURN_NULL();
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  toUtf8
++ *    flags:    c
++ */
++ZEND_METHOD(QString, toUtf8){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++		// bytearray, skipped
++		RETURN_NULL();
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  toULongLong
++ *    flags:    c
++ */
++ZEND_METHOD(QString, toULongLong){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ll public*/
++		long var_ll_0;    // default: 0
++		long var_ll_1;    // default: 10
++
++		/* int* ok, int base,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l|l|&quot;, &amp;var_ll_0, &amp;var_ll_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			obj-&gt;toULongLong((bool*) var_ll_0 ,(int) var_ll_1);
++			RETURN_NULL();
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  indexOf
++ *    flags:    c
++ */
++ZEND_METHOD(QString, indexOf){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ol public*/
++		zval* z_var_ol_0;   // default: 
++		long var_ol_1;    // default: 0
++
++		/* const QRegExp&amp; , int from,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ol|&quot;, &amp;z_var_ol_0, &amp;var_ol_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_ol_0 = (QObject*) php_qt_fetch(z_var_ol_0);
++
++			QString tmp_ol_0(var_ol_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_ol_0 == &quot;const QRegExp&quot;) {
++				RETURN_LONG(obj-&gt;indexOf((const QRegExp&amp;) var_ol_0, (int) var_ol_1));
++			}
++		}
++	}
++
++	if (ZEND_NUM_ARGS() == 3){
++		/* oll public*/
++		zval* z_var_oll_0;   // default: 
++		long var_oll_1;    // default: 0
++		long var_oll_2;    // default: Qt::CaseSensitive
++
++		/* const QString&amp; s, int from, int cs,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ol|l|&quot;, &amp;z_var_oll_0, &amp;var_oll_1, &amp;var_oll_2) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_oll_0 = (QObject*) php_qt_fetch(z_var_oll_0);
++
++			QString tmp_oll_0(var_oll_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_oll_0 == &quot;const QString&quot;) {
++				RETURN_LONG(obj-&gt;indexOf((const QString&amp;) var_oll_0, (int) var_oll_1, (Qt::CaseSensitivity) var_oll_2));
++			}
++		}
++		/* lll public*/
++		long var_lll_0;    // default: 
++		long var_lll_1;    // default: 0
++		long var_lll_2;    // default: Qt::CaseSensitive
++
++		/* char c, int from, int cs,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll|l|&quot;, &amp;var_lll_0, &amp;var_lll_1, &amp;var_lll_2) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			RETURN_LONG(obj-&gt;indexOf((char) var_lll_0 ,(int) var_lll_1 ,(Qt::CaseSensitivity) var_lll_2));
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  fromRawData
++ *    flags:    s
++ */
++ZEND_METHOD(QString, fromRawData){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ol public*/
++		zval* z_var_ol_0;   // default: 
++		long var_ol_1;    // default: 
++
++		/* const QChar* , int size,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ol&quot;, &amp;z_var_ol_0, &amp;var_ol_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_ol_0 = (QObject*) php_qt_fetch(z_var_ol_0);
++
++			QString tmp_ol_0(var_ol_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_ol_0 == &quot;const QChar&quot;) {
++				QString return_object = (QString) obj-&gt;fromRawData((const QChar*) var_ol_0, (int) var_ol_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  constEnd
++ *    flags:    c
++ */
++ZEND_METHOD(QString, constEnd){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			obj-&gt;constEnd();
++			RETURN_NULL();
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  left
++ *    flags:    c
++ */
++ZEND_METHOD(QString, left){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l public*/
++		long var_l_0;    // default: 
++
++		/* int len,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString return_object = (QString) obj-&gt;left((int) var_l_0);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  fromLocal8Bit
++ *    flags:    s
++ */
++ZEND_METHOD(QString, fromLocal8Bit){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* sl public*/
++		char* var_sl_0;   // default: 
++		int len_sl_0;
++
++		long var_sl_1;    // default: -1
++
++		/* const char* , int size,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;sl|&quot;, &amp;var_sl_0, len_sl_0, &amp;var_sl_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString return_object = (QString) obj-&gt;fromLocal8Bit( (const char*) var_sl_0 ,(int) var_sl_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  startsWith
++ *    flags:    c
++ */
++ZEND_METHOD(QString, startsWith){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ol public*/
++		zval* z_var_ol_0;   // default: 
++		long var_ol_1;    // default: Qt::CaseSensitive
++
++		/* const QString&amp; s, int cs,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ol|&quot;, &amp;z_var_ol_0, &amp;var_ol_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_ol_0 = (QObject*) php_qt_fetch(z_var_ol_0);
++
++			QString tmp_ol_0(var_ol_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_ol_0 == &quot;const QString&quot;) {
++				RETURN_BOOL(obj-&gt;startsWith((const QString&amp;) var_ol_0, (Qt::CaseSensitivity) var_ol_1));
++			}			
++			if(tmp_ol_0 == &quot;const QChar&quot;) {
++				RETURN_BOOL(obj-&gt;startsWith((const QChar&amp;) var_ol_0, (Qt::CaseSensitivity) var_ol_1));
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  remove
++ *    flags:    
++ */
++ZEND_METHOD(QString, remove){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* o public*/
++		zval* z_var_o_0;   // default: 
++
++		/* const QRegExp&amp; rx,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
++
++			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_o_0 == &quot;const QRegExp&quot;) {
++				QString &amp; return_object = (QString &amp;) obj-&gt;remove((const QRegExp&amp;) var_o_0);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++	}
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ol public*/
++		zval* z_var_ol_0;   // default: 
++		long var_ol_1;    // default: Qt::CaseSensitive
++
++		/* const QString&amp; s, int cs,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ol|&quot;, &amp;z_var_ol_0, &amp;var_ol_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_ol_0 = (QObject*) php_qt_fetch(z_var_ol_0);
++
++			QString tmp_ol_0(var_ol_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_ol_0 == &quot;const QString&quot;) {
++				QString &amp; return_object = (QString &amp;) obj-&gt;remove((const QString&amp;) var_ol_0, (Qt::CaseSensitivity) var_ol_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++		/* ll public*/
++		long var_ll_0;    // default: 
++		long var_ll_1;    // default: 
++
++		/* int i, int len,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll&quot;, &amp;var_ll_0, &amp;var_ll_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++						
++			QString &amp; return_object = (QString &amp;) obj-&gt;remove((int) var_ll_0 ,(int) var_ll_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  isEmpty
++ *    flags:    c
++ */
++ZEND_METHOD(QString, isEmpty){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			RETURN_BOOL(obj-&gt;isEmpty());
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  arg
++ *    flags:    c
++ */
++ZEND_METHOD(QString, arg){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* oo public*/
++		zval* z_var_oo_0;   // default: 
++		zval* z_var_oo_1;   // default: 
++
++		/* const QString&amp; a1, const QString&amp; a2,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;oo&quot;, &amp;z_var_oo_0, &amp;z_var_oo_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_oo_0 = (QObject*) php_qt_fetch(z_var_oo_0);
++			QObject* var_oo_1 = (QObject*) php_qt_fetch(z_var_oo_1);
++
++			QString tmp_oo_0(var_oo_0-&gt;metaObject()-&gt;className());
++			QString tmp_oo_1(var_oo_1-&gt;metaObject()-&gt;className());
++			
++			if(tmp_oo_0 == &quot;const QString&quot; &amp;&amp; tmp_oo_1 == &quot;const QString&quot;) {
++				QString return_object = (QString) obj-&gt;arg((const QString&amp;) var_oo_0, (const QString&amp;) var_oo_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++	}
++
++	if (ZEND_NUM_ARGS() == 3){
++		/* ooo public*/
++		zval* z_var_ooo_0;   // default: 
++		zval* z_var_ooo_1;   // default: 
++		zval* z_var_ooo_2;   // default: 
++
++		/* const QString&amp; a1, const QString&amp; a2, const QString&amp; a3,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ooo&quot;, &amp;z_var_ooo_0, &amp;z_var_ooo_1, &amp;z_var_ooo_2) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_ooo_0 = (QObject*) php_qt_fetch(z_var_ooo_0);
++			QObject* var_ooo_1 = (QObject*) php_qt_fetch(z_var_ooo_1);
++			QObject* var_ooo_2 = (QObject*) php_qt_fetch(z_var_ooo_2);
++
++			QString tmp_ooo_0(var_ooo_0-&gt;metaObject()-&gt;className());
++			QString tmp_ooo_1(var_ooo_1-&gt;metaObject()-&gt;className());
++			QString tmp_ooo_2(var_ooo_2-&gt;metaObject()-&gt;className());
++			
++			if(tmp_ooo_0 == &quot;const QString&quot; &amp;&amp; tmp_ooo_1 == &quot;const QString&quot; &amp;&amp; tmp_ooo_2 == &quot;const QString&quot;) {
++				QString return_object = (QString) obj-&gt;arg((const QString&amp;) var_ooo_0, (const QString&amp;) var_ooo_1, (const QString&amp;) var_ooo_2);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++		/* olo public*/
++		zval* z_var_olo_0;   // default: 
++		long var_olo_1;    // default: 0
++		zval* z_var_olo_2;   // default: QLatin1Char(' ')
++
++		/* const QString&amp; a, int fieldWidth, const QChar&amp; fillChar,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ol|o|&quot;, &amp;z_var_olo_0, &amp;var_olo_1, &amp;z_var_olo_2) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_olo_0 = (QObject*) php_qt_fetch(z_var_olo_0);
++			QObject* var_olo_2 = (QObject*) php_qt_fetch(z_var_olo_2);
++
++			QString tmp_olo_0(var_olo_0-&gt;metaObject()-&gt;className());
++			QString tmp_olo_1(var_olo_2-&gt;metaObject()-&gt;className());
++			
++			if(tmp_olo_0 == &quot;const QString&quot; &amp;&amp; tmp_olo_1 == &quot;const QChar&quot;) {
++				QString return_object = (QString) obj-&gt;arg((const QString&amp;) var_olo_0, (int) var_olo_1, (const QChar&amp;) var_olo_2);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++		/* llo public*/
++		long var_llo_0;    // default: 
++		long var_llo_1;    // default: 0
++		zval* z_var_llo_2;   // default: QLatin1Char(' ')
++
++		/* char a, int fieldWidth, const QChar&amp; fillChar,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll|o|&quot;, &amp;var_llo_0, &amp;var_llo_1, &amp;z_var_llo_2) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_llo_2 = (QObject*) php_qt_fetch(z_var_llo_2);
++
++			QString tmp_llo_0(var_llo_2-&gt;metaObject()-&gt;className());
++			
++			if(tmp_llo_0 == &quot;const QChar&quot;) {
++				QString return_object = (QString) obj-&gt;arg((char) var_llo_0, (int) var_llo_1, (const QChar&amp;) var_llo_2);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++	}
++
++	if (ZEND_NUM_ARGS() == 4){
++		/* lllo public*/
++		long var_lllo_0;    // default: 
++		long var_lllo_1;    // default: 0
++		long var_lllo_2;    // default: 10
++		zval* z_var_lllo_3;   // default: QLatin1Char(' ')
++
++		/* int a, int fieldWidth, int base, const QChar&amp; fillChar,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll|l|o|&quot;, &amp;var_lllo_0, &amp;var_lllo_1, &amp;var_lllo_2, &amp;z_var_lllo_3) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_lllo_3 = (QObject*) php_qt_fetch(z_var_lllo_3);
++
++			QString tmp_lllo_0(var_lllo_3-&gt;metaObject()-&gt;className());
++			
++			if(tmp_lllo_0 == &quot;const QChar&quot;) {
++				QString return_object = (QString) obj-&gt;arg((int) var_lllo_0, (int) var_lllo_1, (int) var_lllo_2, (const QChar&amp;) var_lllo_3);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++		/* ollo public*/
++		long var_ollo_0;    // default: 
++		long var_ollo_1;    // default: 0
++		long var_ollo_2;    // default: 10
++		zval* z_var_ollo_3;   // default: QLatin1Char(' ')
++
++		/* qlonglong a, int fieldwidth, int base, const QChar&amp; fillChar,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll|l|o|&quot;, &amp;var_ollo_0, &amp;var_ollo_1, &amp;var_ollo_2, &amp;z_var_ollo_3) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_ollo_3 = (QObject*) php_qt_fetch(z_var_ollo_3);
++
++			QString tmp_ollo_0(var_ollo_3-&gt;metaObject()-&gt;className());
++			
++			if(tmp_ollo_0 == &quot;const QChar&quot;) {
++				QString return_object = (QString) obj-&gt;arg((qlonglong) var_ollo_0, (int) var_ollo_1, (int) var_ollo_2, (const QChar&amp;) var_ollo_3);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}			
++			if(tmp_ollo_0 == &quot;const QChar&quot;) {
++				QString return_object = (QString) obj-&gt;arg((qulonglong) var_ollo_0, (int) var_ollo_1, (int) var_ollo_2, (const QChar&amp;) var_ollo_3);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}			
++			if(tmp_ollo_0 == &quot;const QChar&quot;) {
++				QString return_object = (QString) obj-&gt;arg((long) var_ollo_0, (int) var_ollo_1, (int) var_ollo_2, (const QChar&amp;) var_ollo_3);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}			
++			if(tmp_ollo_0 == &quot;const QChar&quot;) {
++				QString return_object = (QString) obj-&gt;arg((ulong) var_ollo_0, (int) var_ollo_1, (int) var_ollo_2, (const QChar&amp;) var_ollo_3);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}			
++			if(tmp_ollo_0 == &quot;const QChar&quot;) {
++				QString return_object = (QString) obj-&gt;arg((short) var_ollo_0, (int) var_ollo_1, (int) var_ollo_2, (const QChar&amp;) var_ollo_3);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}			
++			if(tmp_ollo_0 == &quot;const QChar&quot;) {
++				QString return_object = (QString) obj-&gt;arg((ushort) var_ollo_0, (int) var_ollo_1, (int) var_ollo_2, (const QChar&amp;) var_ollo_3);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++		/* oooo public*/
++		zval* z_var_oooo_0;   // default: 
++		zval* z_var_oooo_1;   // default: 
++		zval* z_var_oooo_2;   // default: 
++		zval* z_var_oooo_3;   // default: 
++
++		/* const QString&amp; a1, const QString&amp; a2, const QString&amp; a3, const QString&amp; a4,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;oooo&quot;, &amp;z_var_oooo_0, &amp;z_var_oooo_1, &amp;z_var_oooo_2, &amp;z_var_oooo_3) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_oooo_0 = (QObject*) php_qt_fetch(z_var_oooo_0);
++			QObject* var_oooo_1 = (QObject*) php_qt_fetch(z_var_oooo_1);
++			QObject* var_oooo_2 = (QObject*) php_qt_fetch(z_var_oooo_2);
++			QObject* var_oooo_3 = (QObject*) php_qt_fetch(z_var_oooo_3);
++
++			QString tmp_oooo_0(var_oooo_0-&gt;metaObject()-&gt;className());
++			QString tmp_oooo_1(var_oooo_1-&gt;metaObject()-&gt;className());
++			QString tmp_oooo_2(var_oooo_2-&gt;metaObject()-&gt;className());
++			QString tmp_oooo_3(var_oooo_3-&gt;metaObject()-&gt;className());
++			
++			if(tmp_oooo_0 == &quot;const QString&quot; &amp;&amp; tmp_oooo_1 == &quot;const QString&quot; &amp;&amp; tmp_oooo_2 == &quot;const QString&quot; &amp;&amp; tmp_oooo_3 == &quot;const QString&quot;) {
++				QString return_object = (QString) obj-&gt;arg((const QString&amp;) var_oooo_0, (const QString&amp;) var_oooo_1, (const QString&amp;) var_oooo_2, (const QString&amp;) var_oooo_3);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++	}
++
++	if (ZEND_NUM_ARGS() == 5){
++		/* llllo public*/
++		long var_llllo_0;    // default: 
++		long var_llllo_1;    // default: 0
++		long var_llllo_2;    // default: 'g'
++		long var_llllo_3;    // default: -1
++		zval* z_var_llllo_4;   // default: QLatin1Char(' ')
++
++		/* double a, int fieldWidth, char fmt, int prec, const QChar&amp; fillChar,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll|l|l|o|&quot;, &amp;var_llllo_0, &amp;var_llllo_1, &amp;var_llllo_2, &amp;var_llllo_3, &amp;z_var_llllo_4) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_llllo_4 = (QObject*) php_qt_fetch(z_var_llllo_4);
++
++			QString tmp_llllo_0(var_llllo_4-&gt;metaObject()-&gt;className());
++			
++			if(tmp_llllo_0 == &quot;const QChar&quot;) {
++				QString return_object = (QString) obj-&gt;arg((double) var_llllo_0, (int) var_llllo_1, (char) var_llllo_2, (int) var_llllo_3, (const QChar&amp;) var_llllo_4);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  vsprintf
++ *    flags:    
++ */
++ZEND_METHOD(QString, vsprintf){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* so public*/
++		char* var_so_0;   // default: 
++		int len_so_0;
++
++		zval* z_var_so_1;   // default: 
++
++		/* const char* format, va_list ap,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;so&quot;, &amp;var_so_0, len_so_0, &amp;z_var_so_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_so_1 = (QObject*) php_qt_fetch(z_var_so_1);
++
++			QString tmp_so_0(var_so_1-&gt;metaObject()-&gt;className());
++			
++			if(tmp_so_0 == &quot;va_list&quot;) {
++				QString &amp; return_object = (QString &amp;) obj-&gt;vsprintf((const char*) var_so_0, (va_list) var_so_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  toFloat
++ *    flags:    c
++ */
++ZEND_METHOD(QString, toFloat){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l public*/
++		long var_l_0;    // default: 0
++
++		/* int* ok,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l|&quot;, &amp;var_l_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++//			RETURN_FLOAT(obj-&gt;toFloat((bool*) var_l_0));
++			RETURN_NULL();
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  isDetached
++ *    flags:    c
++ */
++ZEND_METHOD(QString, isDetached){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			RETURN_BOOL(obj-&gt;isDetached());
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  reserve
++ *    flags:    
++ */
++ZEND_METHOD(QString, reserve){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l public*/
++		long var_l_0;    // default: 
++
++		/* int size,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			obj-&gt;reserve((int) var_l_0);
++			RETURN_NULL();
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  toULong
++ *    flags:    c
++ */
++ZEND_METHOD(QString, toULong){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ll public*/
++		long var_ll_0;    // default: 0
++		long var_ll_1;    // default: 10
++
++		/* int* ok, int base,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l|l|&quot;, &amp;var_ll_0, &amp;var_ll_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++//			RETURN_ULONG(obj-&gt;toULong((bool*) var_ll_0 ,(int) var_ll_1));
++		  	RETURN_NULL();
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  toShort
++ *    flags:    c
++ */
++ZEND_METHOD(QString, toShort){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ll public*/
++		long var_ll_0;    // default: 0
++		long var_ll_1;    // default: 10
++
++		/* int* ok, int base,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l|l|&quot;, &amp;var_ll_0, &amp;var_ll_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++//			RETURN_SHORT(obj-&gt;toShort((bool*) var_ll_0 ,(int) var_ll_1));
++	  		RETURN_NULL();
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  split
++ *    flags:    c
++ */
++ZEND_METHOD(QString, split){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* oo public*/
++		zval* z_var_oo_0;   // default: 
++		long var_oo_1;    // default: KeepEmptyParts
++
++		/* const QRegExp&amp; sep, QString::SplitBehavior behavior,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ol|&quot;, &amp;z_var_oo_0, &amp;var_oo_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_oo_0 = (QObject*) php_qt_fetch(z_var_oo_0);
++
++			QString tmp_oo_0(var_oo_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_oo_0 == &quot;const QRegExp&quot;) {
++/*				QStringList return_object = (QStringList) obj-&gt;split((const QRegExp&amp;) var_oo_0, (QString::SplitBehavior) var_oo_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++*/				return;                                             
++			}
++		}
++	}
++
++	if (ZEND_NUM_ARGS() == 3){
++		/* ool public*/
++		zval* z_var_ool_0;   // default: 
++		long var_ool_1;    // default: KeepEmptyParts
++		long var_ool_2;    // default: Qt::CaseSensitive
++
++		/* const QString&amp; sep, QString::SplitBehavior behavior, int cs,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ol|l|&quot;, &amp;z_var_ool_0, &amp;var_ool_1, &amp;var_ool_2) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_ool_0 = (QObject*) php_qt_fetch(z_var_ool_0);
++
++			QString tmp_ool_0(var_ool_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_ool_0 == &quot;const QString&quot;) {
++/*				QStringList return_object = (QStringList) obj-&gt;split((const QString&amp;) var_ool_0, (QString::SplitBehavior) var_ool_1, (Qt::CaseSensitivity) var_ool_2);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++*/				return;                                             
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  setUnicode
++ *    flags:    
++ */
++ZEND_METHOD(QString, setUnicode){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ol public*/
++		zval* z_var_ol_0;   // default: 
++		long var_ol_1;    // default: 
++
++		/* const QChar* unicode, int size,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ol&quot;, &amp;z_var_ol_0, &amp;var_ol_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_ol_0 = (QObject*) php_qt_fetch(z_var_ol_0);
++
++			QString tmp_ol_0(var_ol_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_ol_0 == &quot;const QChar&quot;) {
++				QString &amp; return_object = (QString &amp;) obj-&gt;setUnicode((const QChar*) var_ol_0, (int) var_ol_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  fromLatin1
++ *    flags:    s
++ */
++ZEND_METHOD(QString, fromLatin1){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* sl public*/
++		char* var_sl_0;   // default: 
++		int len_sl_0;
++
++		long var_sl_1;    // default: -1
++
++		/* const char* , int size,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;sl|&quot;, &amp;var_sl_0, len_sl_0, &amp;var_sl_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString return_object = (QString) obj-&gt;fromLatin1( (const char*) var_sl_0 ,(int) var_sl_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  data
++ *    flags:    
++ */
++ZEND_METHOD(QString, data){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QChar * return_object = (QChar *) obj-&gt;data();
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  toLatin1
++ *    flags:    c
++ */
++ZEND_METHOD(QString, toLatin1){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++		// bytearray, skipped
++		RETURN_NULL();
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  end
++ *    flags:    
++ */
++ZEND_METHOD(QString, end){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++//			RETURN_INTPTR(obj-&gt;end());
++			RETURN_NULL();
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  contains
++ *    flags:    c
++ */
++ZEND_METHOD(QString, contains){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* o public*/
++		zval* z_var_o_0;   // default: 
++
++		/* const QRegExp&amp; rx,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
++
++			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_o_0 == &quot;const QRegExp&quot;) {
++				obj-&gt;contains((const QRegExp&amp;) var_o_0);
++			RETURN_NULL();
++			}
++		}
++	}
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ol public*/
++		zval* z_var_ol_0;   // default: 
++		long var_ol_1;    // default: Qt::CaseSensitive
++
++		/* const QString&amp; s, int cs,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ol|&quot;, &amp;z_var_ol_0, &amp;var_ol_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_ol_0 = (QObject*) php_qt_fetch(z_var_ol_0);
++
++			QString tmp_ol_0(var_ol_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_ol_0 == &quot;const QString&quot;) {
++				obj-&gt;contains((const QString&amp;) var_ol_0, (Qt::CaseSensitivity) var_ol_1);
++			RETURN_NULL();
++			}
++		}
++		/* ll public*/
++		long var_ll_0;    // default: 
++		long var_ll_1;    // default: Qt::CaseSensitive
++
++		/* char c, int cs,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll|&quot;, &amp;var_ll_0, &amp;var_ll_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			obj-&gt;contains((char) var_ll_0 ,(Qt::CaseSensitivity) var_ll_1);
++			RETURN_NULL();
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  resize
++ *    flags:    
++ */
++ZEND_METHOD(QString, resize){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l public*/
++		long var_l_0;    // default: 
++
++		/* int size,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			obj-&gt;resize((int) var_l_0);
++			RETURN_NULL();
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  replace
++ *    flags:    
++ */
++ZEND_METHOD(QString, replace){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* oo public*/
++		zval* z_var_oo_0;   // default: 
++		zval* z_var_oo_1;   // default: 
++
++		/* const QRegExp&amp; rx, const QString&amp; after,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;oo&quot;, &amp;z_var_oo_0, &amp;z_var_oo_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_oo_0 = (QObject*) php_qt_fetch(z_var_oo_0);
++			QObject* var_oo_1 = (QObject*) php_qt_fetch(z_var_oo_1);
++
++			QString tmp_oo_0(var_oo_0-&gt;metaObject()-&gt;className());
++			QString tmp_oo_1(var_oo_1-&gt;metaObject()-&gt;className());
++			
++			if(tmp_oo_0 == &quot;const QRegExp&quot; &amp;&amp; tmp_oo_1 == &quot;const QString&quot;) {
++				QString &amp; return_object = (QString &amp;) obj-&gt;replace((const QRegExp&amp;) var_oo_0, (const QString&amp;) var_oo_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++	}
++
++	if (ZEND_NUM_ARGS() == 3){
++		/* ool public*/
++		zval* z_var_ool_0;   // default: 
++		zval* z_var_ool_1;   // default: 
++		long var_ool_2;    // default: Qt::CaseSensitive
++
++		/* const QString&amp; before, const QString&amp; after, int cs,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ool|&quot;, &amp;z_var_ool_0, &amp;z_var_ool_1, &amp;var_ool_2) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_ool_0 = (QObject*) php_qt_fetch(z_var_ool_0);
++			QObject* var_ool_1 = (QObject*) php_qt_fetch(z_var_ool_1);
++
++			QString tmp_ool_0(var_ool_0-&gt;metaObject()-&gt;className());
++			QString tmp_ool_1(var_ool_1-&gt;metaObject()-&gt;className());
++			
++			if(tmp_ool_0 == &quot;const QString&quot; &amp;&amp; tmp_ool_1 == &quot;const QString&quot;) {
++				QString &amp; return_object = (QString &amp;) obj-&gt;replace((const QString&amp;) var_ool_0, (const QString&amp;) var_ool_1, (Qt::CaseSensitivity) var_ool_2);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++		/* lol public*/
++		long var_lol_0;    // default: 
++		zval* z_var_lol_1;   // default: 
++		long var_lol_2;    // default: Qt::CaseSensitive
++
++		/* char c, const QString&amp; after, int cs,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;lol|&quot;, &amp;var_lol_0, &amp;z_var_lol_1, &amp;var_lol_2) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_lol_1 = (QObject*) php_qt_fetch(z_var_lol_1);
++
++			QString tmp_lol_0(var_lol_1-&gt;metaObject()-&gt;className());
++			
++			if(tmp_lol_0 == &quot;const QString&quot;) {
++				QString &amp; return_object = (QString &amp;) obj-&gt;replace((char) var_lol_0, (const QString&amp;) var_lol_1, (Qt::CaseSensitivity) var_lol_2);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++		/* lll public*/
++		long var_lll_0;    // default: 
++		long var_lll_1;    // default: 
++		long var_lll_2;    // default: 
++
++		/* int i, int len, char after,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;lll&quot;, &amp;var_lll_0, &amp;var_lll_1, &amp;var_lll_2) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++						
++			QString &amp; return_object = (QString &amp;) obj-&gt;replace((int) var_lll_0 ,(int) var_lll_1 ,(char) var_lll_2);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++		/* llo public*/
++		long var_llo_0;    // default: 
++		long var_llo_1;    // default: 
++		zval* z_var_llo_2;   // default: 
++
++		/* int i, int len, const QString&amp; after,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;llo&quot;, &amp;var_llo_0, &amp;var_llo_1, &amp;z_var_llo_2) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_llo_2 = (QObject*) php_qt_fetch(z_var_llo_2);
++
++			QString tmp_llo_0(var_llo_2-&gt;metaObject()-&gt;className());
++			
++			if(tmp_llo_0 == &quot;const QString&quot;) {
++				QString &amp; return_object = (QString &amp;) obj-&gt;replace((int) var_llo_0, (int) var_llo_1, (const QString&amp;) var_llo_2);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++	}
++
++	if (ZEND_NUM_ARGS() == 4){
++		/* llol public*/
++		long var_llol_0;    // default: 
++		long var_llol_1;    // default: 
++		zval* z_var_llol_2;   // default: 
++		long var_llol_3;    // default: 
++
++		/* int i, int len, const QChar* s, int slen,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;llol&quot;, &amp;var_llol_0, &amp;var_llol_1, &amp;z_var_llol_2, &amp;var_llol_3) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_llol_2 = (QObject*) php_qt_fetch(z_var_llol_2);
++
++			QString tmp_llol_0(var_llol_2-&gt;metaObject()-&gt;className());
++			
++			if(tmp_llol_0 == &quot;const QChar&quot;) {
++				QString &amp; return_object = (QString &amp;) obj-&gt;replace((int) var_llol_0, (int) var_llol_1, (const QChar*) var_llol_2, (int) var_llol_3);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  fromUtf8
++ *    flags:    s
++ */
++ZEND_METHOD(QString, fromUtf8){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* sl public*/
++		char* var_sl_0;   // default: 
++		int len_sl_0;
++
++		long var_sl_1;    // default: -1
++
++		/* const char* , int size,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;sl|&quot;, &amp;var_sl_0, len_sl_0, &amp;var_sl_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString return_object = (QString) obj-&gt;fromUtf8( (const char*) var_sl_0 ,(int) var_sl_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  toLong
++ *    flags:    c
++ */
++ZEND_METHOD(QString, toLong){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ll public*/
++		long var_ll_0;    // default: 0
++		long var_ll_1;    // default: 10
++
++		/* int* ok, int base,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l|l|&quot;, &amp;var_ll_0, &amp;var_ll_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			RETURN_LONG(obj-&gt;toLong((bool*) var_ll_0 ,(int) var_ll_1));
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  detach
++ *    flags:    
++ */
++ZEND_METHOD(QString, detach){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			obj-&gt;detach();
++			RETURN_NULL();
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  append
++ *    flags:    
++ */
++ZEND_METHOD(QString, append){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l public*/
++		long var_l_0;    // default: 
++
++		/* char c,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString &amp; return_object = (QString &amp;) obj-&gt;append((char) var_l_0);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++		/* s public*/
++		char* var_s_0;   // default: 
++		int len_s_0;
++
++
++		/* const char* s,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s&quot;, &amp;var_s_0, len_s_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString &amp; return_object = (QString &amp;) obj-&gt;append( (const char*) var_s_0);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++		/* o public*/
++		zval* z_var_o_0;   // default: 
++
++		/* const QString&amp; s,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
++
++			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_o_0 == &quot;const QString&quot;) {
++				QString &amp; return_object = (QString &amp;) obj-&gt;append((const QString&amp;) var_o_0);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}			
++			if(tmp_o_0 == &quot;const QByteArray&quot;) {
++				QString &amp; return_object = (QString &amp;) obj-&gt;append((const QByteArray&amp;) var_o_0);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  mid
++ *    flags:    c
++ */
++ZEND_METHOD(QString, mid){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ll public*/
++		long var_ll_0;    // default: 
++		long var_ll_1;    // default: -1
++
++		/* int i, int len,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll|&quot;, &amp;var_ll_0, &amp;var_ll_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString return_object = (QString) obj-&gt;mid((int) var_ll_0 ,(int) var_ll_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  toDouble
++ *    flags:    c
++ */
++ZEND_METHOD(QString, toDouble){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l public*/
++		long var_l_0;    // default: 0
++
++		/* int* ok,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l|&quot;, &amp;var_l_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			RETURN_DOUBLE(obj-&gt;toDouble((bool*) var_l_0));
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  fill
++ *    flags:    
++ */
++ZEND_METHOD(QString, fill){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ll public*/
++		long var_ll_0;    // default: 
++		long var_ll_1;    // default: -1
++
++		/* char c, int size,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll|&quot;, &amp;var_ll_0, &amp;var_ll_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString &amp; return_object = (QString &amp;) obj-&gt;fill((char) var_ll_0 ,(int) var_ll_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  rightJustified
++ *    flags:    c
++ */
++ZEND_METHOD(QString, rightJustified){
++
++	if (ZEND_NUM_ARGS() == 3){
++		/* lll public*/
++		long var_lll_0;    // default: 
++		long var_lll_1;    // default: QLatin1Char(' ')
++		long var_lll_2;    // default: false
++
++		/* int width, char fill, int trunc,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll|l|&quot;, &amp;var_lll_0, &amp;var_lll_1, &amp;var_lll_2) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			QString return_object = (QString) obj-&gt;rightJustified((int) var_lll_0 ,(char) var_lll_1 ,(bool) var_lll_2);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  toLower
++ *    flags:    c
++ */
++ZEND_METHOD(QString, toLower){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QString return_object = (QString) obj-&gt;toLower();
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  lastIndexOf
++ *    flags:    c
++ */
++ZEND_METHOD(QString, lastIndexOf){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ol public*/
++		zval* z_var_ol_0;   // default: 
++		long var_ol_1;    // default: -1
++
++		/* const QRegExp&amp; , int from,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ol|&quot;, &amp;z_var_ol_0, &amp;var_ol_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_ol_0 = (QObject*) php_qt_fetch(z_var_ol_0);
++
++			QString tmp_ol_0(var_ol_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_ol_0 == &quot;const QRegExp&quot;) {
++				RETURN_LONG(obj-&gt;lastIndexOf((const QRegExp&amp;) var_ol_0, (int) var_ol_1));
++			}
++		}
++	}
++
++	if (ZEND_NUM_ARGS() == 3){
++		/* oll public*/
++		zval* z_var_oll_0;   // default: 
++		long var_oll_1;    // default: -1
++		long var_oll_2;    // default: Qt::CaseSensitive
++
++		/* const QString&amp; s, int from, int cs,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ol|l|&quot;, &amp;z_var_oll_0, &amp;var_oll_1, &amp;var_oll_2) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_oll_0 = (QObject*) php_qt_fetch(z_var_oll_0);
++
++			QString tmp_oll_0(var_oll_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_oll_0 == &quot;const QString&quot;) {
++				RETURN_LONG(obj-&gt;lastIndexOf((const QString&amp;) var_oll_0, (int) var_oll_1, (Qt::CaseSensitivity) var_oll_2));
++			}
++		}
++		/* lll public*/
++		long var_lll_0;    // default: 
++		long var_lll_1;    // default: -1
++		long var_lll_2;    // default: Qt::CaseSensitive
++
++		/* char c, int from, int cs,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ll|l|&quot;, &amp;var_lll_0, &amp;var_lll_1, &amp;var_lll_2) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			RETURN_LONG(obj-&gt;lastIndexOf((char) var_lll_0 ,(int) var_lll_1 ,(Qt::CaseSensitivity) var_lll_2));
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  unicode
++ *    flags:    c
++ */
++ZEND_METHOD(QString, unicode){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			const QChar * return_object = (const QChar *) obj-&gt;unicode();
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QString_ce_ptr);     
++				zend_rsrc_list_entry le;                            
++				le.ptr = (void*) &amp;return_object;                                       
++				php_qt_register(return_value,le);                   
++				return;                                             
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  at
++ *    flags:    c
++ */
++ZEND_METHOD(QString, at){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l public*/
++		long var_l_0;    // default: 
++
++		/* int i,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			obj-&gt;at((int) var_l_0);
++			RETURN_NULL();
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  begin
++ *    flags:    
++ */
++ZEND_METHOD(QString, begin){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++//			RETURN_INTPTR(obj-&gt;begin());
++			RETURN_NULL();
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  push_back
++ *    flags:    
++ */
++ZEND_METHOD(QString, push_back){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l public*/
++		long var_l_0;    // default: 
++
++		/* char c,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			obj-&gt;push_back((char) var_l_0);
++			RETURN_NULL();
++		}
++		/* o public*/
++		zval* z_var_o_0;   // default: 
++
++		/* const QString&amp; s,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
++
++			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_o_0 == &quot;const QString&quot;) {
++				obj-&gt;push_back((const QString&amp;) var_o_0);
++			RETURN_NULL();
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  capacity
++ *    flags:    c
++ */
++ZEND_METHOD(QString, capacity){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			RETURN_LONG(obj-&gt;capacity());
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  constBegin
++ *    flags:    c
++ */
++ZEND_METHOD(QString, constBegin){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			obj-&gt;constBegin();
++			RETURN_NULL();
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  toLocal8Bit
++ *    flags:    c
++ */
++ZEND_METHOD(QString, toLocal8Bit){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++		// bytearray, skipped
++		RETURN_NULL();
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  toInt
++ *    flags:    c
++ */
++ZEND_METHOD(QString, toInt){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* ll public*/
++		long var_ll_0;    // default: 0
++		long var_ll_1;    // default: 10
++
++		/* int* ok, int base,  */
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l|l|&quot;, &amp;var_ll_0, &amp;var_ll_1) == SUCCESS) {
++			QString *obj = (QString*) PHP_QT_FETCH();
++
++			
++			RETURN_LONG(obj-&gt;toInt((bool*) var_ll_0 ,(int) var_ll_1));
++		}
++	}
++}
++
++/*********************************
++ *    class     QString */
++/*
++ *    function  isNull
++ *    flags:    c
++ */
++ZEND_METHOD(QString, isNull){
++	if (ZEND_NUM_ARGS() == 0){
++			QString *obj = (QString*) PHP_QT_FETCH();
++			RETURN_BOOL(obj-&gt;isNull());
++	}
++}
++
++
++PHP_QT_DESTRUCT(QString);
++
+
+Modified: trunk/qt/zend_php_qt.h
+===================================================================
+--- trunk/qt/zend_php_qt.h	2006-01-16 12:19:47 UTC (rev 192)
++++ trunk/qt/zend_php_qt.h	2006-01-16 16:28:40 UTC (rev 193)
+@@ -78,17 +78,119 @@
+ ZEND_METHOD(QObject,startTimer);
+ ZEND_METHOD(QObject,thread);
+ 
++
++ZEND_METHOD(QCharRef, isDigit);
++ZEND_METHOD(QCharRef, combiningClass);
++ZEND_METHOD(QCharRef, decompositionTag);
++ZEND_METHOD(QCharRef, joining);
++ZEND_METHOD(QCharRef, direction);
++ZEND_METHOD(QCharRef, hasMirrored);
++ZEND_METHOD(QCharRef, toLower);
++ZEND_METHOD(QCharRef, unicode);
++ZEND_METHOD(QCharRef, row);
++ZEND_METHOD(QCharRef, setRow);
++ZEND_METHOD(QCharRef, category);
++ZEND_METHOD(QCharRef, isLetter);
++ZEND_METHOD(QCharRef, cell);
++ZEND_METHOD(QCharRef, digitValue);
++ZEND_METHOD(QCharRef, isPrint);
++ZEND_METHOD(QCharRef, isLetterOrNumber);
++ZEND_METHOD(QCharRef, mirroredChar);
++ZEND_METHOD(QCharRef, setCell);
++ZEND_METHOD(QCharRef, isNumber);
++ZEND_METHOD(QCharRef, unicodeVersion);
++ZEND_METHOD(QCharRef, isSpace);
++ZEND_METHOD(QCharRef, toLatin1);
++ZEND_METHOD(QCharRef, toAscii);
++ZEND_METHOD(QCharRef, decomposition);
++ZEND_METHOD(QCharRef, toUpper);
++ZEND_METHOD(QCharRef, isMark);
++ZEND_METHOD(QCharRef, isPunct);
++ZEND_METHOD(QCharRef, isNull);
++
+ /* QString */
+-ZEND_METHOD(QString,__construct);
+-ZEND_METHOD(QString,__toString);
+-ZEND_METHOD(QString,append);
+-ZEND_METHOD(QString,arg);
+-ZEND_METHOD(QString,at);
+-ZEND_METHOD(QString,capacity);
+-ZEND_METHOD(QString,chop);
+-ZEND_METHOD(QString,clear);
+-ZEND_METHOD(QString,compare);
++ZEND_METHOD(QString, __toString);
++ZEND_METHOD(QString, compare);
++ZEND_METHOD(QString, utf16);
++ZEND_METHOD(QString, constData);
++ZEND_METHOD(QString, insert);
++ZEND_METHOD(QString, clear);
++ZEND_METHOD(QString, setUtf16);
++ZEND_METHOD(QString, prepend);
++ZEND_METHOD(QString, trimmed);
++ZEND_METHOD(QString, chop);
++ZEND_METHOD(QString, leftJustified);
++ZEND_METHOD(QString, squeeze);
++ZEND_METHOD(QString, count);
++ZEND_METHOD(QString, fromAscii);
++ZEND_METHOD(QString, toLongLong);
++ZEND_METHOD(QString, toUpper);
++ZEND_METHOD(QString, __construct);
++ZEND_METHOD(QString, normalized);
++ZEND_METHOD(QString, fromUtf16);
++ZEND_METHOD(QString, isRightToLeft);
++ZEND_METHOD(QString, setNum);
++ZEND_METHOD(QString, endsWith);
++ZEND_METHOD(QString, number);
++ZEND_METHOD(QString, localeAwareCompare);
++ZEND_METHOD(QString, section);
++ZEND_METHOD(QString, isSimpleText);
++ZEND_METHOD(QString, size);
++ZEND_METHOD(QString, simplified);
++ZEND_METHOD(QString, toUInt);
++ZEND_METHOD(QString, toUShort);
++ZEND_METHOD(QString, truncate);
++ZEND_METHOD(QString, toAscii);
++ZEND_METHOD(QString, length);
++ZEND_METHOD(QString, right);
++ZEND_METHOD(QString, push_front);
++ZEND_METHOD(QString, toUtf8);
++ZEND_METHOD(QString, toULongLong);
++ZEND_METHOD(QString, indexOf);
++ZEND_METHOD(QString, fromRawData);
++ZEND_METHOD(QString, constEnd);
++ZEND_METHOD(QString, left);
++ZEND_METHOD(QString, fromLocal8Bit);
++ZEND_METHOD(QString, startsWith);
++ZEND_METHOD(QString, remove);
++ZEND_METHOD(QString, isEmpty);
++ZEND_METHOD(QString, arg);
++ZEND_METHOD(QString, vsprintf);
++ZEND_METHOD(QString, toFloat);
++ZEND_METHOD(QString, isDetached);
++ZEND_METHOD(QString, reserve);
++ZEND_METHOD(QString, toULong);
++ZEND_METHOD(QString, toShort);
++ZEND_METHOD(QString, split);
++ZEND_METHOD(QString, setUnicode);
++ZEND_METHOD(QString, fromLatin1);
++ZEND_METHOD(QString, data);
++ZEND_METHOD(QString, toLatin1);
++ZEND_METHOD(QString, end);
++ZEND_METHOD(QString, contains);
++ZEND_METHOD(QString, resize);
++ZEND_METHOD(QString, replace);
++ZEND_METHOD(QString, fromUtf8);
++ZEND_METHOD(QString, toLong);
++ZEND_METHOD(QString, detach);
++ZEND_METHOD(QString, append);
++ZEND_METHOD(QString, mid);
++ZEND_METHOD(QString, toDouble);
++ZEND_METHOD(QString, fill);
++ZEND_METHOD(QString, rightJustified);
++ZEND_METHOD(QString, toLower);
++ZEND_METHOD(QString, lastIndexOf);
++ZEND_METHOD(QString, unicode);
++ZEND_METHOD(QString, at);
++ZEND_METHOD(QString, begin);
++ZEND_METHOD(QString, push_back);
++ZEND_METHOD(QString, capacity);
++ZEND_METHOD(QString, constBegin);
++ZEND_METHOD(QString, toLocal8Bit);
++ZEND_METHOD(QString, toInt);
++ZEND_METHOD(QString, isNull);
+ 
++
+ /* QLatin1String */
+ ZEND_METHOD(QLatin1String,__construct);
+ ZEND_METHOD(QLatin1String,latin1);
+
+Modified: trunk/tests/qstring.php
+===================================================================
+--- trunk/tests/qstring.php	2006-01-16 12:19:47 UTC (rev 192)
++++ trunk/tests/qstring.php	2006-01-16 16:28:40 UTC (rev 193)
+@@ -4,9 +4,45 @@
+         dl('php_qt.' . PHP_SHLIB_SUFFIX);
+     }
+ 
+-	$QString = new QString(&quot;I'm a test!&quot;);
++/* String as parameter */
++	$QString_1 = new QString(&quot;I'm a test!&quot;);
+ 
+-	echo $QString;
++/* ASCII as parameter */
++	$QString_2 = new QString(40);
++	$QString_3 = new QString(41);
+ 
++/* this works: */
++	echo $QString_2;
++	echo $QString_1;
++	echo $QString_3;
++    echo &quot;\n&quot;;
+ 
++/* this does not works */
++	echo $QString_2.&quot; &quot;.$QString_1.&quot; &quot;.$QString_3;
++    echo &quot;\n&quot;;
++
++/* this does not works */
++	$tmp = $QString_2.&quot; &quot;.$QString_1.&quot; &quot;.$QString_3;
++	print($tmp);
++
++    echo &quot;\n&quot;;
++
++/* this does not works */
++	$tmp2 = $QString_2;
++	$tmp2 = $QString_1;
++	$tmp2 = $QString_3;
++	echo $tmp;
++    echo &quot;\n&quot;;
++
++/* this does not works */
++	echo &quot;$QString_2 $QString_1 $QString_3&quot;;
++    echo &quot;\n&quot;;
++
++/* this works: */
++	$var1 = $QString_1-&gt;__toString();
++	$var2 = $QString_2-&gt;__toString();
++	$var3 = $QString_3-&gt;__toString();
++	print $var2.&quot; &quot;.$var1.&quot; &quot;.$var3;
++    echo &quot;\n&quot;;
++
+ ?&gt;
+\ No newline at end of file
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000041.html">[Php-qt-svn] r192 - in trunk: . qt qt/text_related tests
+</A></li>
+	<LI>Next message: <A HREF="000043.html">[Php-qt-svn] r194 - trunk/qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#42">[ date ]</a>
+              <a href="thread.html#42">[ thread ]</a>
+              <a href="subject.html#42">[ subject ]</a>
+              <a href="author.html#42">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

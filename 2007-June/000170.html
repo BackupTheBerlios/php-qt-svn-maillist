@@ -1,0 +1,525 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r326 - trunk/php_qt
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-June/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r326%20-%20trunk/php_qt&In-Reply-To=%3C200706022122.l52LMhdC004789%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000169.html">
+   <LINK REL="Next"  HREF="000171.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r326 - trunk/php_qt</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r326%20-%20trunk/php_qt&In-Reply-To=%3C200706022122.l52LMhdC004789%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r326 - trunk/php_qt">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Sat Jun  2 23:22:43 CEST 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000169.html">[Php-qt-svn] r325 - in trunk: php_qt tests
+</A></li>
+        <LI>Next message: <A HREF="000171.html">[Php-qt-svn] r327 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#170">[ date ]</a>
+              <a href="thread.html#170">[ thread ]</a>
+              <a href="subject.html#170">[ subject ]</a>
+              <a href="author.html#170">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2007-06-02 23:22:42 +0200 (Sat, 02 Jun 2007)
+New Revision: 326
+
+Modified:
+   trunk/php_qt/handlers.cpp
+   trunk/php_qt/marshall.h
+   trunk/php_qt/marshall_basetypes.h
+   trunk/php_qt/marshall_primitives.h
+   trunk/php_qt/marshall_types.cpp
+   trunk/php_qt/marshall_types.h
+   trunk/php_qt/php_qt.cpp
+   trunk/php_qt/php_qt.h
+   trunk/php_qt/smokephp.cpp
+Log:
+* more work on virtual method calls
+
+
+
+Modified: trunk/php_qt/handlers.cpp
+===================================================================
+--- trunk/php_qt/handlers.cpp	2007-05-31 23:05:40 UTC (rev 325)
++++ trunk/php_qt/handlers.cpp	2007-06-02 21:22:42 UTC (rev 326)
+@@ -218,7 +218,6 @@
+ 	if (KCODE == 0) {
+ 		init_codec();
+ 	}
+-
+ 	if (qstrcmp(KCODE, &quot;UTF8&quot;) == 0)
+ 		return new QString(QString::fromUtf8(zstring-&gt;value.str.val, zstring-&gt;value.str.len));
+ 	else if (qstrcmp(KCODE, &quot;EUC&quot;) == 0)
+
+Modified: trunk/php_qt/marshall.h
+===================================================================
+--- trunk/php_qt/marshall.h	2007-05-31 23:05:40 UTC (rev 325)
++++ trunk/php_qt/marshall.h	2007-06-02 21:22:42 UTC (rev 326)
+@@ -43,6 +43,11 @@
+ 
+     virtual ~Marshall() {}
+ 
++	/** returns a pointer to the return value pointer, we need that for
++	 *	overriding the return value defined by ZEND
++	 */
++	virtual zval** return_value_ptr() = 0;
++
+ 	const char* identifier;
+ 
+ };
+
+Modified: trunk/php_qt/marshall_basetypes.h
+===================================================================
+--- trunk/php_qt/marshall_basetypes.h	2007-05-31 23:05:40 UTC (rev 325)
++++ trunk/php_qt/marshall_basetypes.h	2007-06-02 21:22:42 UTC (rev 326)
+@@ -119,7 +119,7 @@
+ 		o-&gt;classId,			// from
+ 		o-&gt;smoke-&gt;idClass(cl.className)	// to
+ 		);
+-	
++
+ 	m-&gt;item().s_class = ptr;
+ 
+ 	return;
+@@ -137,13 +137,14 @@
+ 
+ 	// return the original
+ 	if(phpqt_SmokePHPObjectExists(p)) {
+-		if(((MethodReturnValue*) m)-&gt;retval_ptr()){
++		if(m-&gt;return_value_ptr()){
+ 			// destroys the return_value initialized by ZE, we creare our own:
+-			zval_ptr_dtor(((MethodReturnValue*) m)-&gt;retval_ptr());
++			zval_ptr_dtor(m-&gt;return_value_ptr());
+ 			// prepare the return value
+ 			smokephp_object* o = phpqt_createOriginal(m-&gt;var(), p);
+ 			// overwrite the old one:
+-			*(((MethodReturnValue*) m)-&gt;retval_ptr()) = o-&gt;zval_ptr;
++			*(m-&gt;return_value_ptr()) = o-&gt;zval_ptr;
++			*(m-&gt;var()) = *o-&gt;zval_ptr;
+ 		}
+ 		return;
+ 
+
+Modified: trunk/php_qt/marshall_primitives.h
+===================================================================
+--- trunk/php_qt/marshall_primitives.h	2007-05-31 23:05:40 UTC (rev 325)
++++ trunk/php_qt/marshall_primitives.h	2007-06-02 21:22:42 UTC (rev 326)
+@@ -7,6 +7,8 @@
+  *                                                                         *
+  ***************************************************************************/
+ 
++// TODO catch more types, see php_to_primitive&lt;long&gt;
++
+ template &lt;&gt;
+ static bool php_to_primitive&lt;bool&gt;(zval* v)
+ {
+
+Modified: trunk/php_qt/marshall_types.cpp
+===================================================================
+--- trunk/php_qt/marshall_types.cpp	2007-05-31 23:05:40 UTC (rev 325)
++++ trunk/php_qt/marshall_types.cpp	2007-06-02 21:22:42 UTC (rev 326)
+@@ -200,8 +200,8 @@
+  *	MethodReturnValueBase
+  */
+ 
+-MethodReturnValueBase::MethodReturnValueBase(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack) :
+-	_smoke(smoke), _method(meth), _stack(stack)
++MethodReturnValueBase::MethodReturnValueBase(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval** return_value_ptr) :
++	_smoke(smoke), _method(meth), _stack(stack), _return_value_ptr(return_value_ptr)
+ {
+ 	identifier = &quot;MethodReturnValueBase&quot;;
+ 	_st.set(_smoke, method().ret);
+@@ -267,12 +267,18 @@
+ 	return _smoke-&gt;className(method().classId); 
+ }
+ 
++zval**
++MethodReturnValueBase::return_value_ptr()
++{
++	return _return_value_ptr;
++}
++
+ /**
+  *	VirtualMethodReturnValue
+  */
+ 
+ VirtualMethodReturnValue::VirtualMethodReturnValue(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval retval) :
+-	MethodReturnValueBase(smoke,meth,stack), _retval2(retval) 
++	MethodReturnValueBase(smoke,meth,stack,NULL), _retval2(retval) 
+ {
+ 	identifier = &quot;VirtualMethodReturnValue&quot;;
+ 	_retval = &amp;_retval2;
+@@ -291,7 +297,7 @@
+  */
+ 
+ MethodReturnValue::MethodReturnValue(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval* retval, zval** return_value_ptr) :
+-	MethodReturnValueBase(smoke,meth,stack), _return_value_ptr(return_value_ptr)
++	MethodReturnValueBase(smoke,meth,stack,return_value_ptr)/*, _return_value_ptr(return_value_ptr)*/
+ {
+ 	identifier = &quot;MethodReturnValue&quot;;
+ 	_retval = retval;
+@@ -311,20 +317,17 @@
+ 	return qstrcmp(MethodReturnValueBase::classname(), &quot;QGlobalSpace&quot;) == 0 ? &quot;&quot; : MethodReturnValueBase::classname(); 
+ }
+ 
+-zval**
+-MethodReturnValue::retval_ptr(){ return _return_value_ptr; }
+-
+ /**
+  *	MethodCallBase
+  */
+ 
+-MethodCallBase::MethodCallBase(Smoke *smoke, Smoke::Index meth) :
+-	_smoke(smoke), _method(meth), _cur(-1), _called(false), _sp(0)  
++MethodCallBase::MethodCallBase(Smoke *smoke, Smoke::Index meth,zval** return_value_ptr) :
++	_smoke(smoke), _method(meth), _cur(-1), _called(false), _sp(0), _return_value_ptr(return_value_ptr)
+ {  
+ }
+ 
+-MethodCallBase::MethodCallBase(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack) :
+-	_smoke(smoke), _method(meth), _stack(stack), _cur(-1), _called(false), _sp(0) 
++MethodCallBase::MethodCallBase(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack,zval** return_value_ptr) :
++	_smoke(smoke), _method(meth), _stack(stack), _cur(-1), _called(false), _sp(0), _return_value_ptr(return_value_ptr)
+ {  
+ }
+ 
+@@ -382,15 +385,21 @@
+ 	return _smoke-&gt;className(method().classId); 
+ }
+ 
++zval**
++MethodCallBase::return_value_ptr()
++{
++	return _return_value_ptr;
++}
++
+ /**
+  *	VirtualMethodCall
+  */
+ 
+-VirtualMethodCall::VirtualMethodCall(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval* obj, zval ***sp) :
+-	MethodCallBase(smoke,meth,stack), _obj(obj)
++VirtualMethodCall::VirtualMethodCall(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval* obj, zval **sp, zval** return_value_ptr) :
++	MethodCallBase( smoke, meth, stack, return_value_ptr), _obj(obj)/*, _sp(sp)*/
+ {
++	__sp = sp;
+ 	identifier = &quot;VirtualMethodCall&quot;;
+- 	_sp = sp;
+   	_args = _smoke-&gt;argumentList + method().args;
+ }
+ 
+@@ -408,8 +417,9 @@
+ zval*
+ VirtualMethodCall::var() 
+ {
+-	*_sp[_cur] = (zval*) emalloc(sizeof(zval));
+-    return (zval*) *_sp[_cur];
++// 	*_sp[_cur] = (zval*) emalloc(sizeof(zval));
++	ZVAL_NULL(__sp[_cur]);
++    return __sp[_cur];
+ }
+ 
+ int 
+@@ -424,7 +434,7 @@
+ 	if (_called) return;
+ 	_called = true;
+ 
+-	phpqt_callPHPMethod(_obj, (char*) _smoke-&gt;methodNames[method().name], items(), _sp);
++	phpqt_callPHPMethod(_obj, (char*) _smoke-&gt;methodNames[method().name], items(), __sp);
+ 
+ 	zval _retval;
+  	VirtualMethodReturnValue r(_smoke, _method, _stack, _retval);
+@@ -441,7 +451,7 @@
+  */
+ 
+ MethodCall::MethodCall(Smoke *smoke, Smoke::Index method, zval* target, zval ***sp, int items, zval *retval, zval** return_value_ptr) :
+-	MethodCallBase(smoke,method), _target(target), _current_object(0), _sp(sp), _items(items), _retval(retval), _return_value_ptr(return_value_ptr)
++ 	MethodCallBase(smoke,method,return_value_ptr), _target(target), _current_object(0), _sp(sp), _items(items), _retval(retval)
+ {
+ 
+ 	identifier = &quot;MethodCall&quot;;
+@@ -460,6 +470,7 @@
+ 
+     _args = _smoke-&gt;argumentList + _smoke-&gt;methods[_method].args;
+     _items = _smoke-&gt;methods[_method].numArgs;
++
+     _stack = new Smoke::StackItem[items + 1];
+ // 	_retval = retval;
+ }
+@@ -618,6 +629,9 @@
+ 	~SlotReturnValue() {
+ 		delete[] _stack;
+ 	}
++
++	zval** return_value_ptr(){};
++
+ };
+ 
+ /**
+@@ -668,7 +682,7 @@
+ {
+ 	if (_called) return;
+ 	_called = true;
+-	zval* result = phpqt_callPHPMethod(_obj, (char*) PQ::smoke()-&gt;methodNames[PQ::smoke()-&gt;methods[_slotname].name], _items - 1, _sp);
++ 	zval* result = phpqt_callPHPMethod(_obj, (char*) PQ::smoke()-&gt;methodNames[PQ::smoke()-&gt;methods[_slotname].name], _items - 1, *_sp);
+ 	if (_args[0].argType != xmoc_void) {
+ 		SlotReturnValue r(_o, result, _args);
+ 	}
+
+Modified: trunk/php_qt/marshall_types.h
+===================================================================
+--- trunk/php_qt/marshall_types.h	2007-05-31 23:05:40 UTC (rev 325)
++++ trunk/php_qt/marshall_types.h	2007-06-02 21:22:42 UTC (rev 326)
+@@ -41,7 +41,7 @@
+ class MethodReturnValueBase : public Marshall 
+ {
+ public:
+-	MethodReturnValueBase(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack);
++	MethodReturnValueBase(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval** return_value_ptr);
+ 	const Smoke::Method &amp;method();
+ 	Smoke::StackItem &amp;item();
+ 	Smoke *smoke();
+@@ -51,6 +51,7 @@
+ 	void unsupported();
+ 	zval* var();
+ 	void setVar(zval* zobj);
++	zval** return_value_ptr();
+ 
+ protected:
+ 	Smoke *_smoke;
+@@ -58,6 +59,7 @@
+ 	Smoke::Stack _stack;
+ 	SmokeType _st;
+ 	zval* _retval;
++	zval **_return_value_ptr;
+ 
+ 	virtual const char *classname();
+ };
+@@ -83,10 +85,8 @@
+ public:
+ 	MethodReturnValue(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval *retval, zval** return_value_ptr);
+     Marshall::Action action();
+-	zval** retval_ptr();
+ 
+ private:
+-	zval **_return_value_ptr;
+ 	const char *classname();
+ };
+ 
+@@ -97,8 +97,8 @@
+ class MethodCallBase : public Marshall
+ {
+ public:
+-	MethodCallBase(Smoke *smoke, Smoke::Index meth);
+-	MethodCallBase(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack);
++	MethodCallBase(Smoke *smoke, Smoke::Index meth,zval** return_value_ptr);
++	MethodCallBase(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval** return_value_ptr);
+ 	Smoke *smoke();
+ 	SmokeType type();
+ 	Smoke::StackItem &amp;item();
+@@ -107,6 +107,7 @@
+ 	virtual void callMethod() = 0;	
+ 	void next();
+ 	void unsupported();
++	zval** return_value_ptr();
+ 
+ protected:
+ 	Smoke *_smoke;
+@@ -117,6 +118,8 @@
+ 	bool _called;
+ 	zval ***_sp;
+ 	virtual const char* classname();
++	zval** _return_value_ptr;
++
+ };
+ 
+ /**
+@@ -125,7 +128,7 @@
+ 
+ class VirtualMethodCall : public MethodCallBase {
+ public:
+-	VirtualMethodCall(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval* obj, zval ***sp);
++	VirtualMethodCall(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval* obj, zval **sp, zval** return_value_ptr);
+ 	~VirtualMethodCall();
+ 	Marshall::Action action();
+ 	zval* var();
+@@ -135,7 +138,8 @@
+  
+ private:
+ 	zval* _obj;
+-	zval ***_sp;
++ 	zval **__sp;
++
+ };
+ 
+ /**
+@@ -169,6 +173,7 @@
+ 		Smoke::ClassFn fn = _smoke-&gt;classes[method().classId].classFn;
+ 		void *ptr = _smoke-&gt;cast(_current_object, _current_object_class, method().classId);
+ 		_items = -1;
++
+ 		(*fn)(method().method, ptr, _stack);
+ 		MethodReturnValue r(_smoke, _method, _stack, _retval, _return_value_ptr);
+ 	}
+@@ -183,7 +188,6 @@
+ 	zval ***_sp;
+ 	int _items;
+ 	zval *_retval;
+-	zval **_return_value_ptr;
+ 
+ 	const char *classname();
+ };
+@@ -235,6 +239,8 @@
+ 	void unsupported();
+ 	Smoke* smoke();
+ 	const MocArgument &amp;arg();
++	zval** return_value_ptr(){};
++
+  protected:
+ 	MocArgument *_args;
+ 	int _cur;
+
+Modified: trunk/php_qt/php_qt.cpp
+===================================================================
+--- trunk/php_qt/php_qt.cpp	2007-05-31 23:05:40 UTC (rev 325)
++++ trunk/php_qt/php_qt.cpp	2007-06-02 21:22:42 UTC (rev 326)
+@@ -200,7 +200,7 @@
+  *	proxy handler
+  */
+ 
+-union _zend_function *proxyHandler(zval **obj_ptr, char* methodName, int methodName_len TSRMLS_DC)
++union _zend_function* proxyHandler(zval **obj_ptr, char* methodName, int methodName_len TSRMLS_DC)
+ {
+     union _zend_function *fbc;
+ 
+@@ -294,7 +294,7 @@
+     zend_class_entry *ce_parent = Z_OBJCE_P(getThis());
+ 
+     while (PQ::smoke()-&gt;idClass(ce-&gt;name) &lt;= 0) {
+-	    ce_parent = ce-&gt;parent;
++// 	    ce_parent = ce-&gt;parent;
+ 	    ce = ce-&gt;parent; // orig
+     }
+ 
+@@ -704,7 +704,7 @@
+     cout &lt;&lt; &quot;\tcall PHP method &quot; &lt;&lt; so-&gt;ce_ptr-&gt;name &lt;&lt; &quot;::&quot; &lt;&lt; method_name &lt;&lt; endl;
+ #endif
+ 
+-        phpqt_callPHPMethod(so-&gt;zval_ptr, method_name, j, args);
++         phpqt_callPHPMethod(so-&gt;zval_ptr, method_name, j, *args);
+ 
+     // is a signal
+     } else {
+@@ -744,8 +744,9 @@
+ 
+ }
+ 
++
+ zval* 
+-phpqt_callPHPMethod(zval* this_ptr, char* methodName, zend_uint param_count, zval** args[])
++phpqt_callPHPMethod(zval* this_ptr, char* methodName, zend_uint param_count, zval** args)
+ {
+ 
+ 	if(this_ptr == NULL){
+@@ -759,7 +760,7 @@
+     zval* retval;
+     MAKE_STD_ZVAL(retval);
+ 
+-    if(call_user_function(EG(function_table),&amp;this_ptr,function_name,retval,param_count,*args) == FAILURE){
++    if(call_user_function(EG(function_table),&amp;this_ptr,function_name,retval,param_count,args) == FAILURE){
+     	smokephp_object* o = phpqt_getSmokePHPObjectFromZval(this_ptr);
+     	php_error(E_ERROR, &quot;PHP-Qt could not call method %s::%s&quot;, o-&gt;ce_ptr-&gt;name, methodName);
+     }
+@@ -1000,6 +1001,7 @@
+ // 		zval_ptr-&gt;is_ref = 1;
+ 		Z_OBJ_HT_P(zval_ptr) = &amp;php_qt_handler;
+ 		zval_x_smokephp.insert(zval_ptr, o);*/
++	Z_OBJ_HT_P(zval_ptr) = &amp;php_qt_handler;
+ 	zval_ptr = o-&gt;zval_ptr;
+ 	zval_add_ref(&amp;zval_ptr);
+ 	return o;
+
+Modified: trunk/php_qt/php_qt.h
+===================================================================
+--- trunk/php_qt/php_qt.h	2007-05-31 23:05:40 UTC (rev 325)
++++ trunk/php_qt/php_qt.h	2007-06-02 21:22:42 UTC (rev 326)
+@@ -147,7 +147,7 @@
+ static void 			phpqt_destroyHashtable(zend_rsrc_list_entry *rsrc);
+ 
+ // void 				phpqt_register(zval* this_ptr, zend_rsrc_list_entry le);
+-zval* 				phpqt_callPHPMethod(zval* zend_ptr, char* methodname, zend_uint param_count, zval** params[]);
++zval* 				phpqt_callPHPMethod(zval* zend_ptr, char* methodname, zend_uint param_count, zval** params);
+ bool 				phpqt_methodExists(zend_class_entry* ce_ptr, char* methodname);
+ bool 				phpqt_getMocData(zval* this_ptr, char* classname, const QMetaObject* superdata, QMetaObject* metachar, QString* meta_stringdata, uint* signature);
+ int					phpqt_metacall(smokephp_object* this_ptr, Smoke::StackItem* args, QMetaObject::Call _c, int _id, void **_a);
+
+Modified: trunk/php_qt/smokephp.cpp
+===================================================================
+--- trunk/php_qt/smokephp.cpp	2007-05-31 23:05:40 UTC (rev 325)
++++ trunk/php_qt/smokephp.cpp	2007-06-02 21:22:42 UTC (rev 326)
+@@ -28,6 +28,8 @@
+ #include &lt;QtCore/QCoreApplication&gt;
+ #include &lt;QtGui/QApplication&gt;
+ 
++#define ALLOCA_N(type,n) (type*)alloca(sizeof(type)*(n))
++
+ extern void init_qt_Smoke();
+ extern zend_class_entry* qstring_ce;
+ 
+@@ -80,13 +82,9 @@
+ 		}
+ 
+ 		if(phpqt_methodExists(o-&gt;ce_ptr, (char*) methodName)){
+-		    Smoke::Method &amp; meth = smoke-&gt;methods[method];
+-		    zval*** sp = (zval ***) safe_emalloc((int) meth.numArgs, sizeof(zval), 0);
+-
+-		    VirtualMethodCall c(smoke, method, args, o-&gt;zval_ptr, sp);
++			zval* zmem = ALLOCA_N(zval, smoke-&gt;methods[method].numArgs);
++		    VirtualMethodCall c(smoke, method, args, o-&gt;zval_ptr, &amp;zmem, &amp;o-&gt;zval_ptr);
+ 		    c.next();
+-
+-  		    efree(sp);
+ 		}
+ 		
+ 		return false;
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000169.html">[Php-qt-svn] r325 - in trunk: php_qt tests
+</A></li>
+	<LI>Next message: <A HREF="000171.html">[Php-qt-svn] r327 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#170">[ date ]</a>
+              <a href="thread.html#170">[ thread ]</a>
+              <a href="subject.html#170">[ subject ]</a>
+              <a href="author.html#170">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

@@ -1,0 +1,212 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r223 - trunk/qt
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-April/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r223%20-%20trunk/qt&In-Reply-To=%3C200604172009.k3HK9g9B015959%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000066.html">
+   <LINK REL="Next"  HREF="000068.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r223 - trunk/qt</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r223%20-%20trunk/qt&In-Reply-To=%3C200604172009.k3HK9g9B015959%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r223 - trunk/qt">tm243 at berlios.de
+       </A><BR>
+    <I>Mon Apr 17 22:09:42 CEST 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000066.html">[Php-qt-svn] r222 - trunk
+</A></li>
+        <LI>Next message: <A HREF="000068.html">[Php-qt-svn] r224 - trunk/qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#67">[ date ]</a>
+              <a href="thread.html#67">[ thread ]</a>
+              <a href="subject.html#67">[ subject ]</a>
+              <a href="author.html#67">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-04-17 22:09:39 +0200 (Mon, 17 Apr 2006)
+New Revision: 223
+
+Modified:
+   trunk/qt/ag_php_qt_cpp.inc
+   trunk/qt/ag_qt_minit.inc
+Log:
+moved QCoreApplication before QApplication
+
+Modified: trunk/qt/ag_php_qt_cpp.inc
+===================================================================
+--- trunk/qt/ag_php_qt_cpp.inc	2006-04-17 12:44:09 UTC (rev 222)
++++ trunk/qt/ag_php_qt_cpp.inc	2006-04-17 20:09:39 UTC (rev 223)
+@@ -94,6 +94,53 @@
+ 
+ 
+ }
++static zend_function_entry QCoreApplication_methods[] = {
++	ZEND_ME(QCoreApplication,removeTranslator,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,tr,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,installTranslator,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,startingUp,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,exit,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,addLibraryPath,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,setOrganizationDomain,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,argv,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,libraryPaths,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,exec,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,setLibraryPaths,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,removeLibraryPath,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,organizationName,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,setOrganizationName,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,instance,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,organizationDomain,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,hasPendingEvents,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,sendPostedEvents,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,applicationName,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,flush,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,processEvents,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,translate,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,applicationDirPath,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,staticMetaObject,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,qObject,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCoreApplication,argc,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,quit,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication, __construct,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCoreApplication,watchUnixSignal,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,removePostedEvents,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,applicationFilePath,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,setApplicationName,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,trUtf8,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QCoreApplication,closingDown,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QCoreApplication(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QCoreApplication&quot;,QCoreApplication_methods);
++    QCoreApplication_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QObject_ce_ptr,NULL TSRMLS_CC);
++
++
++}
+ static zend_function_entry QApplication_methods[] = {
+ 	ZEND_ME(QApplication,sessionKey,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QApplication,tr,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+@@ -369,53 +416,7 @@
+ 
+ 
+ }
+-static zend_function_entry QCoreApplication_methods[] = {
+-	ZEND_ME(QCoreApplication,removeTranslator,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,tr,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,installTranslator,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,startingUp,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,exit,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,addLibraryPath,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,setOrganizationDomain,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,argv,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,libraryPaths,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,exec,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,setLibraryPaths,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,removeLibraryPath,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,organizationName,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,setOrganizationName,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,instance,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,organizationDomain,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,hasPendingEvents,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,sendPostedEvents,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,applicationName,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,flush,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,processEvents,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,translate,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,applicationDirPath,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,staticMetaObject,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,qObject,NULL,ZEND_ACC_PUBLIC)
+-	ZEND_ME(QCoreApplication,argc,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,quit,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication, __construct,NULL,ZEND_ACC_PUBLIC)
+-	ZEND_ME(QCoreApplication,watchUnixSignal,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,removePostedEvents,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,applicationFilePath,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,setApplicationName,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,trUtf8,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QCoreApplication,closingDown,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+ 
+-    {NULL,NULL,NULL}
+-};
+-
+-void _register_QCoreApplication(TSRMLS_D)
+-{
+-    zend_class_entry ce;
+-    INIT_CLASS_ENTRY(ce,&quot;QCoreApplication&quot;,QCoreApplication_methods);
+-    QCoreApplication_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QObject_ce_ptr,NULL TSRMLS_CC);
+-
+-
+-}
+ static zend_function_entry QDate_methods[] = {
+ 	ZEND_ME(QDate,longDayName,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+ 	ZEND_ME(QDate,dayOfWeek,NULL,ZEND_ACC_PUBLIC)
+
+Modified: trunk/qt/ag_qt_minit.inc
+===================================================================
+--- trunk/qt/ag_qt_minit.inc	2006-04-17 12:44:09 UTC (rev 222)
++++ trunk/qt/ag_qt_minit.inc	2006-04-17 20:09:39 UTC (rev 223)
+@@ -31,6 +31,10 @@
+ 
+ 	_register_QActionEvent(TSRMLS_C);
+ 
++	_register_QCoreApplication(TSRMLS_C);
++	  REGISTER_LONG_CONSTANT(&quot;QCOREAPPLICATION_ENCODING_DEFAULTCODEC&quot;, QCoreApplication::DefaultCodec, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCOREAPPLICATION_ENCODING_UNICODEUTF8&quot;, QCoreApplication::UnicodeUTF8, CONST_CS | CONST_PERSISTENT);
++
+ 	_register_QApplication(TSRMLS_C);
+ 	  REGISTER_LONG_CONSTANT(&quot;QAPPLICATION_TYPE_TTY&quot;, QApplication::Tty, CONST_CS | CONST_PERSISTENT);
+ 	  REGISTER_LONG_CONSTANT(&quot;QAPPLICATION_TYPE_GUICLIENT&quot;, QApplication::GuiClient, CONST_CS | CONST_PERSISTENT);
+@@ -167,10 +171,8 @@
+ 
+ 	_register_QContextMenuEvent(TSRMLS_C);
+ 
+-	_register_QCoreApplication(TSRMLS_C);
+-	  REGISTER_LONG_CONSTANT(&quot;QCOREAPPLICATION_ENCODING_DEFAULTCODEC&quot;, QCoreApplication::DefaultCodec, CONST_CS | CONST_PERSISTENT);
+-	  REGISTER_LONG_CONSTANT(&quot;QCOREAPPLICATION_ENCODING_UNICODEUTF8&quot;, QCoreApplication::UnicodeUTF8, CONST_CS | CONST_PERSISTENT);
+ 
++
+ 	_register_QDate(TSRMLS_C);
+ 
+ 	_register_QDateTime(TSRMLS_C);
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000066.html">[Php-qt-svn] r222 - trunk
+</A></li>
+	<LI>Next message: <A HREF="000068.html">[Php-qt-svn] r224 - trunk/qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#67">[ date ]</a>
+              <a href="thread.html#67">[ thread ]</a>
+              <a href="subject.html#67">[ subject ]</a>
+              <a href="author.html#67">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

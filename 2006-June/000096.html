@@ -1,0 +1,440 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r252 - trunk/qt
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-June/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r252%20-%20trunk/qt&In-Reply-To=%3C200606062038.k56KcJDw029650%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000095.html">
+   <LINK REL="Next"  HREF="000097.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r252 - trunk/qt</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r252%20-%20trunk/qt&In-Reply-To=%3C200606062038.k56KcJDw029650%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r252 - trunk/qt">tm243 at berlios.de
+       </A><BR>
+    <I>Tue Jun  6 22:38:19 CEST 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000095.html">[Php-qt-svn] r251 - trunk/tools
+</A></li>
+        <LI>Next message: <A HREF="000097.html">[Php-qt-svn] r253 - trunk/qt/text_related
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#96">[ date ]</a>
+              <a href="thread.html#96">[ thread ]</a>
+              <a href="subject.html#96">[ subject ]</a>
+              <a href="author.html#96">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-06-06 22:38:18 +0200 (Tue, 06 Jun 2006)
+New Revision: 252
+
+Modified:
+   trunk/qt/php_qt.cpp
+   trunk/qt/php_qt.h
+Log:
+new functions: storing the moc objects, auto-invokation of strings to QStrings, new macros for moc-related implementations and fetching arguments.
+
+Modified: trunk/qt/php_qt.cpp
+===================================================================
+--- trunk/qt/php_qt.cpp	2006-06-06 20:34:16 UTC (rev 251)
++++ trunk/qt/php_qt.cpp	2006-06-06 20:38:18 UTC (rev 252)
+@@ -60,10 +60,15 @@
+ /* True global resources - no need for thread safety here */
+ static int le_php_qt;
+ 
++// object list
+ int le_php_qt_hashtype;
+ HashTable php_qt_objptr_hash;
+ 
+-zend_class_entry *QObject_ce_ptr;
++// metaobject list
++int le_php_qt_moc_hashtype;
++HashTable php_qt_objptr_moc_hash;
++
++//zend_class_entry *QObject_ce_ptr;
+ //zend_class_entry *QEvent_ce_ptr;
+ zend_class_entry *QMimeSource_ce_ptr;
+ 
+@@ -956,14 +961,18 @@
+ 	  REGISTER_LONG_CONSTANT(&quot;QT_WINDOWMODALITY_WINDOWMODAL&quot;, Qt::WindowModal, CONST_CS | CONST_PERSISTENT);
+ 	  REGISTER_LONG_CONSTANT(&quot;QT_WINDOWMODALITY_APPLICATIONMODAL&quot;, Qt::ApplicationModal, CONST_CS | CONST_PERSISTENT);
+ */
++	  REGISTER_LONG_CONSTANT(&quot;QBOXLAYOUT_DIRECTION_TOP_TO_BOTTOM&quot;, QBoxLayout::TopToBottom, CONST_CS | CONST_PERSISTENT);
+ 
+ #include &quot;ag_qt_minit.inc&quot;
+ 
+ 
++    // object list
+ 	le_php_qt_hashtype = zend_register_list_destructors_ex(destroy_php_qt_hashtable, NULL, &quot;PHP-Qt object list&quot;, module_number);
+-
+ 	zend_hash_init_ex(&amp;php_qt_objptr_hash, 50, NULL, NULL, 1, 0);
+ 
++    // metaobject list
++	le_php_qt_moc_hashtype = zend_register_list_destructors_ex(destroy_php_qt_hashtable, NULL, &quot;PHP-Qt metaobject list&quot;, module_number);
++	zend_hash_init_ex(&amp;php_qt_objptr_moc_hash, 50, NULL, NULL, 1, 0);
+ 
+ 	return SUCCESS;
+ }
+@@ -1151,7 +1160,7 @@
+ 		php_error(E_ERROR,&quot;reference to Qt object missing, %s&quot;,Z_OBJCE_P(this_ptr)-&gt;name);
+ 	} 
+ 	if(type != le_php_qt_hashtype){
+-		php_error(E_ERROR,&quot;wrong type, %s&quot;,Z_OBJCE_P(this_ptr)-&gt;name);
++		php_error(E_ERROR,&quot;php_qt_fetch(): wrong type, %s&quot;,Z_OBJCE_P(this_ptr)-&gt;name);
+ 	}
+ 
+ 	return ptr;
+@@ -1165,6 +1174,53 @@
+ #endif
+ }
+ 
++void php_qt_register_moc(zval* this_ptr, zend_rsrc_list_entry le){
++
++	zval *listhandle;
++	MAKE_STD_ZVAL(listhandle);
++	Z_TYPE_P(listhandle) = IS_LONG;
++	Z_LVAL_P(listhandle) = zend_list_insert(le.ptr, le_php_qt_moc_hashtype);
++
++	if(zend_hash_index_update(Z_OBJPROP_P(this_ptr), 1, &amp;listhandle, sizeof(zval*), NULL) == FAILURE){
++		php_error(E_ERROR,&quot;php_qt_register_moc(): could not bind resource to object.&quot;);
++	}
++
++	zval_add_ref(&amp;this_ptr);
++
++	if(zend_hash_index_update(&amp;php_qt_objptr_moc_hash, (long) le.ptr, (void*) &amp;this_ptr, sizeof(zval *), NULL) == FAILURE){
++		php_error(E_ERROR,&quot;php_qt_register_moc(): could not register MetaObject in resource table.&quot;);
++	}
++
++}
++
++void* php_qt_fetch_moc(zval* this_ptr){
++
++	if(this_ptr == NULL){
++	  php_error(E_ERROR,&quot;fatal: object does not exists and could not be fetched, %s&quot;,Z_OBJCE_P(this_ptr)-&gt;name);
++	}
++
++	void *ptr;
++	zval **listhandle;
++	int type;
++	TSRMLS_FETCH();
++
++	if(zend_hash_index_find(Z_OBJPROP_P(this_ptr), 1, (void**) &amp;listhandle) == FAILURE){
++	  php_error(E_ERROR,&quot;MetaObject missing. '%s' fails&quot;,Z_OBJCE_P(this_ptr)-&gt;name,Z_OBJCE_P(this_ptr)-&gt;name);
++	}
++	ptr = zend_list_find(Z_LVAL_PP(listhandle), &amp;type);
++
++	if(!ptr){
++		php_error(E_ERROR,&quot;reference to MetaObject missing, %s&quot;,Z_OBJCE_P(this_ptr)-&gt;name);
++	} 
++	if(type != le_php_qt_moc_hashtype){
++		php_error(E_ERROR,&quot;php_qt_fetch_moc(): wrong type, %s&quot;,Z_OBJCE_P(this_ptr)-&gt;name);
++	}
++
++	return ptr;
++
++}
++
++
+ void php_qt_callmethod(zval* this_ptr, char* methodname, zend_uint param_count, zval** args[])
+ {
+ 
+@@ -1301,8 +1357,23 @@
+ 
+ }
+ 
++zval* invokeToQString(zval* arg)
++{
++    if(Z_TYPE_P(arg) != IS_STRING){
++        return arg;
++    }
+ 
++    zend_class_entry *ce;
++    zval* return_value = (zval*) emalloc(sizeof(zval*));
++    object_init_ex(return_value, QString_ce_ptr);
++    zend_rsrc_list_entry le;
++    le.ptr = new QString(Z_STRVAL_P(arg));
++    php_qt_register(return_value, le);
++    return return_value;
+ 
++}
++
++
+ ///
+ static zend_function_entry QObject_methods[] = { 
+     ZEND_ME(QObject,__construct,NULL,ZEND_ACC_PUBLIC)
+
+Modified: trunk/qt/php_qt.h
+===================================================================
+--- trunk/qt/php_qt.h	2006-06-06 20:34:16 UTC (rev 251)
++++ trunk/qt/php_qt.h	2006-06-06 20:38:18 UTC (rev 252)
+@@ -22,9 +22,17 @@
+ 
+ /* define macros */
+ #define debug
++#define MONITOR
+ 
++#include &lt;iostream&gt;
++using namespace std;
++
++#include &quot;defined.h&quot;
++
+ #include &lt;QTextStream&gt;
+ #include &lt;QVariant&gt;
++#include &lt;QWidget&gt;
++
+ #define QOUT()                                              \
+     extern QTextStream qout(stdout, QIODevice::WriteOnly);  \
+ 
+@@ -315,6 +323,190 @@
+     RETURN_NULL();                                                              \
+ }                                                                     
+ 
++//    zval** args = new zval*[ZEND_NUM_ARGS()*sizeof(zval)];          \
++
++#define PHP_QT_FETCH_ARGS();                                        \
++    zval** args = (zval**) malloc(ZEND_NUM_ARGS()*sizeof(zval));          \
++    for(int i=0;i&lt;ZEND_NUM_ARGS();i++){                             \
++        zend_parse_parameters(1 TSRMLS_CC, &quot;z&quot;, &amp;args[i]);          \
++    }                                                               
++
++//     char* format = (char*) emalloc(ZEND_NUM_ARGS());    \
++
++//#define PHP_QT_FETCH_ARGS();                                        \
++//    zval* args[10];    \
++//    string format = &quot;&quot;;\
++//    for(int i=0;i&lt;ZEND_NUM_ARGS();i++){                             \
++//        format += &quot;z&quot;;                 \
++//    }                                   \
++//    cout &lt;&lt; format &lt;&lt; &quot;,\n&quot;;\
++//    zend_parse_parameters(1 TSRMLS_CC, (char*) format.data(), &amp;args[0], &amp;args[1], &amp;args[2], &amp;args[3], &amp;args[4], &amp;args[5], &amp;args[6], &amp;args[7], &amp;args[8], &amp;args[9]);          \
++
++#define PHP_QT_FETCH_0_ARGS();                                        \
++
++#define PHP_QT_FETCH_1_ARGS();                                        \
++    zval* arg_0;    \
++    zend_parse_parameters_ex(ZEND_PARSE_PARAMS_QUIET, 1 TSRMLS_CC, &quot;z&quot;, &amp;arg_0);          
++
++#define PHP_QT_FETCH_2_ARGS();                                        \
++    zval* arg_0;    \
++    zval* arg_1;    \
++    zend_parse_parameters_ex(ZEND_PARSE_PARAMS_QUIET, 2 TSRMLS_CC, &quot;zz&quot;, &amp;arg_0, &amp;arg_1);          \
++
++#define PHP_QT_FETCH_3_ARGS();                                        \
++    zval* arg_0;    \
++    zval* arg_1;    \
++    zval* arg_2;    \
++    zend_parse_parameters_ex(ZEND_PARSE_PARAMS_QUIET, 3 TSRMLS_CC, &quot;zzz&quot;, &amp;arg_0, &amp;arg_1, &amp;arg_2);          
++
++#define PHP_QT_FETCH_4_ARGS();                                        \
++    zval* arg_0;    \
++    zval* arg_1;    \
++    zval* arg_2;    \
++    zval* arg_3;    \
++    zend_parse_parameters_ex(ZEND_PARSE_PARAMS_QUIET, 4 TSRMLS_CC, &quot;zzzz&quot;, &amp;arg_0, &amp;arg_1, &amp;arg_2, &amp;arg_3);          
++
++#define PHP_QT_FETCH_5_ARGS();                                        \
++    zval* arg_0;    \
++    zval* arg_1;    \
++    zval* arg_2;    \
++    zval* arg_3;    \
++    zval* arg_4;    \
++    zend_parse_parameters_ex(ZEND_PARSE_PARAMS_QUIET, 5 TSRMLS_CC, &quot;zzzzz&quot;, &amp;arg_0, &amp;arg_1, &amp;arg_2, &amp;arg_3, &amp;arg_4);          
++
++#define PHP_QT_FETCH_6_ARGS();                                        \
++    zval* arg_0;    \
++    zval* arg_1;    \
++    zval* arg_2;    \
++    zval* arg_3;    \
++    zval* arg_4;    \
++    zval* arg_5;    \
++    zend_parse_parameters_ex(ZEND_PARSE_PARAMS_QUIET, 6 TSRMLS_CC, &quot;zzzzzz&quot;, &amp;arg_0, &amp;arg_1, &amp;arg_2, &amp;arg_3, &amp;arg_4, &amp;arg_5);          
++
++#define PHP_QT_FETCH_7_ARGS();                                        \
++    zval* arg_0;    \
++    zval* arg_1;    \
++    zval* arg_2;    \
++    zval* arg_3;    \
++    zval* arg_4;    \
++    zval* arg_5;    \
++    zval* arg_6;    \
++    zend_parse_parameters_ex(ZEND_PARSE_PARAMS_QUIET, 7 TSRMLS_CC, &quot;zzzzzzz&quot;, &amp;arg_0, &amp;arg_1, &amp;arg_2, &amp;arg_3, &amp;arg_4, &amp;arg_5, &amp;arg_6);          
++
++#define PHP_QT_FETCH_8_ARGS();                                        \
++    zval* arg_0;    \
++    zval* arg_1;    \
++    zval* arg_2;    \
++    zval* arg_3;    \
++    zval* arg_4;    \
++    zval* arg_5;    \
++    zval* arg_6;    \
++    zval* arg_7;    \
++    zend_parse_parameters_ex(ZEND_PARSE_PARAMS_QUIET, 8 TSRMLS_CC, &quot;zzzzzzzz&quot;, &amp;arg_0, &amp;arg_1, &amp;arg_2, &amp;arg_3, &amp;arg_4, &amp;arg_5, &amp;arg_6, &amp;arg_7);          
++
++#define PHP_QT_FETCH_9_ARGS();                                        \
++    zval* arg_0;    \
++    zval* arg_1;    \
++    zval* arg_2;    \
++    zval* arg_3;    \
++    zval* arg_4;    \
++    zval* arg_5;    \
++    zval* arg_6;    \
++    zval* arg_7;    \
++    zval* arg_8;    \
++    zend_parse_parameters_ex(ZEND_PARSE_PARAMS_QUIET, 9 TSRMLS_CC, &quot;zzzzzzzzz&quot;, &amp;arg_0, &amp;arg_1, &amp;arg_2, &amp;arg_3, &amp;arg_4, &amp;arg_5, &amp;arg_6, &amp;arg_7, &amp;arg_8);          
++
++#define PHP_QT_FETCH_10_ARGS();                                        \
++    zval* arg_0;    \
++    zval* arg_1;    \
++    zval* arg_2;    \
++    zval* arg_3;    \
++    zval* arg_4;    \
++    zval* arg_5;    \
++    zval* arg_6;    \
++    zval* arg_7;    \
++    zval* arg_8;    \
++    zval* arg_9;    \
++    zend_parse_parameters_ex(ZEND_PARSE_PARAMS_QUIET, 10 TSRMLS_CC, &quot;zzzzzzzzzz&quot;, &amp;arg_0, &amp;arg_1, &amp;arg_2, &amp;arg_3, &amp;arg_4, &amp;arg_5, &amp;arg_6, &amp;arg_7, &amp;arg_8, &amp;arg_9);          
++
++
++#define PHP_QT_REGISTER_MOC(object)     \
++    zend_rsrc_list_entry le;        \
++    le.ptr = object;                \
++    php_qt_register_moc(this-&gt;zend_ptr,le);  \
++
++#define PHP_QT_FETCH_MOC()  \
++	php_qt_fetch_moc(this-&gt;zend_ptr) \
++
++
++#define PHP_QT_MOC(classname)                                               \
++const QMetaObject * classname##_php_qt::metaObject() const                  \
++{                                                                           \
++    QMetaObject* d = php_qt_getMocData(this-&gt;zend_ptr,#classname,&amp;staticMetaObject); \
++}                                                                           \
++                                                                            \
++int classname##_php_qt::qt_metacall(QMetaObject::Call _c, int _id, void **_a)    \
++{                                                                           \
++    int _id2 = _id;                                                         \
++    _id = classname::qt_metacall(_c,_id,_a);                                \
++    QMetaObject* d = (QMetaObject*) classname##_php_qt::metaObject();       \
++    if (_id &lt; 0)                                                            \
++        return _id;                                                         \
++    else _id = _id2;                                                        \
++    if (_c == QMetaObject::InvokeMetaMethod) {                              \
++     QMetaObject* d = (QMetaObject*) this-&gt;metaObject();                    \
++     char* method_name = new char[strlen((d-&gt;method(_id)).signature())];    \
++     strcpy(method_name,(char*) (d-&gt;method(_id)).signature());              \
++     int i;                                                                 \
++     for(i = 0; i &lt; strlen(method_name); i++){                              \
++        if(method_name[i] == 40){                                           \
++            method_name[i] = 0;                                             \
++            break;                                                          \
++        }                                                                   \
++     }                                                                      \
++     if(d-&gt;method(_id).methodType() == QMetaMethod::Slot){                  \
++        int j = 0;                                                          \
++        zval** args[1];                                                     \
++        QList&lt;QByteArray&gt; qargs = d-&gt;method(_id).parameterTypes();          \
++        for(i = 0; i &lt; qargs.count(); i++){                                 \
++            zval *arg;                                                      \
++            MAKE_STD_ZVAL(arg);                                             \
++            if(!strncmp(&quot;int&quot;,(const char*) qargs[i],3)){                   \
++                ZVAL_LONG(arg, *reinterpret_cast&lt; int*&gt;(_a[i+1]));          \
++            } else if(!strncmp(&quot;char*&quot;,(const char*) qargs[i],5)){          \
++                ZVAL_STRING(arg, *reinterpret_cast&lt; char**&gt;(_a[i+1]), 1);   \
++            } else if(!strncmp(&quot;bool&quot;,(const char*) qargs[i],4)){           \
++                ZVAL_BOOL(arg, *reinterpret_cast&lt; bool*&gt;(_a[i+1]));         \
++            } else if(!strncmp(&quot;double&quot;,(const char*) qargs[i],4)){         \
++                ZVAL_DOUBLE(arg, *reinterpret_cast&lt; double*&gt;(_a[i+1]));     \
++            } else {                                                        \
++                    zend_class_entry *ce;                                   \
++                    object_init_ex(arg, classname##_ce_ptr);                \
++                    zend_rsrc_list_entry le;                                \
++                    le.ptr = *reinterpret_cast&lt; classname **&gt;(_a[1]);       \
++                    php_qt_register(arg, le);                               \
++            }                                                               \
++            args[j++] = &arg;                                               \
++        }                                                                   \
++        php_qt_callmethod(this-&gt;zend_ptr, method_name, j, args);            \
++     } else {                                                               \
++        void *_b[] = { 0, _a[1] };                                          \
++        QMetaObject::activate(this, d, 0, _b);                              \
++     }                                                                      \
++     delete d;                                                              \
++     delete method_name;                                                    \
++    }                                                                       \
++    return _id;                                                             \
++}                                                                           
++
++#define RETURN_VOID(a) \
++a; \
++return;
++
++#define RETURN_ARRAY(a)\
++a; \
++return;
++
+ #ifdef HAVE_CONFIG_H
+ #include &quot;config.h&quot;
+ #endif
+@@ -333,8 +525,14 @@
+ void php_qt_register(zval* this_ptr, zend_rsrc_list_entry le);
+ void php_qt_setObject(zval* this_ptr, void* obj);
+ static void destroy_php_qt_hashtable(zend_rsrc_list_entry *rsrc);
++
++void* php_qt_fetch_moc(zval* this_ptr);
++void php_qt_register_moc(zval* this_ptr, zend_rsrc_list_entry le);
++
+ void php_qt_callmethod(zval* zend_ptr, char* methodname, zend_uint param_count, zval** params[]);
+ QMetaObject* php_qt_getMocData(zval* this_ptr, char* classname, const QMetaObject* superdata);
++zval* invokeToQString(zval* arg);
++bool inherits(zend_class_entry* ace, uint objectId, int recursion = 0);
+ 
+ extern int le_php_qt_hashtype;
+ extern HashTable php_qt_objptr_hash;
+@@ -342,7 +540,9 @@
+ void _register_QObject();
+ void _register_QEvent();
+ 
+-extern zend_class_entry *QObject_ce_ptr;
++
++
++//extern zend_class_entry *QObject_ce_ptr;
+ extern zend_class_entry *QEvent_ce_ptr;
+ 
+ extern zend_class_entry *QCharRef_ce_ptr;
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000095.html">[Php-qt-svn] r251 - trunk/tools
+</A></li>
+	<LI>Next message: <A HREF="000097.html">[Php-qt-svn] r253 - trunk/qt/text_related
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#96">[ date ]</a>
+              <a href="thread.html#96">[ thread ]</a>
+              <a href="subject.html#96">[ subject ]</a>
+              <a href="author.html#96">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

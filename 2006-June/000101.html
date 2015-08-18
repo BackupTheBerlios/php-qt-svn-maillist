@@ -1,0 +1,110 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r257 - trunk
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-June/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r257%20-%20trunk&In-Reply-To=%3C200606081324.k58DO8x2024668%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000100.html">
+   <LINK REL="Next"  HREF="000102.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r257 - trunk</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r257%20-%20trunk&In-Reply-To=%3C200606081324.k58DO8x2024668%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r257 - trunk">tm243 at berlios.de
+       </A><BR>
+    <I>Thu Jun  8 15:24:08 CEST 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000100.html">[Php-qt-svn] r256 - trunk/qt/classes
+</A></li>
+        <LI>Next message: <A HREF="000102.html">[Php-qt-svn] r258 - in trunk: . examples examples/calculator tutorials
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#101">[ date ]</a>
+              <a href="thread.html#101">[ thread ]</a>
+              <a href="subject.html#101">[ subject ]</a>
+              <a href="author.html#101">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-06-08 15:24:07 +0200 (Thu, 08 Jun 2006)
+New Revision: 257
+
+Modified:
+   trunk/ChangeLog
+   trunk/TODO
+Log:
+next steps to do and things that were done
+
+Modified: trunk/ChangeLog
+===================================================================
+--- trunk/ChangeLog	2006-06-06 21:03:31 UTC (rev 256)
++++ trunk/ChangeLog	2006-06-08 13:24:07 UTC (rev 257)
+@@ -1,3 +1,14 @@
++2006-06-08  Thomas Moenicke &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">tm at ippfp.org</A>&gt;  (v.0.0.3) &quot;Lilly&quot;
++
++		* tutorial 7 and an example application
++		* automatically conversion of PHP strings into QStrings in method calls
++		* function 'qobject_cast' implemented
++		* handling of all allowed arguments in methods, with fast lookup table for inheritance
++		* Signals-Slots and custom Signals-Slots implemented
++		* better error handling for debugging
++		* #ifdef statements to exclude unimplemented classes to compile safely
++		* kalyptus extension rewritten
++
+ 2006-01-23  Thomas Moenicke  &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">tm at ippfp.org</A>&gt; (v.0.0.2) &quot;Fridolin&quot;
+ 
+         * a lot of new classes added
+
+Modified: trunk/TODO
+===================================================================
+--- trunk/TODO	2006-06-06 21:03:31 UTC (rev 256)
++++ trunk/TODO	2006-06-08 13:24:07 UTC (rev 257)
+@@ -1,5 +1,9 @@
+ 
+-- handling of optional method arguments
+-- custom SLOTS/SIGNALS
+-- virtual methods
+-- float
++
++- virtual and protected methods (already prepared)
++- storing meta objects in hashtable (already prepared)
++- returning of right php objects if returntype is reference
++- support for pecl operators
++- support for Q_SIGNAL/Q_SLOT macros
++- classes for tutorial 8-14 and QSvgWidget, QSvgRenderer
++
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000100.html">[Php-qt-svn] r256 - trunk/qt/classes
+</A></li>
+	<LI>Next message: <A HREF="000102.html">[Php-qt-svn] r258 - in trunk: . examples examples/calculator tutorials
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#101">[ date ]</a>
+              <a href="thread.html#101">[ thread ]</a>
+              <a href="subject.html#101">[ subject ]</a>
+              <a href="author.html#101">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

@@ -1,0 +1,243 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r325 - in trunk: php_qt tests
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-June/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r325%20-%20in%20trunk%3A%20php_qt%20tests&In-Reply-To=%3C200705312305.l4VN5h72004036%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   
+   <LINK REL="Next"  HREF="000170.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r325 - in trunk: php_qt tests</H1>
+    <B>Katrina.Niolet at mail.berlios.de</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r325%20-%20in%20trunk%3A%20php_qt%20tests&In-Reply-To=%3C200705312305.l4VN5h72004036%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r325 - in trunk: php_qt tests">Katrina.Niolet at mail.berlios.de
+       </A><BR>
+    <I>Fri Jun  1 01:05:43 CEST 2007</I>
+    <P><UL>
+        
+        <LI>Next message: <A HREF="000170.html">[Php-qt-svn] r326 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#169">[ date ]</a>
+              <a href="thread.html#169">[ thread ]</a>
+              <a href="subject.html#169">[ subject ]</a>
+              <a href="author.html#169">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: Katrina Niolet
+Date: 2007-06-01 01:05:40 +0200 (Fri, 01 Jun 2007)
+New Revision: 325
+
+Modified:
+   trunk/php_qt/functions.cpp
+   trunk/php_qt/php_qt.cpp
+   trunk/php_qt/php_qt.h
+   trunk/tests/qFunctions.php
+Log:
+Added support for the following Qt namespace functions
+qt_noop,qt_assert,qt_assert_x,Q_ASSERT,Q_ASSERT_X,qt_check_pointer and updated tests/qFunctions.php appropriately
+
+Modified: trunk/php_qt/functions.cpp
+===================================================================
+--- trunk/php_qt/functions.cpp	2007-05-31 05:37:32 UTC (rev 324)
++++ trunk/php_qt/functions.cpp	2007-05-31 23:05:40 UTC (rev 325)
+@@ -510,15 +510,84 @@
+ 	if(src_orig_type==IS_STRING || dest_orig_type==IS_STRING)
+ 		RETURN_TRUE;
+ 	if(src_orig_type==IS_DOUBLE || dest_orig_type==IS_DOUBLE) {
+-		convert_to_double(dest);
+ 		RETURN_TRUE;
+ 	}
+-	if(src_orig_type==IS_LONG || dest_orig_type==IS_LONG) {
++	if(src_orig_type==IS_LONG &amp;&amp; dest_orig_type==IS_LONG) {
+ 		convert_to_long(dest);
+ 		RETURN_TRUE;
+ 	}
+ }
+ 
++PHP_FUNCTION(qt_noop) {}
++
++PHP_FUNCTION(qt_assert) {
++	
++	char* msg;
++	int msglen;
++	char* file;
++	int filelen;
++	int line;
++	
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s|sl&quot;,&amp;msg,&amp;msglen,&amp;file,&amp;filelen,&amp;line)==FAILURE)
++		return;
++	php_error(E_ERROR,msg);
++}
++
++PHP_FUNCTION(qt_assert_x) {
++	
++	char* msg;
++	int msglen;
++	char* file;
++	int filelen;
++	char* where;
++	int wherelen;
++	char* what;
++	int whatlen;
++	int line;
++	
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s|sssl&quot;,&amp;msg,&amp;msglen,&amp;where,&amp;wherelen,&amp;what,&amp;whatlen,&amp;file,&amp;filelen,&amp;line)==FAILURE)
++		return;
++	php_error(E_ERROR,msg);
++}
++
++
++PHP_FUNCTION(Q_ASSERT) {
++	
++	bool cond;
++	
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;b&quot;,&amp;cond)==FAILURE)
++		return;
++	if(!cond)
++		php_error(E_ERROR,&quot;Assertion failed&quot;);
++}
++
++PHP_FUNCTION(Q_ASSERT_X) {
++	
++	bool cond;
++	char* where=&quot;&quot;;
++	int wherelen;
++	char* what=&quot;&quot;;
++	int whatlen;
++	
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;b|ss&quot;,&amp;cond,&amp;where,&amp;wherelen,&amp;what,&amp;whatlen)==FAILURE) {
++		return;
++	}
++	if(!cond) {
++		php_error(E_ERROR,&quot;Assertion failed: %s, %s&quot;,what,where);
++	}
++}
++
++PHP_FUNCTION(qt_check_pointer) {
++
++	char* file;
++	int line;
++	
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;|sl&quot;,&amp;file,&amp;line)==FAILURE)
++		return;
++	php_error(E_WARNING,&quot;Out of memory&quot;);
++}
++		
++	
+ /*!
+  *	tr() returns QObject::tr()
+  *
+
+Modified: trunk/php_qt/php_qt.cpp
+===================================================================
+--- trunk/php_qt/php_qt.cpp	2007-05-31 05:37:32 UTC (rev 324)
++++ trunk/php_qt/php_qt.cpp	2007-05-31 23:05:40 UTC (rev 325)
+@@ -93,6 +93,12 @@
+ 	PHP_FE(qFree,		NULL)
+ 	PHP_FE(qRealloc,	NULL)
+ 	PHP_FE(qMemCopy,	NULL)
++	PHP_FE(qt_noop,		NULL)
++	PHP_FE(qt_assert,	NULL)
++	PHP_FE(qt_assert_x,	NULL)
++	PHP_FE(Q_ASSERT,	NULL)
++	PHP_FE(Q_ASSERT_X,	NULL)
++	PHP_FE(qt_check_pointer,	NULL)
+ 	PHP_FE(qobject_cast,	phpqt_cast_arginfo)
+ 	PHP_FE(tr,	NULL)
+ 	PHP_FE(check_qobject,	NULL)
+
+Modified: trunk/php_qt/php_qt.h
+===================================================================
+--- trunk/php_qt/php_qt.h	2007-05-31 05:37:32 UTC (rev 324)
++++ trunk/php_qt/php_qt.h	2007-05-31 23:05:40 UTC (rev 325)
+@@ -118,6 +118,12 @@
+ PHP_FUNCTION(qFree);
+ PHP_FUNCTION(qRealloc);
+ PHP_FUNCTION(qMemCopy);
++PHP_FUNCTION(qt_noop);
++PHP_FUNCTION(qt_assert);
++PHP_FUNCTION(qt_assert_x);
++PHP_FUNCTION(Q_ASSERT);
++PHP_FUNCTION(Q_ASSERT_X);
++PHP_FUNCTION(qt_check_pointer);
+ PHP_FUNCTION(qobject_cast);
+ PHP_FUNCTION(tr);
+ PHP_FUNCTION(check_qobject);
+
+Modified: trunk/tests/qFunctions.php
+===================================================================
+--- trunk/tests/qFunctions.php	2007-05-31 05:37:32 UTC (rev 324)
++++ trunk/tests/qFunctions.php	2007-05-31 23:05:40 UTC (rev 325)
+@@ -97,8 +97,27 @@
+ qMemCopy($b,$a,2);
+ echo $b.&quot;\n&quot;;
+ 
++echo &quot;\nTesting qt_noop:&quot;;
++qt_noop();
++echo &quot;done\n&quot;;
+ 
+-/*echo &quot;\nTesting qDebug:\n&quot;;
++echo &quot;\nTesting Q_ASSERT:\n&quot;;
++echo &quot;Q_ASSERT(5==5): &quot;;
++Q_ASSERT(5==5);
++echo &quot;done\n&quot;;
++//echo &quot;Q_ASSERT(6==5): &quot;;
++//Q_ASSERT(6==5);
++//echo &quot;done\n&quot;;
++
++echo &quot;\nTesting Q_ASSERT_X:\n&quot;;
++echo &quot;Q_ASSERT(5==5,'in our test file', 'oh no! it failed!'): &quot;;
++Q_ASSERT_X(5==5,'in our test file','oh no! it failed!');
++echo &quot;done\n&quot;;
++//echo &quot;Q_ASSERT(6==5,'in our test file', 'oh no! it worked!'): &quot;;
++//Q_ASSERT_X(6==5,'in our test file','oh no! it worked!');
++//echo &quot;done\n&quot;;
++
++echo &quot;\nTesting qDebug:\n&quot;;
+ qDebug(&quot;This is a debug message&quot;);
+ 
+ echo &quot;Testing qWarning:\n&quot;;
+@@ -106,5 +125,7 @@
+ 
+ echo &quot;Testing qCritical:\n&quot;;
+ qCritical(&quot;This is a fatal error&quot;);
+- */
++
++echo &quot;We shouldn't see this\n&quot;;
++
+ ?&gt;
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	
+	<LI>Next message: <A HREF="000170.html">[Php-qt-svn] r326 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#169">[ date ]</a>
+              <a href="thread.html#169">[ thread ]</a>
+              <a href="subject.html#169">[ subject ]</a>
+              <a href="author.html#169">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

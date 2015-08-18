@@ -1,0 +1,348 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r157 - trunk/tools
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-January/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r157%20-%20trunk/tools&In-Reply-To=%3C200601062350.k06NongQ000343%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000005.html">
+   <LINK REL="Next"  HREF="000007.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r157 - trunk/tools</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r157%20-%20trunk/tools&In-Reply-To=%3C200601062350.k06NongQ000343%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r157 - trunk/tools">tm243 at berlios.de
+       </A><BR>
+    <I>Sat Jan  7 00:50:49 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000005.html">[Php-qt-svn] r156 - trunk
+</A></li>
+        <LI>Next message: <A HREF="000007.html">[Php-qt-svn] r158 - in trunk: . qt qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#6">[ date ]</a>
+              <a href="thread.html#6">[ thread ]</a>
+              <a href="subject.html#6">[ subject ]</a>
+              <a href="author.html#6">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-01-07 00:50:37 +0100 (Sat, 07 Jan 2006)
+New Revision: 157
+
+Modified:
+   trunk/tools/kalyptusCxxToPHP.pm
+Log:
+prepared code snippets to include it easier into php_qt.
+
+Modified: trunk/tools/kalyptusCxxToPHP.pm
+===================================================================
+--- trunk/tools/kalyptusCxxToPHP.pm	2006-01-06 18:35:28 UTC (rev 156)
++++ trunk/tools/kalyptusCxxToPHP.pm	2006-01-06 23:50:37 UTC (rev 157)
+@@ -18,7 +18,7 @@
+ #   - support for all types in method calls
+ #   - fit cplusplusToZEND, cplusplusToInvoke, cplusplusToMacro
+ #   - setter methods support only one php property (adequate, I believe)
+-#   - marshalling method arguments
++#   - snippets for the config.m4 file and the QDate_ce_ptr pointer
+ 
+ package kalyptusCxxToPHP;
+ 
+@@ -37,7 +37,7 @@
+ 
+ use vars qw/ @clist $host $who $now $gentext %functionId $docTop
+ 	$lib $rootnode $outputdir $opt $debug $typeprefix $eventHandlerCount
+-	$pastaccess $pastname $pastreturn $pastparams $nullctor $ctorCount @properties @functions @constructors %methods *CLASS *ZEND_PHP_QT *HEADER *QTCTYPES *KDETYPES /;
++	$pastaccess $pastname $pastreturn $pastparams $nullctor $ctorCount @properties @functions @constructors %methods *CLASS *ZEND_PHP_QT *HEADER *AG_ZEND_CLASS_ENTRY *AG_EXTERN_ZEND_CLASS_ENTRY *AG_VOID_REGISTER *AG_ZEND_PHP_QT *AG_CONFIGM4 *AG_QT_MINIT *AG_PHP_QT_CPP *QTCTYPES *KDETYPES /;
+ 
+ BEGIN
+ {
+@@ -584,11 +584,14 @@
+     }
+ 
+     print ZEND_PHP_QT &quot;\nZEND_METHOD(&quot;,$class-&gt;{astNodeName},&quot;, &quot;,$functionname,&quot;);&quot;;
++    print AG_ZEND_PHP_QT &quot;\nZEND_METHOD(&quot;,$class-&gt;{astNodeName},&quot;, &quot;,$functionname,&quot;);&quot;;
++
+ # code snippets for php_qt.cpp here
+     $access = uc($access);
+     $access =~ s/_SLOTS//;
+     $access =~ s/_SIGNALS//;
+-    print PHP_QT_CPP &quot;\tZEND_ME(&quot;,$classname,&quot;,&quot;,$functionname,&quot;,NULL,ZEND_ACC_&quot;,$access,&quot;)\n&quot;;
++#    print PHP_QT_CPP &quot;\tZEND_ME(&quot;,$classname,&quot;,&quot;,$functionname,&quot;,NULL,ZEND_ACC_&quot;,$access,&quot;)\n&quot;;
++    print AG_PHP_QT_CPP &quot;\tZEND_ME(&quot;,$classname,&quot;,&quot;,$functionname,&quot;,NULL,ZEND_ACC_&quot;,$access,&quot;)\n&quot;;
+ 
+ }
+ 
+@@ -599,12 +602,49 @@
+ 	$debug = $main::debuggen;
+ 
+ 	mkpath( $outputdir ) unless -f $outputdir;
++    mkpath( $outputdir.&quot;/generated/&quot; ) unless -f $outputdir.&quot;/generated/&quot;;
+ 
++# open files
+     # make zend_php_qt.h header file
+ 	my $file_zend_php_qt = &quot;$outputdir/zend_php_qt.h&quot;;
+ 	open( ZEND_PHP_QT, &quot;&gt;$file_zend_php_qt&quot; ) || die &quot;Couldn't create $file_zend_php_qt\n&quot;;
+ 	$file_zend_php_qt =~ s/\.h/.h/;
+ 
++    # AG_ZEND_CLASS_ENTRY
++    my $file_ag_zend_class_entry = &quot;$outputdir/ag_zend_class_entry.h&quot;;
++    open( AG_ZEND_CLASS_ENTRY, &quot;&gt;$file_ag_zend_class_entry&quot; ) || die &quot;Couldn't create $file_ag_zend_class_entry\n&quot;;
++    $file_ag_zend_class_entry =~ s/\.h/.h/;
++
++    # AG_EXTERN_ZEND_CLASS_ENTRY
++    my $file_ag_extern_zend_class_entry = &quot;$outputdir/ag_extern_zend_class_entry.h&quot;;
++    open( AG_EXTERN_ZEND_CLASS_ENTRY, &quot;&gt;$file_ag_extern_zend_class_entry&quot; ) || die &quot;Couldn't create $file_ag_extern_zend_class_entry\n&quot;;
++    $file_ag_extern_zend_class_entry =~ s/\.h/.h/;
++
++#     # AG_VOID_REGISTER
++#     my $file_ag_void_register = &quot;$outputdir/ag_void_register.h&quot;;
++#     open( AG_VOID_REGISTER, &quot;&gt;$file_ag_void_register&quot; ) || die &quot;Couldn't create $file_ag_void_register\n&quot;;
++#     $file_ag_void_register =~ s/\.h/.h/;
++
++    # AG_ZEND_PHP_QT
++    my $file_ag_zend_php_qt = &quot;$outputdir/ag_zend_php_qt.h&quot;;
++    open( AG_ZEND_PHP_QT, &quot;&gt;$file_ag_zend_php_qt&quot; ) || die &quot;Couldn't create $file_ag_zend_php_qt\n&quot;;
++    $file_ag_zend_php_qt =~ s/\.h/.h/;
++
++    # AG_CONFIGM4
++    my $file_ag_configm4 = &quot;$outputdir/ag_configm4.h&quot;;
++    open( AG_CONFIGM4, &quot;&gt;$file_ag_configm4&quot; ) || die &quot;Couldn't create $file_ag_configm4\n&quot;;
++    $file_ag_configm4 =~ s/\.h/.h/;
++
++    # AG_QT_MINIT
++    my $file_ag_qt_minit = &quot;$outputdir/ag_qt_minit.h&quot;;
++    open( AG_QT_MINIT, &quot;&gt;$file_ag_qt_minit&quot; ) || die &quot;Couldn't create $file_ag_qt_minit\n&quot;;
++    $file_ag_qt_minit =~ s/\.h/.h/;
++
++    # AG_PHP_QT_CPP
++    my $file_ag_php_qt_cpp = &quot;$outputdir/ag_php_qt_cpp.h&quot;;
++    open( AG_PHP_QT_CPP, &quot;&gt;$file_ag_php_qt_cpp&quot; ) || die &quot;Couldn't create $file_ag_php_qt_cpp\n&quot;;
++    $file_ag_php_qt_cpp =~ s/\.h/.h/;
++
+     print ZEND_PHP_QT &quot;/*
+   +----------------------------------------------------------------------+
+   | PHP Version 5                                                        |
+@@ -653,19 +693,21 @@
+ PHP_FUNCTION(SLOT);
+     \n\n&quot;;
+ 
++# deprecated
+     # make zend_php.cpp snippets file
+-	my $file_php_qt_cpp = &quot;$outputdir/php_qt.snippets.cpp&quot;;
+-	open( PHP_QT_CPP, &quot;&gt;$file_php_qt_cpp&quot; ) || die &quot;Couldn't create $file_php_qt_cpp\n&quot;;
+-	$file_php_qt_cpp =~ s/\.h/.h/;
++# 	my $file_php_qt_cpp = &quot;$outputdir/php_qt.snippets.cpp&quot;;
++# 	open( PHP_QT_CPP, &quot;&gt;$file_php_qt_cpp&quot; ) || die &quot;Couldn't create $file_php_qt_cpp\n&quot;;
++# 	$file_php_qt_cpp =~ s/\.h/.h/;
+ 
+-    print PHP_QT_CPP &quot;/**/\n&quot;;
++#    print PHP_QT_CPP &quot;/**/\n&quot;;
+ 
++# deprecated
+     # make zend_php.cpp second snippets file PHP_MINIT_FUNCTION
+ 	my $file_php_qt_minit = &quot;$outputdir/php_qt.snippets2.cpp&quot;;
+ 	open( PHP_QT_MINIT, &quot;&gt;$file_php_qt_minit&quot; ) || die &quot;Couldn't create $file_php_qt_minit\n&quot;;
+ 	$file_php_qt_minit =~ s/\.h/.h/;
+ 
+-    print PHP_QT_CPP &quot;\n&quot;;
++#    print PHP_QT_CPP &quot;\n&quot;;
+     print PHP_QT_MINIT &quot;\n&quot;;
+ 
+ 
+@@ -710,11 +752,21 @@
+  * vim&lt;600: noet sw=4 ts=4
+  */\n
+     &quot;;
+-    close ZEND_PHP_QT;
+ 
+-    print PHP_QT_CPP &quot;\n&quot;;
+-    close PHP_QT_CPP;
++# close files
++#    close ZEND_PHP_QT;
+ 
++#    print PHP_QT_CPP &quot;\n&quot;;
++#    close PHP_QT_CPP;
++
++    close AG_ZEND_CLASS_ENTRY;
++    close AG_EXTERN_ZEND_CLASS_ENTRY;
++#    close AG_VOID_REGISTER;
++    close AG_ZEND_PHP_QT;
++    close AG_CONFIGM4;
++    close AG_QT_MINIT;
++    close AG_PHP_QT_CPP;
++
+ }
+ 
+ sub writeClassDoc
+@@ -745,7 +797,7 @@
+ 	}
+ # make the class file
+ 	my $file = join(&quot;__&quot;, kdocAstUtil::heritage($node)).&quot;.cpp&quot;;
+-    $file = &quot;$outputdir/&quot;.lc($file);
++    $file = $outputdir.&quot;generated/&quot;.lc($file);
+ 	my $docnode = $node-&gt;{DocNode};
+ 	my @list = ();
+ 	my $version = undef;
+@@ -794,9 +846,20 @@
+ #include \&quot;../php_qt.h\&quot;\n&quot;;
+ 
+ # php_qt.cpp
+-    print PHP_QT_CPP &quot;static zend_function_entry &quot;,$node-&gt;{astNodeName},&quot;_methods[] = {\n&quot;;
++#    print PHP_QT_CPP &quot;static zend_function_entry &quot;,$node-&gt;{astNodeName},&quot;_methods[] = {\n&quot;;
++    print AG_PHP_QT_CPP &quot;static zend_function_entry &quot;,$node-&gt;{astNodeName},&quot;_methods[] = {\n&quot;;
++
++
++    print AG_ZEND_CLASS_ENTRY &quot;zend_class_entry *&quot;,$node-&gt;{astNodeName},&quot;_ce_ptr;\n&quot;;
++    print AG_CONFIGM4 &quot;\tqt/generated/&quot;,uc($node-&gt;{astNodeName}),&quot;.cpp \\ \n&quot;;
++    print AG_EXTERN_ZEND_CLASS_ENTRY &quot;extern zend_class_entry *&quot;,$node-&gt;{astNodeName},&quot;_ce_ptr;\n&quot;;
++    print AG_EXTERN_ZEND_CLASS_ENTRY &quot;void \t_register_&quot;,$node-&gt;{astNodeName},&quot;();\n&quot;;
++
++
+     print PHP_QT_MINIT &quot;\n\t_register_&quot;,$node-&gt;{astNodeName},&quot;(TSRMLS_C);\n&quot;;
++    print AG_QT_MINIT &quot;\n\t_register_&quot;,$node-&gt;{astNodeName},&quot;(TSRMLS_C);\n&quot;;
+ 
++
+ 	# ancestors
+ 	my @ancestors = ();
+ 	Iter::Ancestors( $node, $rootnode, undef, undef,
+@@ -1012,8 +1075,11 @@
+ 	$nullctor = 0;
+ 
+ # php_qt.cpp
+-    print PHP_QT_CPP &quot;
+-	{NULL,NULL,NULL}
++#     print PHP_QT_CPP &quot;
++# 	{NULL,NULL,NULL}
++# };\n&quot;;
++    print AG_PHP_QT_CPP &quot;
++    {NULL,NULL,NULL}
+ };\n&quot;;
+ 
+ # inheritance
+@@ -1030,7 +1096,14 @@
+         }
+ 	}
+ 
+-    print PHP_QT_CPP &quot;
++#     print PHP_QT_CPP &quot;
++# void _register_&quot;,$node-&gt;{astNodeName},&quot;(TSRMLS_D)
++# {
++#     zend_class_entry ce;
++#     INIT_CLASS_ENTRY(ce,\&quot;&quot;,$node-&gt;{astNodeName},&quot;\&quot;,&quot;,$node-&gt;{astNodeName},&quot;_methods);
++#     &quot;,$zend_inherit,&quot;
++# &quot;;
++    print AG_PHP_QT_CPP &quot;
+ void _register_&quot;,$node-&gt;{astNodeName},&quot;(TSRMLS_D)
+ {
+     zend_class_entry ce;
+@@ -1042,17 +1115,25 @@
+ 		sub { print CLASS &quot;&quot;, $_[0], &quot;&quot;; print CLASS &quot;&quot;, $_[0], &quot;&quot;;  },
+ 		sub {	my ($node, $kid ) = @_;
+             if ($kid-&gt;{NodeType} eq &quot;property&quot;){
+-                print PHP_QT_CPP
++#                 print PHP_QT_CPP
++# #                    &quot;zend_declare_property_string(&quot;,$node-&gt;{astNodeName},&quot;_ce_ptr,\&quot;&quot;,$kid-&gt;{astNodeName},&quot;\&quot;,strlen(\&quot;&quot;,$kid-&gt;{astNodeName},&quot;\&quot;),\&quot;\&quot;,ZEND_ACC_PROTECTED TSRMLS_CC);&quot;;
++#                      &quot;\tPHP_QT_DECLARE_PROPERTY(\&quot;$kid-&gt;{astNodeName}\&quot;);\n&quot;;
++                print AG_PHP_QT_CPP
+ #                    &quot;zend_declare_property_string(&quot;,$node-&gt;{astNodeName},&quot;_ce_ptr,\&quot;&quot;,$kid-&gt;{astNodeName},&quot;\&quot;,strlen(\&quot;&quot;,$kid-&gt;{astNodeName},&quot;\&quot;),\&quot;\&quot;,ZEND_ACC_PROTECTED TSRMLS_CC);&quot;;
+                      &quot;\tPHP_QT_DECLARE_PROPERTY(\&quot;$kid-&gt;{astNodeName}\&quot;);\n&quot;;
++
+             }
+         },
+ 		sub { print CLASS &quot;&quot;; print JNISOURCE &quot;&quot;; }
+ 	);
+ 
+-    print PHP_QT_CPP &quot;
++#     print PHP_QT_CPP &quot;
++# }\n&quot;;
++    print AG_PHP_QT_CPP &quot;
+ }\n&quot;;
+ 
++
++
+ 	if ( kalyptusDataDict::interfacemap($node-&gt;{astNodeName}) ne () ) {
+ 		close INTERFACE;
+     }
+@@ -1313,6 +1394,7 @@
+ #                $enum =~ s/=//g;
+                 my @constant = split(/=/,$enum_);
+                 print PHP_QT_MINIT &quot;\t	REGISTER_LONG_CONSTANT(\&quot;&quot;,uc($class-&gt;{astNodeName}),&quot;_&quot;,uc($enum),&quot;_&quot;,uc($constant[0]),&quot;\&quot;, &quot;,$class-&gt;{astNodeName},&quot;::&quot;,$constant[0],&quot;, CONST_CS | CONST_PERSISTENT);\n&quot;;
++                print AG_QT_MINIT &quot;\t  REGISTER_LONG_CONSTANT(\&quot;&quot;,uc($class-&gt;{astNodeName}),&quot;_&quot;,uc($enum),&quot;_&quot;,uc($constant[0]),&quot;\&quot;, &quot;,$class-&gt;{astNodeName},&quot;::&quot;,$constant[0],&quot;, CONST_CS | CONST_PERSISTENT);\n&quot;;
+ 				$enumCount++;
+ 
+ 			}
+@@ -1402,6 +1484,8 @@
+ # add method name
+         $tmp{ $paramstring }-&gt;AddProp(&quot;methodname&quot;,$method-&gt;{astNodeName});
+         $tmp{ $paramstring }-&gt;AddProp(&quot;ReturnType&quot;,$method-&gt;{ReturnType});
++        $tmp{ $paramstring }-&gt;AddProp(&quot;Access&quot;,$method-&gt;{Access});
++        $tmp{ $paramstring }-&gt;AddProp(&quot;Flags&quot;,$method-&gt;{Flags});
+ 
+     }
+ 
+@@ -1441,6 +1525,7 @@
+         my $param_zend_function;    # parameter for zend function
+         my @objects;                # object stack
+         my $method = $args{$key};   # helping
++        my $access = $method-&gt;{Access};
+         my $object_selection = &quot;&quot;;
+         my $tmp_count = 0;          # helping
+ 
+@@ -1582,6 +1667,22 @@
+ 
+         $return .= &quot;\t\t}\n&quot;;
+         $tmp_count=0;
++
++        # write code snippets
++        if( $method-&gt;{Flags} =~ /s/ ){
++            $access .= &quot;|ZEND_ACC_STATIC&quot;;
++        }
++    
++#        print ZEND_PHP_QT &quot;\nZEND_METHOD(&quot;,$classname,&quot;, &quot;,$method-&gt;{methodname},&quot;);&quot;;
++        print AG_ZEND_PHP_QT &quot;\nZEND_METHOD(&quot;,$classname,&quot;, &quot;,$method-&gt;{methodname},&quot;);&quot;;
++    
++    # code snippets for php_qt.cpp here
++        $access = uc($access);
++        $access =~ s/_SLOTS//;
++        $access =~ s/_SIGNALS//;
++#        print PHP_QT_CPP &quot;\tZEND_ME(&quot;,$classname,&quot;,&quot;,$method-&gt;{methodname},&quot;,NULL,ZEND_ACC_&quot;,$access,&quot;)\n&quot;;
++        print AG_PHP_QT_CPP &quot;\tZEND_ME(&quot;,$classname,&quot;,&quot;,$method-&gt;{methodname},&quot;,NULL,ZEND_ACC_&quot;,$access,&quot;)\n&quot;;
++
+     } # foreach args
+ 
+     my $not_empty = %args;
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000005.html">[Php-qt-svn] r156 - trunk
+</A></li>
+	<LI>Next message: <A HREF="000007.html">[Php-qt-svn] r158 - in trunk: . qt qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#6">[ date ]</a>
+              <a href="thread.html#6">[ thread ]</a>
+              <a href="subject.html#6">[ subject ]</a>
+              <a href="author.html#6">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

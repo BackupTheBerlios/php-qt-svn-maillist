@@ -1,0 +1,231 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r154 - trunk/tools
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-January/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r154%20-%20trunk/tools&In-Reply-To=%3C200601052241.k05MfYDr024753%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000002.html">
+   <LINK REL="Next"  HREF="000004.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r154 - trunk/tools</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r154%20-%20trunk/tools&In-Reply-To=%3C200601052241.k05MfYDr024753%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r154 - trunk/tools">tm243 at berlios.de
+       </A><BR>
+    <I>Thu Jan  5 23:41:34 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000002.html">[Php-qt-svn] r153 - trunk/tools
+</A></li>
+        <LI>Next message: <A HREF="000004.html">[Php-qt-svn] r155 - trunk/playground
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#3">[ date ]</a>
+              <a href="thread.html#3">[ thread ]</a>
+              <a href="subject.html#3">[ subject ]</a>
+              <a href="author.html#3">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-01-05 23:41:34 +0100 (Thu, 05 Jan 2006)
+New Revision: 154
+
+Modified:
+   trunk/tools/kalyptusCxxToPHP.pm
+Log:
+handling of return values finished.
+
+Modified: trunk/tools/kalyptusCxxToPHP.pm
+===================================================================
+--- trunk/tools/kalyptusCxxToPHP.pm	2006-01-04 22:25:08 UTC (rev 153)
++++ trunk/tools/kalyptusCxxToPHP.pm	2006-01-05 22:41:34 UTC (rev 154)
+@@ -920,6 +920,7 @@
+                 }
+ # copy
+                 if($count == 0){
++                    print CLASS createReturn($node-&gt;{astNodeName}, $n_,&quot;&quot;);
+                 } elsif($count == 1){
+                     push @one, $n_;
+                 } elsif($count == 2){
+@@ -950,18 +951,16 @@
+             my %five_ = mergeEquals($node-&gt;{astNodeName}<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">,5, at five</A>);
+             print CLASS marshal($node-&gt;{astNodeName},5,%five_);
+ 
+-            print CLASS &quot;}\n&quot;; # ZEND_METHOD
++#            print CLASS &quot;}\n&quot;; # ZEND_METHOD
+ 
+         }
++        print CLASS &quot;}\n&quot;;
+     }
+ 
+     print CLASS &quot;\n&quot;;
+ 
+ # creating the constructor
+     my $function = $node-&gt;{astNodeName};
+-# brace comes from previous method
+-    print CLASS &quot;\t}\n&quot;;
+-    print CLASS &quot;}\n&quot;;
+ 
+     print CLASS &quot;\n\nZEND_METHOD(&quot;,$function, &quot;,__construct){\n&quot;;
+     print CLASS &quot;\n\t&quot;,$function, &quot; *&quot;,$function,&quot;_ptr = new &quot;,$function,&quot;();\n&quot;;
+@@ -1261,7 +1260,7 @@
+ # prepare arguments
+                 mergeNumbers($class,$m);
+ # deprecated
+-                cplusplusToMacro($class,$m);
++#                cplusplusToMacro($class,$m);
+    		    }
+ 	    }
+ 	}
+@@ -1445,6 +1444,8 @@
+         my $object_selection = &quot;&quot;;
+         my $tmp_count = 0;          # helping
+ 
++# informations about return type
++
+ # identical strings grouped
+         $return .= &quot;\t\t/* &quot;.$key.&quot; */\n&quot;;
+         $run = $key.&quot;_&quot;;
+@@ -1545,15 +1546,13 @@
+ 
+             if(!$obj_first){
+                 $object_selection .= &quot;\n\t\t\tif(&quot;.$object_test.&quot;) {\n&quot;;
+-                $object_selection .= &quot;\t\t\t\tRETURN_BOOL(obj-&gt;&quot;.$method-&gt;{methodname}.&quot;(&quot;.$object_call.&quot;)); \n\t\t\t}&quot;;
++                $object_selection .= &quot;\t&quot;.createReturn($classname, $method, $object_call);
++                $object_selection .=  &quot;\t\t\t}&quot;;
+             }
+         } # foreach params
+ 
+         $shortstring .= &quot;\&quot;&quot;;
+ 
+-        my $returntype = $method-&gt;{ReturnType};
+-        my $zend_return_type = cplusplusToZEND($returntype);
+-
+ # write zend_parse_parameters method
+         $return .= &quot;\t\tif(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;.$shortstring.$paratype.&quot;) == SUCCESS) {\n&quot;;
+         $return .= &quot;\t\t\t&quot;.$classname.&quot; *obj = (&quot;.$classname.&quot;*) PHP_QT_FETCH();\n&quot;;
+@@ -1562,8 +1561,8 @@
+         my $obj;
+         foreach $obj ( @objects ) {
+             $return .= &quot;\t\t\tQObject* &quot;.$obj.&quot; = (QObject*) php_qt_fetch(&quot;.$obj.&quot;);\n&quot;;
+-#            $paraf =~ s/$obj/tmp_$obj/;
+         }
++
+ # add object handling
+         my $not_empty = %args;
+         if($not_empty){
+@@ -1573,39 +1572,67 @@
+ # $c counts objects, if there is no object the return mechanism has to be created
+             if($c&gt;0){
+                 $return .= &quot;\t\t}\n&quot;;
++# break run if there are objects
+                 next;
+             }
+         }
+ 
++# return handling
++        $return .= createReturn($classname, $method, $param_zend_function);
++
++        $return .= &quot;\t\t}\n&quot;;
++        $tmp_count=0;
++    } # foreach args
++
++    my $not_empty = %args;
++    if($not_empty){
++        $return .= &quot;\t}\n&quot;;
++    }
++
++    return $return;
++}
++
++sub createReturn {
++
++    my ($classname, $method, $param_zend_function) = @_;
++    my $return;
++
++# no arguments, no object created
++    if($param_zend_function == &quot;&quot;){
++        $return .= &quot;\t\t\t&quot;.$classname.&quot; *obj = (&quot;.$classname.&quot;) PHP_QT_FETCH();\n&quot;;
++    }
++
++    my $methodname;
++    if (defined $method-&gt;{methodname}) {
++        $methodname = $method-&gt;{methodname}
++    } else {
++        $methodname = $method-&gt;{astNodeName} if defined $method-&gt;{astNodeName};
++    }
++
++    my $returntype = $method-&gt;{ReturnType};
++    my $zend_return_type = cplusplusToZEND($returntype);
++
+ # handle return value here
+ # if no return type specified
+         if ( $zend_return_type eq &quot;NULL&quot; ) {
+-            $return .=  &quot;\t\t\tobj-&gt;&quot;.$method-&gt;{methodname}.&quot;(&quot;.$param_zend_function.&quot;);\n&quot;;
++            $return .=  &quot;\t\t\tobj-&gt;&quot;.$methodname.&quot;(&quot;.$param_zend_function.&quot;);\n&quot;;
+             $return .=  &quot;\t\t\tRETURN_NULL();\n&quot;;
+ # if return type is an object
+         } elsif ( $zend_return_type =~ /zval/ ) {
+         # TODO: consider 'const',
+         # and non-pointer types, pointer types
+-            $return .=  &quot;\t\t\t&quot;.$returntype.&quot; obj = (&quot;.$returntype.&quot;) o-&gt;&quot;.$method-&gt;{methodname}.&quot;(&quot;.$param_zend_function.&quot;);\n&quot;;
++            $return .=  &quot;\t\t\t&quot;.$returntype.&quot; return_object = (&quot;.$returntype.&quot;) obj-&gt;&quot;.$methodname.&quot;(&quot;.$param_zend_function.&quot;);\n&quot;;
+             $return .=  &quot;\t\t\tzend_class_entry *ce;                                   \n&quot;;
+             $return .=  &quot;\t\t\tobject_init_ex(return_value, &quot;.$classname.&quot;_ce_ptr);     \n&quot;;
+             $return .=  &quot;\t\t\tzend_rsrc_list_entry le;                            \n&quot;;
+-            $return .=  &quot;\t\t\tle.ptr = &obj;                                       \n&quot;;
++            $return .=  &quot;\t\t\tle.ptr = &amp;return_object;                                       \n&quot;;
+             $return .=  &quot;\t\t\tphp_qt_register(return_value,le);                   \n&quot;;
+             $return .=  &quot;\t\t\treturn;                                             \n&quot;;
++# simple types
+         } else {
+-            $return .=  &quot;\t\t\tRETURN_&quot;.uc($zend_return_type).&quot;(o-&gt;&quot;.$method-&gt;{methodname}.&quot;(&quot;.$param_zend_function.&quot;));\n&quot; if defined $zend_return_type;
++            $return .=  &quot;\t\t\tRETURN_&quot;.uc($zend_return_type).&quot;(obj-&gt;&quot;.$methodname.&quot;(&quot;.$param_zend_function.&quot;));\n&quot; if defined $zend_return_type;
+         }
+-        $return .= &quot;\t\t}\n&quot;;
+-        $tmp_count=0;
+-    } # foreach args
+ 
+-    my $not_empty = %args;
+-    if($not_empty){
+-        $return .= &quot;\t}\n&quot;;
+-    }
+-
+-
+     return $return;
+ 
+ }
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000002.html">[Php-qt-svn] r153 - trunk/tools
+</A></li>
+	<LI>Next message: <A HREF="000004.html">[Php-qt-svn] r155 - trunk/playground
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#3">[ date ]</a>
+              <a href="thread.html#3">[ thread ]</a>
+              <a href="subject.html#3">[ subject ]</a>
+              <a href="author.html#3">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

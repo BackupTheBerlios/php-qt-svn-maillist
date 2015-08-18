@@ -1,0 +1,214 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r231 - in trunk/qt: . classes
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-May/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r231%20-%20in%20trunk/qt%3A%20.%20classes&In-Reply-To=%3C200605032249.k43MnOog026278%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000074.html">
+   <LINK REL="Next"  HREF="000076.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r231 - in trunk/qt: . classes</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r231%20-%20in%20trunk/qt%3A%20.%20classes&In-Reply-To=%3C200605032249.k43MnOog026278%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r231 - in trunk/qt: . classes">tm243 at berlios.de
+       </A><BR>
+    <I>Thu May  4 00:49:24 CEST 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000074.html">[Php-qt-svn] r230 - in trunk/qt: . classes
+</A></li>
+        <LI>Next message: <A HREF="000076.html">[Php-qt-svn] r232 - in trunk/qt: . classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#75">[ date ]</a>
+              <a href="thread.html#75">[ thread ]</a>
+              <a href="subject.html#75">[ subject ]</a>
+              <a href="author.html#75">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-05-04 00:49:22 +0200 (Thu, 04 May 2006)
+New Revision: 231
+
+Modified:
+   trunk/qt/classes/qwidget.cpp
+   trunk/qt/php_qt.cpp
+   trunk/qt/php_qt.h
+Log:
+getStringData: a function which computes stringdata for Qt runtime.
+
+Modified: trunk/qt/classes/qwidget.cpp
+===================================================================
+--- trunk/qt/classes/qwidget.cpp	2006-05-03 16:49:42 UTC (rev 230)
++++ trunk/qt/classes/qwidget.cpp	2006-05-03 22:49:22 UTC (rev 231)
+@@ -34,12 +34,23 @@
+ #include &lt;QIcon&gt;
+ #include &lt;QMetaMethod&gt;
+ 
+-const QMetaObject *QWidget::metaObject() const
++
++
++class QWidget_moc : public QWidget
+ {
++    public:
++        zval* zend_ptr;
++        const QMetaObject* metaObject() const;
++        int qt_metacall(QMetaObject::Call _c, int _id, void **_a);
++        
++};
+ 
++const QMetaObject *QWidget_moc::metaObject() const
++{
++
+     QMetaObject *superdata = (QMetaObject*) &staticMetaObject;
+ 
+-    static const char stringdata[] = {&quot;QWidget\0\0value\0test(int)\0&quot;};
++//    static const char stringdata[] = {&quot;QWidget\0\0value\0test(int)\0&quot;};
+     static const uint data[] = {
+ 
+        1,       // revision
+@@ -50,9 +61,12 @@
+        0,    0, // enums/sets
+ 
+        15,   10,    9,    9, 0x0a,
++       15,   10,    9,    9, 0x0a,
+ 
+     };
+ 
++    static const char* stringdata = php_qt_getStringdata(this-&gt;zend_ptr,&quot;QWidget&quot;);
++
+     QMetaObject ob = {
+         {superdata,stringdata,data,0}
+     };
+@@ -64,15 +78,6 @@
+ 
+ }
+ 
+-class QWidget_moc : public QWidget
+-{
+-    public:
+-        zval* zend_ptr;
+-        int qt_metacall(QMetaObject::Call _c, int _id, void **_a);
+-        
+-};
+-
+-
+ int QWidget_moc::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
+ {
+ 
+
+Modified: trunk/qt/php_qt.cpp
+===================================================================
+--- trunk/qt/php_qt.cpp	2006-05-03 16:49:42 UTC (rev 230)
++++ trunk/qt/php_qt.cpp	2006-05-03 22:49:22 UTC (rev 231)
+@@ -1155,6 +1155,63 @@
+ 
+ }
+ 
++// creates stringdata
++// example: char* stringdata = &quot;QWidget\0\0value\0test(int)\0&quot;;
++
++char* php_qt_getStringdata(zval* this_ptr, char* classname){
++
++    char * r;
++    r = (char*) malloc(2 + strlen(classname));
++    strcpy(r, classname);  
++    strncat(r,&quot;++&quot;,2);
++
++    char * value;
++    value = (char*) malloc(1 + strlen(&quot;value&quot;));
++    strcpy(value, &quot;value&quot;);
++
++    strcat(r,value);
++    strncat(r,&quot;+&quot;,1);    
++
++    zval *s1 = zend_read_property(QWidget_ce_ptr,this_ptr,&quot;slots&quot;,5,0);
++    zval **data;
++
++// TODO: is it really an array?
++    HashTable* hash = HASH_OF(s1);
++    char* assocKey;
++    ulong numKey;
++
++    zend_hash_internal_pointer_reset(hash);
++
++    while(zend_hash_has_more_elements(hash) == SUCCESS){
++        zend_hash_get_current_key(hash,&amp;assocKey,&amp;numKey,0);
++        zend_hash_get_current_data(hash,(void**)&amp;data);
++        
++        convert_to_string(*data);
++
++        char *buf;
++        buf = (char*) malloc(1+strlen(Z_STRVAL_PP(data)));
++        strcpy(buf, Z_STRVAL_PP(data));
++
++        strncat(r,buf,strlen(Z_STRVAL_PP(data)));
++        strncat(r,&quot;+&quot;,1);
++
++        zend_hash_move_forward(hash);
++    }
++
++    // transform '+' into \0
++    for(int i=0;i&lt;44;i++){
++#ifdef DEBUG
++        cout &lt;&lt; r[i] &lt;&lt; &quot;&quot;;
++#endif
++        if((int) r[i] == 43){
++            r[i] = NULL;
++        }
++    }
++
++    return r;
++
++}
++
+ ///
+ static zend_function_entry QObject_methods[] = { 
+     ZEND_ME(QObject,__construct,NULL,ZEND_ACC_PUBLIC)
+
+Modified: trunk/qt/php_qt.h
+===================================================================
+--- trunk/qt/php_qt.h	2006-05-03 16:49:42 UTC (rev 230)
++++ trunk/qt/php_qt.h	2006-05-03 22:49:22 UTC (rev 231)
+@@ -329,6 +329,7 @@
+ void php_qt_setObject(zval* this_ptr, void* obj);
+ static void destroy_php_qt_hashtable(zend_rsrc_list_entry *rsrc);
+ void php_qt_callmethod(zval* zend_ptr, char* methodname);
++char* php_qt_getStringdata(zval* this_ptr, char* classname);
+ 
+ extern int le_php_qt_hashtype;
+ extern HashTable php_qt_objptr_hash;
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000074.html">[Php-qt-svn] r230 - in trunk/qt: . classes
+</A></li>
+	<LI>Next message: <A HREF="000076.html">[Php-qt-svn] r232 - in trunk/qt: . classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#75">[ date ]</a>
+              <a href="thread.html#75">[ thread ]</a>
+              <a href="subject.html#75">[ subject ]</a>
+              <a href="author.html#75">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

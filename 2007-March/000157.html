@@ -1,0 +1,96 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r313 - trunk/php_qt
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-March/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r313%20-%20trunk/php_qt&In-Reply-To=%3C200703260955.l2Q9tumQ030327%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000156.html">
+   <LINK REL="Next"  HREF="000158.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r313 - trunk/php_qt</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r313%20-%20trunk/php_qt&In-Reply-To=%3C200703260955.l2Q9tumQ030327%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r313 - trunk/php_qt">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Mon Mar 26 11:55:56 CEST 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000156.html">[Php-qt-svn] r312 - trunk/php_qt
+</A></li>
+        <LI>Next message: <A HREF="000158.html">[Php-qt-svn] r314 - in trunk: php_qt tests
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#157">[ date ]</a>
+              <a href="thread.html#157">[ thread ]</a>
+              <a href="subject.html#157">[ subject ]</a>
+              <a href="author.html#157">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2007-03-26 11:55:56 +0200 (Mon, 26 Mar 2007)
+New Revision: 313
+
+Modified:
+   trunk/php_qt/php_qt.h
+Log:
+* code cleaned up
+
+
+
+Modified: trunk/php_qt/php_qt.h
+===================================================================
+--- trunk/php_qt/php_qt.h	2007-03-26 09:44:13 UTC (rev 312)
++++ trunk/php_qt/php_qt.h	2007-03-26 09:55:56 UTC (rev 313)
+@@ -59,18 +59,7 @@
+ #endif
+ 
+ #define Qnil (zval *) NULL
+-#define QOUT()                                              \
+-    extern QTextStream qout(stdout, QIODevice::WriteOnly);  \
+ 
+-#ifndef NOT_YET_IMPLEMENTED
+-#define NOT_YET_IMPLEMENTED { php_printf(&quot;%s(): functionality not yet implemented\n&quot;,get_active_function_name(TSRMLS_C));} 
+-#endif
+-
+-#define PHP_QT_REGISTER(object)     \
+-    zend_rsrc_list_entry le;        \
+-    le.ptr = object;                \
+-    phpqt_register(getThis(),le);  \
+-
+ #define PHP_QT_FETCH()  \
+ 	phpqt_getQtObjectFromZval(getThis()) \
+ 
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000156.html">[Php-qt-svn] r312 - trunk/php_qt
+</A></li>
+	<LI>Next message: <A HREF="000158.html">[Php-qt-svn] r314 - in trunk: php_qt tests
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#157">[ date ]</a>
+              <a href="thread.html#157">[ thread ]</a>
+              <a href="subject.html#157">[ subject ]</a>
+              <a href="author.html#157">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

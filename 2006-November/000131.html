@@ -1,0 +1,1030 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r287 - in trunk: examples/calculator tutorials/t1	tutorials/t2 tutorials/t3 tutorials/t4 tutorials/t5	tutorials/t6 tutorials/t7
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-November/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r287%20-%20in%20trunk%3A%20examples/calculator%20tutorials/t1%0A%09tutorials/t2%20tutorials/t3%20tutorials/t4%20tutorials/t5%0A%09tutorials/t6%20tutorials/t7&In-Reply-To=%3C200611181519.kAIFJUhw022683%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000130.html">
+   <LINK REL="Next"  HREF="000132.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r287 - in trunk: examples/calculator tutorials/t1	tutorials/t2 tutorials/t3 tutorials/t4 tutorials/t5	tutorials/t6 tutorials/t7</H1>
+    <B>tm243 at mail.berlios.de</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r287%20-%20in%20trunk%3A%20examples/calculator%20tutorials/t1%0A%09tutorials/t2%20tutorials/t3%20tutorials/t4%20tutorials/t5%0A%09tutorials/t6%20tutorials/t7&In-Reply-To=%3C200611181519.kAIFJUhw022683%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r287 - in trunk: examples/calculator tutorials/t1	tutorials/t2 tutorials/t3 tutorials/t4 tutorials/t5	tutorials/t6 tutorials/t7">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Sat Nov 18 16:19:30 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000130.html">[Php-qt-svn] r286 - in trunk: . qt
+</A></li>
+        <LI>Next message: <A HREF="000132.html">[Php-qt-svn] r288 - trunk/qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#131">[ date ]</a>
+              <a href="thread.html#131">[ thread ]</a>
+              <a href="subject.html#131">[ subject ]</a>
+              <a href="author.html#131">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-11-18 16:19:26 +0100 (Sat, 18 Nov 2006)
+New Revision: 287
+
+Modified:
+   trunk/examples/calculator/button.php
+   trunk/examples/calculator/calculator.php
+   trunk/examples/calculator/main.php
+   trunk/tutorials/t1/main.php
+   trunk/tutorials/t2/main.php
+   trunk/tutorials/t3/main.php
+   trunk/tutorials/t4/main.php
+   trunk/tutorials/t5/main.php
+   trunk/tutorials/t6/main.php
+   trunk/tutorials/t7/main.php
+Log:
+tutorials and example cleaned up
+
+Modified: trunk/examples/calculator/button.php
+===================================================================
+--- trunk/examples/calculator/button.php	2006-11-18 12:51:03 UTC (rev 286)
++++ trunk/examples/calculator/button.php	2006-11-18 15:19:26 UTC (rev 287)
+@@ -1,22 +1,27 @@
+ &lt;?php
++
+     /****************************************************************
+     **
+     ** Qt Calculator
+     **
+-    ** <A HREF="http://doc.trolltech.com/4.0/widgets-calculator.html">http://doc.trolltech.com/4.0/widgets-calculator.html</A>
++    ** original:
++    ** <A HREF="http://doc.trolltech.com/4.1/widgets-calculator.html">http://doc.trolltech.com/4.1/widgets-calculator.html</A>
+     **
+     ****************************************************************/
+ 
+     class Button extends QToolButton {
+-    
+-        function __construct($text){
+ 
++        function __construct($text, &amp;$color)
++        {
+             parent::__construct();
+-///            $this-&gt;setSizePolicy(&quot;QSizePolicy::Expanding&quot;, &quot;QSizePolicy::Preferred&quot;);
+-            $this-&gt;setText(new QString($text));
+ 
++            $this-&gt;setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
++            $this-&gt;setText($text);
++
++    	    $newPalette = new QPalette();
++            $newPalette-&gt;setColor(QPalette::Button, &amp;$color);
++            $this-&gt;setPalette($newPalette);
+         }
+-
+     }
+ 
+ ?&gt;
+\ No newline at end of file
+
+Modified: trunk/examples/calculator/calculator.php
+===================================================================
+--- trunk/examples/calculator/calculator.php	2006-11-18 12:51:03 UTC (rev 286)
++++ trunk/examples/calculator/calculator.php	2006-11-18 15:19:26 UTC (rev 287)
+@@ -1,49 +1,50 @@
+ &lt;?php
++
+     /****************************************************************
+     **
+     ** Qt Calculator
+     **
+-    ** <A HREF="http://doc.trolltech.com/4.0/widgets-calculator.html">http://doc.trolltech.com/4.0/widgets-calculator.html</A>
++    ** original:
++    ** <A HREF="http://doc.trolltech.com/4.1/widgets-calculator.html">http://doc.trolltech.com/4.1/widgets-calculator.html</A>
+     **
+     ****************************************************************/
+ 
+-    require_once(&quot;button.php&quot;);
++    require_once('button.php');
+ 
+     class Calculator extends QDialog {
+-    
+-        var $sumInMemory = 0.0;
+-        var $sumSoFar = 0.0;
+-        var $factorSoFar = 0.0;
+-        var $pendingAdditiveOperator;
+-        var $pendingMultiplicativeOperator;
+-        var $waitingForOperand = true;
+ 
+-        var $display;           /// QLineEdit
++        private $sumInMemory = 0.0;
++        private $sumSoFar = 0.0;
++        private $factorSoFar = 0.0;
++        private $pendingAdditiveOperator;
++        private $pendingMultiplicativeOperator;
++        private $waitingForOperand = true;
+ 
+-        var $NumDigitButtons = 10;
+-        var $digitButtons;      /// Array of buttons
++        private $display;
+ 
+-        /// Buttons
+-        var $pointButton;
+-        var $changeSignButton;
+-        var $backspaceButton;
+-        var $clearButton;
+-        var $clearAllButton;
+-        var $clearMemoryButton;
+-        var $readMemoryButton;
+-        var $setMemoryButton;
+-        var $addToMemoryButton;
++        const NumDigitButtons = 10;
++        private $digitButtons;
+ 
+-        var $divisionButton;
+-        var $timesButton;
+-        var $minusButton;
+-        var $plusButton;
+-        var $squareRootButton;
+-        var $powerButton;
+-        var $reciprocalButton;
+-        var $equalButton;
++        private $pointButton;
++        private $changeSignButton;
++        private $backspaceButton;
++        private $clearButton;
++        private $clearAllButton;
++        private $clearMemoryButton;
++        private $readMemoryButton;
++        private $setMemoryButton;
++        private $addToMemoryButton;
+ 
+-        var $slots = array(
++        private $divisionButton;
++        private $timesButton;
++        private $minusButton;
++        private $plusButton;
++        private $squareRootButton;
++        private $powerButton;
++        private $reciprocalButton;
++        private $equalButton;
++
++        private $slots = array(
+             &quot;digitClicked()&quot;,
+             &quot;unaryOperatorClicked()&quot;,
+             &quot;additiveOperatorClicked()&quot;,
+@@ -59,10 +60,10 @@
+             &quot;setMemory()&quot;,
+             &quot;addToMemory()&quot;
+         );
+-        var $signals = array(&quot;&quot;);
++        private $signals = array(&quot;&quot;);
+ 
+-        function __construct() {
+-
++        function __construct()
++        {
+             parent::__construct();
+ 
+             $this-&gt;pendingAdditiveOperator = new QString();
+@@ -74,53 +75,59 @@
+             $this-&gt;display-&gt;setMaxLength(15);
+             $this-&gt;display-&gt;installEventFilter($this);
+ 
+-            for ($i = 0; $i &lt; $this-&gt;NumDigitButtons; ++$i) {
+-                    $this-&gt;digitButtons[$i] = $this-&gt;createButton($i.&quot;&quot;, SLOT(&quot;digitClicked()&quot;));
++            $font = $this-&gt;display-&gt;font();
++            $font-&gt;setPointSize($font-&gt;pointSize() + 8);
++            $this-&gt;display-&gt;setFont($font);
++
++            $digitColor = new QColor(150, 205, 205);
++            $backspaceColor = new QColor(225, 185, 135);
++            $memoryColor = new QColor(100, 155, 155);
++            $operatorColor = new QColor(155, 175, 195);
++
++            for ($i = 0; $i &lt; Calculator::NumDigitButtons; ++$i) {
++                    $this-&gt;digitButtons[$i] = $this-&gt;createButton(tr($i), $digitColor, SLOT('digitClicked()'));
+             }
+ 
+-            $this-&gt;pointButton = $this-&gt;createButton(&quot;.&quot;, SLOT(&quot;pointClicked()&quot;));
+-            $this-&gt;changeSignButton = $this-&gt;createButton(&quot;\261&quot;, SLOT(&quot;changeSignClicked()&quot;));
++            $this-&gt;pointButton = $this-&gt;createButton(tr(&quot;.&quot;), $digitColor, SLOT('pointClicked()'));
++            $this-&gt;changeSignButton = $this-&gt;createButton(tr(&quot;\261&quot;), $digitColor, SLOT('changeSignClicked()'));
+ 
+-            $this-&gt;backspaceButton = $this-&gt;createButton(&quot;Backspace&quot;, SLOT(&quot;backspaceClicked()&quot;));
+-            $this-&gt;clearButton = $this-&gt;createButton(&quot;Clear&quot;, SLOT(&quot;clear()&quot;));
+-            $this-&gt;clearAllButton = $this-&gt;createButton(&quot;Clear All&quot;, SLOT(&quot;clearAll()&quot;));
++            $this-&gt;backspaceButton = $this-&gt;createButton(tr(&quot;Backspace&quot;), $backspaceColor, SLOT('backspaceClicked()'));
++            $this-&gt;clearButton = $this-&gt;createButton(tr(&quot;Clear&quot;), $backspaceColor, SLOT('clear()'));
++            $this-&gt;clearAllButton = $this-&gt;createButton(tr(&quot;Clear All&quot;), $backspaceColor, SLOT('clearAll()'));
+ 
+-            $this-&gt;clearMemoryButton = $this-&gt;createButton(&quot;MC&quot;, SLOT(&quot;clearMemory()&quot;));
+-            $this-&gt;readMemoryButton = $this-&gt;createButton(&quot;MR&quot;, SLOT(&quot;read_Memory()&quot;));
+-            $this-&gt;setMemoryButton = $this-&gt;createButton(&quot;MS&quot;, SLOT(&quot;setMemory()&quot;));
+-            $this-&gt;addToMemoryButton = $this-&gt;createButton(&quot;M+&quot;, SLOT(&quot;addToMemory()&quot;));
++            $this-&gt;clearMemoryButton = $this-&gt;createButton(tr(&quot;MC&quot;), $memoryColor, SLOT('clearMemory()'));
++            $this-&gt;readMemoryButton = $this-&gt;createButton(tr(&quot;MR&quot;), $memoryColor, SLOT('read_Memory()'));
++            $this-&gt;setMemoryButton = $this-&gt;createButton(tr(&quot;MS&quot;), $memoryColor, SLOT('setMemory()'));
++            $this-&gt;addToMemoryButton = $this-&gt;createButton(tr(&quot;M+&quot;), $memoryColor, SLOT('addToMemory()'));
+ 
+-            $this-&gt;divisionButton = $this-&gt;createButton(&quot;\367&quot;, SLOT(&quot;multiplicativeOperatorClicked()&quot;));
++            $this-&gt;divisionButton = $this-&gt;createButton(tr(&quot;\367&quot;), $operatorColor, SLOT('multiplicativeOperatorClicked()'));
+ 
+-            $this-&gt;timesButton = $this-&gt;createButton(&quot;\327&quot;, SLOT(&quot;multiplicativeOperatorClicked()&quot;));
+-            $this-&gt;minusButton = $this-&gt;createButton(&quot;-&quot;, SLOT(&quot;additiveOperatorClicked()&quot;));
+-            $this-&gt;plusButton = $this-&gt;createButton(&quot;+&quot;, SLOT(&quot;additiveOperatorClicked()&quot;));
++            $this-&gt;timesButton = $this-&gt;createButton(tr(&quot;\327&quot;), $operatorColor, SLOT('multiplicativeOperatorClicked()'));
++            $this-&gt;minusButton = $this-&gt;createButton(tr(&quot;-&quot;), $operatorColor, SLOT('additiveOperatorClicked()'));
++            $this-&gt;plusButton = $this-&gt;createButton(tr(&quot;+&quot;), $operatorColor, SLOT('additiveOperatorClicked()'));
+ 
+-            $this-&gt;squareRootButton = $this-&gt;createButton(&quot;Sqrt&quot;, SLOT(&quot;unaryOperatorClicked()&quot;));
+-            $this-&gt;powerButton = $this-&gt;createButton(&quot;x\262&quot;, SLOT(&quot;unaryOperatorClicked()&quot;));
+-            $this-&gt;reciprocalButton = $this-&gt;createButton(&quot;1/x&quot;, SLOT(&quot;unaryOperatorClicked()&quot;));
+-            $this-&gt;equalButton = $this-&gt;createButton(&quot;=&quot;, SLOT(&quot;equalClicked()&quot;));
++            $this-&gt;squareRootButton = $this-&gt;createButton(tr(&quot;Sqrt&quot;), $operatorColor, SLOT('unaryOperatorClicked()'));
++            $this-&gt;powerButton = $this-&gt;createButton(tr(&quot;x\262&quot;), $operatorColor, SLOT('unaryOperatorClicked()'));
++            $this-&gt;reciprocalButton = $this-&gt;createButton(tr(&quot;1/x&quot;), $operatorColor, SLOT('unaryOperatorClicked()'));
++            $this-&gt;equalButton = $this-&gt;createButton(tr(&quot;=&quot;), $operatorColor, SLOT('equalClicked()'));
+ 
+-            $this-&gt;mainLayout = new QGridLayout($this);
++            $this-&gt;mainLayout = &amp;new QGridLayout($this);
++            $this-&gt;mainLayout-&gt;setSizeConstraint(QLayout::SetFixedSize);
+ 
+-//            $this-&gt;mainLayout-&gt;setSizeConstraint(&quot;QLayout::SetFixedSize&quot;);
+-
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;display, 0, 0, 1, 6);
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;backspaceButton, 1, 0, 1, 2);
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;clearButton, 1, 2, 1, 2);
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;clearAllButton, 1, 4, 1, 2);
++
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;clearMemoryButton, 2, 0);
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;readMemoryButton, 3, 0);
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;setMemoryButton, 4, 0);
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;addToMemoryButton, 5, 0);
+ 
+-            for ($i = 1; $i &lt; $this-&gt;NumDigitButtons; ++$i) {
+-
++            for ($i = 1; $i &lt; Calculator::NumDigitButtons; ++$i) {
+                     $row = ceil(((8 - ($i+1))) / 3) + 2;
+                     $column = ceil((($i-1) % 3)) + 1;
+-
+                     $this-&gt;mainLayout-&gt;addWidget($this-&gt;digitButtons[$i], (int) $row, (int) $column);
+-
+             }
+ 
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;digitButtons[0], 5, 1);
+@@ -131,28 +138,45 @@
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;timesButton, 3, 4);
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;minusButton, 4, 4);
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;plusButton, 5, 4);
+-                                
++
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;squareRootButton, 2, 5);
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;powerButton, 3, 5);
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;reciprocalButton, 4, 5);
+             $this-&gt;mainLayout-&gt;addWidget($this-&gt;equalButton, 5, 5);
+ 
+             $this-&gt;setLayout($this-&gt;mainLayout);
+-            $this-&gt;setWindowTitle(new QString(&quot;Calculator&quot;));
++            $this-&gt;setWindowTitle(tr(&quot;Calculator&quot;));
+ 
+         }
+ 
+-        function createButton($text, $member)
+-        {
+-            $button = new Button($text);
+-            $this-&gt;connect($button, SIGNAL(&quot;clicked()&quot;), $this, $member);
+-            return $button;
++        function eventFilter($target, $event){
++            if ($target == $display) {
++                if ($event-&gt;type() == QEvent::MouseButtonPress
++                    || $event-&gt;type() == QEvent::MouseButtonDblClick
++                    || $event-&gt;type() == QEvent::MouseButtonRelease
++                    || $event-&gt;type() == QEvent::ContextMenu) {
++
++                    $mouseEvent = &amp;$event;
++                    if ($mouseEvent-&gt;buttons() &amp; Qt::LeftButton) {
++                        $newPalette = $this-&gt;palette();
++                        $newPalette-&gt;setColor(QPalette::Base,
++                            $this-&gt;display-&gt;palette()-&gt;color(QPalette::Text));
++                        $newPalette-&gt;setColor(QPalette::Text,
++                            $this-&gt;display-&gt;palette()-&gt;color(QPalette::Base));
++                        $this-&gt;display-&gt;setPalette($newPalette);
++                    } else {
++                        $this-&gt;display-&gt;setPalette($palette());
++                    }
++                    return true;
++                }
++            }
++            return QDialog::eventFilter($target, $event);
+         }
+ 
+         function digitClicked()
+         {
+ 
+-            $clickedButton = qobject_cast($this-&gt;sender(),new QToolButton());
++            $clickedButton = qobject_cast($this-&gt;sender(), new QToolButton());
+             $digitValue = $clickedButton-&gt;text()-&gt;toInt();
+ 
+             if ($this-&gt;display-&gt;text() == &quot;0&quot; &amp;&amp; $digitValue == 0.0)
+@@ -163,23 +187,15 @@
+                 $this-&gt;waitingForOperand = false;
+             }
+ 
+-            $new_value = new QString();
+-            $display_text = $this-&gt;display-&gt;text();
+-
+-            $number = QString::number($digitValue);
+-
+-            $new_value-&gt;append($display_text);
+-            $new_value-&gt;append($number);
+-
+-            $this-&gt;display-&gt;setText($new_value);
++            $this-&gt;display-&gt;setText($this-&gt;display-&gt;text()-&gt;append(QString::number($digitValue)));
+         }
+ 
+         function unaryOperatorClicked()
+         {
+-            $clickedButton = qobject_cast($this-&gt;sender(), new Button(&quot;&quot;));
++            $clickedButton = qobject_cast($this-&gt;sender(), $this-&gt;pointButton);
+             $clickedOperator = $clickedButton-&gt;text();
+             $operand = $this-&gt;display-&gt;text()-&gt;toDouble();
+-            $result;
++            $result = 0.0;
+ 
+             if ($clickedOperator-&gt;__toString() == &quot;Sqrt&quot;) {
+                 if ($operand &lt; 0.0) {
+@@ -203,9 +219,8 @@
+ 
+         function additiveOperatorClicked()
+         {
+-            $clickedButton = qobject_cast($this-&gt;sender(), new Button(&quot;&quot;));
++            $clickedButton = qobject_cast($this-&gt;sender(), $this-&gt;pointButton);
+             $clickedOperator = $clickedButton-&gt;text();
+-
+             $operand = $this-&gt;display-&gt;text()-&gt;toDouble();
+ 
+             if (!$this-&gt;pendingMultiplicativeOperator-&gt;isEmpty()) {
+@@ -220,7 +235,7 @@
+             }
+ 
+             if (!$this-&gt;pendingAdditiveOperator-&gt;isEmpty()) {
+-                if (!$this-&gt;calculate(operand, $this-&gt;pendingAdditiveOperator)) {
++                if (!$this-&gt;calculate($operand, $this-&gt;pendingAdditiveOperator)) {
+                     $this-&gt;abortOperation();
+                     return;
+                 }
+@@ -236,9 +251,8 @@
+ 
+         function multiplicativeOperatorClicked()
+         {
+-            $clickedButton = qobject_cast($this-&gt;sender(), new Button(&quot;&quot;));
++            $clickedButton = qobject_cast($this-&gt;sender(), $this-&gt;pointButton);
+             $clickedOperator = $clickedButton-&gt;text();
+-
+             $operand = $this-&gt;display-&gt;text()-&gt;toDouble();
+ 
+             if (!$this-&gt;pendingMultiplicativeOperator-&gt;isEmpty()) {
+@@ -285,14 +299,11 @@
+         function pointClicked()
+         {
+             if ($this-&gt;waitingForOperand)
+-                $this-&gt;display-&gt;setText(&quot;0&quot;);
++                $this-&gt;display-&gt;setText(tr(&quot;0&quot;));
+ 
+-            if (!$this-&gt;display-&gt;text()-&gt;contains(&quot;.&quot;)){
+-                $new_value = $this-&gt;display-&gt;text();
+-                $new_value-&gt;append(new QString(&quot;.&quot;));
+-                $this-&gt;display-&gt;setText($new_value);
+-                
+-            }
++            if (!$this-&gt;display-&gt;text()-&gt;contains(tr(&quot;.&quot;)))
++                $this-&gt;display-&gt;setText($this-&gt;display-&gt;text()-&gt;append(tr(&quot;.&quot;)));
++
+             $this-&gt;waitingForOperand = false;
+         }
+ 
+@@ -302,7 +313,7 @@
+             $value = $text-&gt;toDouble();
+ 
+             if ($value &gt; 0.0) {
+-                $text-&gt;prepend(new QString(&quot;-&quot;));
++                $text-&gt;prepend(tr(&quot;-&quot;));
+             } else if ($value &lt; 0.0) {
+                 $text-&gt;remove(0, 1);
+             }
+@@ -317,7 +328,7 @@
+             $text = $this-&gt;display-&gt;text();
+             $text-&gt;chop(1);
+             if ($text-&gt;isEmpty()) {
+-                $text = &quot;0&quot;;
++                $text = tr(&quot;0&quot;);
+                 $this-&gt;waitingForOperand = true;
+             }
+             $this-&gt;display-&gt;setText($text);
+@@ -328,7 +339,7 @@
+             if ($this-&gt;waitingForOperand)
+                 return;
+ 
+-            $this-&gt;display-&gt;setText(&quot;0&quot;);
++            $this-&gt;display-&gt;setText(tr(&quot;0&quot;));
+             $this-&gt;waitingForOperand = true;
+         }
+ 
+@@ -338,7 +349,7 @@
+             $this-&gt;factorSoFar = 0.0;
+             $this-&gt;pendingAdditiveOperator-&gt;clear();
+             $this-&gt;pendingMultiplicativeOperator-&gt;clear();
+-            $this-&gt;display-&gt;setText(&quot;0&quot;);
++            $this-&gt;display-&gt;setText(tr(&quot;0&quot;));
+             $this-&gt;waitingForOperand = true;
+         }
+ 
+@@ -346,7 +357,7 @@
+         {
+             $this-&gt;sumInMemory = 0.0;
+         }
+-                    
++
+         function read_Memory()
+         {
+             $this-&gt;display-&gt;setText(QString::number($this-&gt;sumInMemory));
+@@ -358,17 +369,24 @@
+             $this-&gt;equalClicked();
+             $this-&gt;sumInMemory = $this-&gt;display-&gt;text()-&gt;toDouble();
+         }
+-                            
++
+         function addToMemory()
+         {
+             $this-&gt;equalClicked();
+             $this-&gt;sumInMemory += $this-&gt;display-&gt;text()-&gt;toDouble();
+         }
+ 
++        function createButton($text, &amp;$color, $member)
++        {
++            $button = new Button($text, &amp;$color);
++            $this-&gt;connect($button, SIGNAL('clicked()'), $this, $member);
++            return $button;
++        }
++
+         function abortOperation()
+         {
+             $this-&gt;clearAll();
+-            $this-&gt;display-&gt;setText($this-&gt;tr(&quot;####&quot;));
++            $this-&gt;display-&gt;setText(tr(&quot;####&quot;));
+         }
+ 
+         function calculate($rightOperand, $pendingOperator)
+
+Modified: trunk/examples/calculator/main.php
+===================================================================
+--- trunk/examples/calculator/main.php	2006-11-18 12:51:03 UTC (rev 286)
++++ trunk/examples/calculator/main.php	2006-11-18 15:19:26 UTC (rev 287)
+@@ -1,9 +1,11 @@
+ &lt;?php
++
+     /****************************************************************
+     **
+     ** Qt Calculator
+     **
+-    ** <A HREF="http://doc.trolltech.com/4.0/widgets-calculator.html">http://doc.trolltech.com/4.0/widgets-calculator.html</A>
++    ** original:
++    ** <A HREF="http://doc.trolltech.com/4.1/widgets-calculator.html">http://doc.trolltech.com/4.1/widgets-calculator.html</A>
+     **
+     ****************************************************************/
+ 
+@@ -13,7 +15,7 @@
+ 
+     require_once('calculator.php');
+ 
+-    $app = new QApplication($argc,$argv);
++    $app = new QApplication(&amp;$argc,$argv);
+ 
+     $calc = new Calculator();
+     $calc-&gt;show();
+
+Modified: trunk/tutorials/t1/main.php
+===================================================================
+--- trunk/tutorials/t1/main.php	2006-11-18 12:51:03 UTC (rev 286)
++++ trunk/tutorials/t1/main.php	2006-11-18 15:19:26 UTC (rev 287)
+@@ -1,23 +1,24 @@
+ &lt;?php
+-    /****************************************************************
+-     **
+-     ** Qt tutorial 1
+-     **
+-     ** <A HREF="http://doc.trolltech.com/4.0/tutorial-t1.html">http://doc.trolltech.com/4.0/tutorial-t1.html</A>
+-     **
+-     ****************************************************************/
+ 
++	/****************************************************************
++	**
++	** Qt tutorial 1
++	**
++	** original:
++	** <A HREF="http://doc.trolltech.com/4.1/tutorial-t1.html">http://doc.trolltech.com/4.1/tutorial-t1.html</A>
++	**
++	****************************************************************/
++
+ 	if(!extension_loaded('php_qt')) {
+ 		dl('php_qt.' . PHP_SHLIB_SUFFIX);
+ 	}
+ 
++	$app = new QApplication(&amp;$argc,$argv);
++	
++	$hello = new QPushButton(&quot;Hello world!&quot;);
++	$hello-&gt;resize(100, 30);
++	
++	$hello-&gt;show();
++	$app-&gt;exec();
+ 
+-    $app = new QApplication($argc,$argv);
+-
+-    $hello = new QPushButton(&quot;Hello world!&quot;);
+-//    hello.resize(100, 30);
+-
+-    $hello-&gt;show();
+-    $app-&gt;exec();
+-
+ ?&gt;
+
+Modified: trunk/tutorials/t2/main.php
+===================================================================
+--- trunk/tutorials/t2/main.php	2006-11-18 12:51:03 UTC (rev 286)
++++ trunk/tutorials/t2/main.php	2006-11-18 15:19:26 UTC (rev 287)
+@@ -4,27 +4,24 @@
+     **
+     ** Qt tutorial 2
+     **
+-    ** <A HREF="http://doc.trolltech.com/4.0/tutorial-t2.html">http://doc.trolltech.com/4.0/tutorial-t2.html</A>
++    ** original:
++    ** <A HREF="http://doc.trolltech.com/4.1/tutorial-t2.html">http://doc.trolltech.com/4.1/tutorial-t2.html</A>
+     **
+     ****************************************************************/
+-                
++
+ 	if(!extension_loaded('php_qt')) {
+ 		dl('php_qt.' . PHP_SHLIB_SUFFIX);
+ 	}
+ 
++    $app = new QApplication(&amp;$argc,$argv);
+ 
+-    $app = new QApplication($argc,$argv);
+-
+     $quit = new QPushButton(&quot;Quit&quot;);
+-
+     $quit-&gt;resize(75,30);
+-//    $quit-&gt;setFont();
++    $quit-&gt;setFont(new QFont(&quot;Times&quot;, 18, QFont::Bold));
+ 
+-//    QObject::connect($quit,SIGNAL(&quot;clicked()&quot;),$app,SLOT(&quot;quit()&quot;));
+-    $quit-&gt;connect($quit,SIGNAL(&quot;clicked()&quot;),$app,SLOT(&quot;quit()&quot;));
++    QObject::connect($quit,SIGNAL('clicked()'),$app,SLOT('quit()'));
+ 
+     $quit-&gt;show();
+-
+     $app-&gt;exec();
+ 
+ ?&gt;
+
+Modified: trunk/tutorials/t3/main.php
+===================================================================
+--- trunk/tutorials/t3/main.php	2006-11-18 12:51:03 UTC (rev 286)
++++ trunk/tutorials/t3/main.php	2006-11-18 15:19:26 UTC (rev 287)
+@@ -4,29 +4,27 @@
+     **
+     ** Qt tutorial 3
+     **
+-    ** <A HREF="http://doc.trolltech.com/4.0/tutorial-t3.html">http://doc.trolltech.com/4.0/tutorial-t3.html</A>
++    ** original:
++    ** <A HREF="http://doc.trolltech.com/4.1/tutorial-t3.html">http://doc.trolltech.com/4.1/tutorial-t3.html</A>
+     **
+     ****************************************************************/
+-                
++
+ 	if(!extension_loaded('php_qt')) {
+ 		dl('php_qt.' . PHP_SHLIB_SUFFIX);
+ 	}
+ 
++    $app = new QApplication(&amp;$argc,$argv);
+ 
+-    $app = new QApplication($argc,$argv);
+-
+     $window = new QWidget();
+     $window-&gt;resize(200,120);
+ 
+-    $quit = new QPushButton(&quot;Quit&quot;, $window);
+-//    $quit-&gt;setFont();
++    $quit = new QPushButton(&quot;Quit&quot;, &amp;$window);
++    $quit-&gt;setFont(new QFont(&quot;Times&quot;, 18, QFont::Bold));
+     $quit-&gt;setGeometry(10, 40, 180, 40);
+ 
+-//    QObject::connect($quit,SIGNAL(&quot;clicked()&quot;),$app,SLOT(&quot;quit()&quot;));
+-    $quit-&gt;connect($quit,SIGNAL(&quot;clicked()&quot;),$app,SLOT(&quot;quit()&quot;));
++    QObject::connect(&amp;$quit,SIGNAL('clicked()'), &amp;$app, SLOT('quit()'));
+ 
+     $window-&gt;show();
+-
+     $app-&gt;exec();
+ 
+ ?&gt;
+
+Modified: trunk/tutorials/t4/main.php
+===================================================================
+--- trunk/tutorials/t4/main.php	2006-11-18 12:51:03 UTC (rev 286)
++++ trunk/tutorials/t4/main.php	2006-11-18 15:19:26 UTC (rev 287)
+@@ -4,46 +4,39 @@
+     **
+     ** Qt tutorial 4
+     **
+-    ** <A HREF="http://doc.trolltech.com/4.0/tutorial-t4.html">http://doc.trolltech.com/4.0/tutorial-t4.html</A>
++    ** original:
++    ** <A HREF="http://doc.trolltech.com/4.1/tutorial-t4.html">http://doc.trolltech.com/4.1/tutorial-t4.html</A>
+     **
+     ****************************************************************/
+-                
++
+ 	if(!extension_loaded('php_qt')) {
+ 		dl('php_qt.' . PHP_SHLIB_SUFFIX);
+ 	}
+ 
+     class MyWidget extends QWidget
+     {
+-    
+-        public $quit;
+ 
++        private $quit;
++
+         function __construct()
+         {
++            parent::__construct();
+ 
+-			parent::__construct();
+-
+             $this-&gt;setFixedSize(200, 120);
+ 
+-            $this-&gt;quit = new QPushButton(&quot;Quit&quot;, $this);
++            $this-&gt;quit = new QPushButton(tr(&quot;Quit&quot;), $this);
+             $this-&gt;quit-&gt;setGeometry(62, 40, 75, 30);
+-//            $quit-&gt;setFont();
++            $this-&gt;quit-&gt;setFont(new QFont(&quot;Times&quot;, 18, QFont::Bold));
+ 
+             /* the macro qApp is not available in php-qt, we use QApplication::instance() directly. */
+-
+-            $this-&gt;connect($this-&gt;quit, SIGNAL(&quot;clicked()&quot;), QApplication::instance(), SLOT(&quot;quit()&quot;));
+-
+-
+-
++            $this-&gt;connect($this-&gt;quit, SIGNAL('clicked()'), QApplication::instance(), SLOT('quit()'));
+         }
+-    
++
+     }
+ 
+-    $app = new QApplication($argc,$argv);
+-
++    $app = new QApplication(&amp;$argc,$argv);
+     $widget = new MyWidget();
+-
+     $widget-&gt;show();
+-
+     $app-&gt;exec();
+ 
+ ?&gt;
+
+Modified: trunk/tutorials/t5/main.php
+===================================================================
+--- trunk/tutorials/t5/main.php	2006-11-18 12:51:03 UTC (rev 286)
++++ trunk/tutorials/t5/main.php	2006-11-18 15:19:26 UTC (rev 287)
+@@ -1,9 +1,11 @@
+ &lt;?php
++
+     /****************************************************************
+     **
+     ** Qt tutorial 5
+     **
+-    ** <A HREF="http://doc.trolltech.com/4.0/tutorial-t5.html">http://doc.trolltech.com/4.0/tutorial-t5.html</A>
++    ** original:
++    ** <A HREF="http://doc.trolltech.com/4.1/tutorial-t5.html">http://doc.trolltech.com/4.1/tutorial-t5.html</A>
+     **
+     ****************************************************************/
+ 
+@@ -14,40 +16,38 @@
+     class MyWidget extends QWidget
+     {
+ 
+-        public $quit;
+-        public $slider;
+-        public $layout;
+-        public $lcd;
++        private $quit;
++        private $slider;
++        private $layout;
++        private $lcd;
+ 
+-        function __construct(){
++        function __construct()
++        {
++            parent::__construct();
+ 
+-			parent::__construct();
++            $this-&gt;quit = new QPushButton(tr(&quot;Quit&quot;));
++            $this-&gt;quit-&gt;setFont(new QFont(&quot;Times&quot;, 18, QFont::Bold));
+ 
+-            $this-&gt;quit = new QPushButton(&quot;Quit&quot;, $this);
+-//            $this-&gt;quit-&gt;setFont(QFont(&quot;Times&quot;, 18, QFont::Bold));
++            $this-&gt;lcd = new QLCDNumber(2);
++            $this-&gt;lcd-&gt;setSegmentStyle(QLCDNumber::Filled);
+ 
+-            $this-&gt;lcd = new QLCDNumber(2,$this);
+-
+-            $this-&gt;slider = new QSlider($this);
+-            $this-&gt;slider-&gt;setOrientation(Qt::Horizontal);
++            $this-&gt;slider = new QSlider(Qt::Horizontal);
+             $this-&gt;slider-&gt;setRange(0, 99);
+             $this-&gt;slider-&gt;setValue(0);
+ 
+-            $this-&gt;connect($this-&gt;quit, SIGNAL(&quot;clicked()&quot;), QApplication::instance(), SLOT(&quot;quit()&quot;));
+-            $this-&gt;connect($this-&gt;slider, SIGNAL(&quot;valueChanged(int)&quot;),$this-&gt;lcd, SLOT(&quot;display(int)&quot;));
++            $this-&gt;connect($this-&gt;quit, SIGNAL('clicked()'), QApplication::instance(), SLOT('quit()'));
++            $this-&gt;connect($this-&gt;slider, SIGNAL('valueChanged(int)'),$this-&gt;lcd, SLOT('display(int)'));
+ 
+-            $this-&gt;layout = new QVBoxLayout($this);
+-
++            $this-&gt;layout = new QVBoxLayout();
+             $this-&gt;layout-&gt;addWidget($this-&gt;quit);
+             $this-&gt;layout-&gt;addWidget($this-&gt;lcd);
+             $this-&gt;layout-&gt;addWidget($this-&gt;slider);
+             $this-&gt;setLayout($this-&gt;layout);
+-
+         }
+     }
+ 
+ 
+-    $app = new QApplication($argc,$argv);
++    $app = new QApplication(&amp;$argc,$argv);
+     $widget = new MyWidget();
+     $widget-&gt;show();
+ 
+
+Modified: trunk/tutorials/t6/main.php
+===================================================================
+--- trunk/tutorials/t6/main.php	2006-11-18 12:51:03 UTC (rev 286)
++++ trunk/tutorials/t6/main.php	2006-11-18 15:19:26 UTC (rev 287)
+@@ -1,9 +1,11 @@
+ &lt;?php
++
+     /****************************************************************
+     **
+     ** Qt tutorial 6
+     **
+-    ** <A HREF="http://doc.trolltech.com/4.0/tutorial-t6.html">http://doc.trolltech.com/4.0/tutorial-t6.html</A>
++    ** original:
++    ** <A HREF="http://doc.trolltech.com/4.1/tutorial-t6.html">http://doc.trolltech.com/4.1/tutorial-t6.html</A>
+     **
+     ****************************************************************/
+ 
+@@ -13,43 +15,43 @@
+ 
+     class LCDRange extends QWidget
+     {
+-        var $lcd;
+-        var $slider;
+-        var $layout;
++        private $lcd;
++        private $slider;
++        private $layout;
+ 
+-        function __construct(){
+-
++        function __construct()
++        {
+             parent::__construct();
+ 
+-            $this-&gt;lcd = new QLCDNumber(2,$this);
+-            $this-&gt;slider = new QSlider($this);
+-            $this-&gt;slider-&gt;setOrientation(Qt::Horizontal);
++            $this-&gt;lcd = new QLCDNumber(2);
++            $this-&gt;lcd-&gt;setSegmentStyle(QLCDNumber::Filled);
++
++            $this-&gt;slider = new QSlider(Qt::Horizontal);
+             $this-&gt;slider-&gt;setRange(0, 99);
+             $this-&gt;slider-&gt;setValue(0);
+-            $this-&gt;connect($this-&gt;slider, SIGNAL(&quot;valueChanged(int)&quot;),
+-                    $this-&gt;lcd, SLOT(&quot;display(int)&quot;));
+-    
+-            $this-&gt;layout = new QVBoxLayout($this);
++            $this-&gt;connect($this-&gt;slider, SIGNAL('valueChanged(int)'),
++                    $this-&gt;lcd, SLOT('display(int)'));
++
++            $this-&gt;layout = new QVBoxLayout();
+             $this-&gt;layout-&gt;addWidget($this-&gt;lcd);
+             $this-&gt;layout-&gt;addWidget($this-&gt;slider);
+             $this-&gt;setLayout($this-&gt;layout);
+         }
+-
+     };
+ 
+     class MyWidget extends QWidget
+     {
+-        var $quit;
+-        var $grid;
+-        var $layout;
++        private $quit;
++        private $grid;
++        private $layout;
+ 
+-        function __construct(){
+-
++        function __construct()
++        {
+             parent::__construct();
+ 
+-            $this-&gt;quit = new QPushButton(&quot;Quit&quot;);
+-    //        $this-&gt;quit-&gt;setFont(QFont(&quot;Times&quot;, 18, QFont::Bold));
+-            $this-&gt;connect($this-&gt;quit, SIGNAL(&quot;clicked()&quot;), QApplication::instance(), SLOT(&quot;quit()&quot;));
++            $this-&gt;quit = new QPushButton(tr(&quot;Quit&quot;));
++            $this-&gt;quit-&gt;setFont(new QFont(&quot;Times&quot;, 18, QFont::Bold));
++            $this-&gt;connect($this-&gt;quit, SIGNAL('clicked()'), QApplication::instance(), SLOT('quit()'));
+ 
+             $this-&gt;grid = new QGridLayout();
+             for ($row = 0; $row &lt; 4; ++$row) {
+@@ -58,14 +60,14 @@
+                 }
+             }
+ 
+-            $this-&gt;layout = new QVBoxLayout($this);
++            $this-&gt;layout = new QVBoxLayout();
+             $this-&gt;layout-&gt;addWidget($this-&gt;quit);
+-            $this-&gt;layout-&gt;addLayout($this-&gt;grid,0);
++            $this-&gt;layout-&gt;addLayout($this-&gt;grid);
+             $this-&gt;setLayout($this-&gt;layout);
+         }
+     }
+ 
+-    $app = new QApplication($argc,$argv);
++    $app = new QApplication(&amp;$argc,$argv);
+     $widget = new MyWidget();
+     $widget-&gt;show();
+     $app-&gt;exec();
+
+Modified: trunk/tutorials/t7/main.php
+===================================================================
+--- trunk/tutorials/t7/main.php	2006-11-18 12:51:03 UTC (rev 286)
++++ trunk/tutorials/t7/main.php	2006-11-18 15:19:26 UTC (rev 287)
+@@ -1,9 +1,11 @@
+ &lt;?php
++
+     /****************************************************************
+     **
+     ** Qt tutorial 7
+     **
+-    ** <A HREF="http://doc.trolltech.com/4.0/tutorial-t6.html">http://doc.trolltech.com/4.0/tutorial-t6.html</A>
++    ** original:
++    ** <A HREF="http://doc.trolltech.com/4.1/tutorial-t7.html">http://doc.trolltech.com/4.1/tutorial-t7.html</A>
+     **
+     ****************************************************************/
+ 
+@@ -13,78 +15,79 @@
+ 
+     class LCDRange extends QWidget
+     {
+-        var $lcd;
+-        var $slider;
+-        var $layout;
++        private $lcd;
++        private $slider;
++        private $layout;
+ 
+-        var $slots = array(&quot;setValue(int)&quot;);
+-        var $signals = array(&quot;valueChanged(int)&quot;);
++        private $slots = array(&quot;setValue(int)&quot;);
++        private $signals = array(&quot;valueChanged(int)&quot;);
+ 
+-        function __construct(){
+-
++        function __construct()
++        {
+             parent::__construct();
+ 
+-            $this-&gt;lcd = new QLCDNumber(2,$this);
+-            $this-&gt;slider = new QSlider($this);
++            $this-&gt;lcd = new QLCDNumber(2);
++            $this-&gt;lcd-&gt;setSegmentStyle(QLCDNumber::Filled);
+ 
+-            $this-&gt;slider-&gt;setOrientation(Qt::Horizontal);
++            $this-&gt;slider = new QSlider(Qt::Horizontal);
+             $this-&gt;slider-&gt;setRange(0, 99);
+             $this-&gt;slider-&gt;setValue(0);
+ 
+-            $this-&gt;connect($this-&gt;slider, SIGNAL(&quot;valueChanged(int)&quot;),
+-                    $this-&gt;lcd, SLOT(&quot;display(int)&quot;));
++            $this-&gt;connect($this-&gt;slider, SIGNAL('valueChanged(int)'),
++                    $this-&gt;lcd, SLOT('display(int)'));
++            $this-&gt;connect($this-&gt;slider, SIGNAL('valueChanged(int)'),
++                    $this,SIGNAL('valueChanged(int)'));
+ 
+-            $this-&gt;connect($this-&gt;slider, SIGNAL(&quot;valueChanged(int)&quot;),
+-                    $this,SIGNAL(&quot;valueChanged(int)&quot;));
+-
+-            $this-&gt;layout = new QVBoxLayout($this);
++            $this-&gt;layout = new QVBoxLayout();
+             $this-&gt;layout-&gt;addWidget($this-&gt;lcd);
+             $this-&gt;layout-&gt;addWidget($this-&gt;slider);
+             $this-&gt;setLayout($this-&gt;layout);
+         }
+ 
++        function value(){
++            return $this-&gt;slider-&gt;value();
++        }
++
+         function setValue($value){
+             $this-&gt;slider-&gt;setValue($value);
+         }
+-
+     };
+ 
+     class MyWidget extends QWidget
+     {
+-        var $quit;
+-        var $grid;
+-        var $layout;
++        private $quit;
++        private $grid;
++        private $layout;
+ 
+-        function __construct(){
+-
++        function __construct()
++        {
+             parent::__construct();
+ 
+-            $this-&gt;quit = new QPushButton(&quot;Quit&quot;);
+-            $this-&gt;quit-&gt;setFont(new QFont(&quot;Times&quot;, 18, 1));
+-            $this-&gt;connect($this-&gt;quit, SIGNAL(&quot;clicked()&quot;), QApplication::instance(), SLOT(&quot;quit()&quot;));
++            $this-&gt;quit = new QPushButton(tr(&quot;Quit&quot;));
++            $this-&gt;quit-&gt;setFont(new QFont(&quot;Times&quot;, 18, QFont::Bold));
++            $this-&gt;connect($this-&gt;quit, SIGNAL('clicked()'), QApplication::instance(), SLOT('quit()'));
+ 
+-
+             $this-&gt;grid = new QGridLayout();
+             for ($row = 0; $row &lt; 3; ++$row) {
+                 for ($column = 0; $column &lt; 3; ++$column) {
+                     $lcdRange = new LCDRange();
+                     $this-&gt;grid-&gt;addWidget($lcdRange, $row, $column);
+                     if($previousRange)
+-                        $this-&gt;connect($lcdRange, SIGNAL(&quot;valueChanged(int)&quot;), $previousRange, SLOT(&quot;setValue(int)&quot;));
++                        $this-&gt;connect($lcdRange, SIGNAL('valueChanged(int)'), $previousRange, SLOT('setValue(int)'));
+                     $previousRange = $lcdRange;
+                 }
+ 
+             }
+ 
+-            $this-&gt;layout = new QVBoxLayout($this);
++            $this-&gt;layout = new QVBoxLayout();
+             $this-&gt;layout-&gt;addWidget($this-&gt;quit);
+-            $this-&gt;layout-&gt;addLayout($this-&gt;grid,0);
++            $this-&gt;layout-&gt;addLayout($this-&gt;grid);
+             $this-&gt;setLayout($this-&gt;layout);
+         }
+     }
+ 
+-    $app = new QApplication($argc,$argv);
+-echo &quot;argv&quot;;
++    $app = new QApplication(&amp;$argc,$argv);
++
+     $widget = new MyWidget();
+     $widget-&gt;show();
+     $app-&gt;exec();
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000130.html">[Php-qt-svn] r286 - in trunk: . qt
+</A></li>
+	<LI>Next message: <A HREF="000132.html">[Php-qt-svn] r288 - trunk/qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#131">[ date ]</a>
+              <a href="thread.html#131">[ thread ]</a>
+              <a href="subject.html#131">[ subject ]</a>
+              <a href="author.html#131">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

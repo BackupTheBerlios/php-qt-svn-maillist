@@ -1,0 +1,328 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r291 - in trunk: . cmake cmake/modules
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-February/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r291%20-%20in%20trunk%3A%20.%20cmake%20cmake/modules&In-Reply-To=%3C200702192135.l1JLZeMf027959%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000134.html">
+   <LINK REL="Next"  HREF="000136.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r291 - in trunk: . cmake cmake/modules</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r291%20-%20in%20trunk%3A%20.%20cmake%20cmake/modules&In-Reply-To=%3C200702192135.l1JLZeMf027959%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r291 - in trunk: . cmake cmake/modules">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Mon Feb 19 22:35:40 CET 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000134.html">[Php-qt-svn] r290 - in trunk: . kalyptus php_qt smoke smoke/kde	smoke/qt
+</A></li>
+        <LI>Next message: <A HREF="000136.html">[Php-qt-svn] r292 - trunk/smoke/qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#135">[ date ]</a>
+              <a href="thread.html#135">[ thread ]</a>
+              <a href="subject.html#135">[ subject ]</a>
+              <a href="author.html#135">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2007-02-19 22:35:39 +0100 (Mon, 19 Feb 2007)
+New Revision: 291
+
+Added:
+   trunk/cmake/
+   trunk/cmake/modules/
+   trunk/cmake/modules/FindPHP5.cmake
+   trunk/cmake/modules/FindQScintilla.cmake
+   trunk/cmake/modules/FindQwt.cmake
+Log:
+added cmake modules.
+
+Added: trunk/cmake/modules/FindPHP5.cmake
+===================================================================
+--- trunk/cmake/modules/FindPHP5.cmake	2007-02-19 21:34:59 UTC (rev 290)
++++ trunk/cmake/modules/FindPHP5.cmake	2007-02-19 21:35:39 UTC (rev 291)
+@@ -0,0 +1,119 @@
++# - Find PHP5
++# This module finds if PHP5 is installed and determines where the include files
++# and libraries are. It also determines what the name of the library is. This
++# code sets the following variables:
++#
++#  PHP5_INCLUDE_PATH       = path to where php.h can be found
++#  PHP5_EXECUTABLE         = full path to the php4 binary
++#
++#  file is derived from FindPHP4.cmake
++#
++
++SET(PHP5_FOUND &quot;NO&quot;)
++
++SET(PHP5_POSSIBLE_INCLUDE_PATHS
++  /usr/include/php5
++  /usr/local/include/php5
++  /usr/include/php
++  /usr/local/include/php
++  /usr/local/apache/php
++  )
++
++SET(PHP5_POSSIBLE_LIB_PATHS
++  /usr/lib
++  )
++
++#FIND_PATH(PHP5_FOUND_INCLUDE_PATH main/php.h
++#  ${PHP5_POSSIBLE_INCLUDE_PATHS})
++#
++#IF(PHP5_FOUND_INCLUDE_PATH)
++#  SET(php5_paths &quot;${PHP5_POSSIBLE_INCLUDE_PATHS}&quot;)
++#  FOREACH(php5_path Zend main TSRM)
++#    SET(php5_paths ${php5_paths} &quot;${PHP5_FOUND_INCLUDE_PATH}/${php5_path}&quot;)
++#  ENDFOREACH(php5_path Zend main TSRM)
++#  SET(PHP5_INCLUDE_PATH &quot;${php5_paths}&quot; INTERNAL &quot;PHP5 include paths&quot;)
++#ENDIF(PHP5_FOUND_INCLUDE_PATH)
++
++FIND_PROGRAM(PHP5_EXECUTABLE
++  NAMES php5 php
++  PATHS
++  /usr/bin
++  /usr/local/bin
++  )
++
++MARK_AS_ADVANCED(
++  PHP5_EXECUTABLE
++  PHP5_FOUND_INCLUDE_PATH
++  )
++
++IF(APPLE)
++# this is a hack for now
++  SET(CMAKE_SHARED_MODULE_CREATE_C_FLAGS 
++   &quot;${CMAKE_SHARED_MODULE_CREATE_C_FLAGS} -Wl,-flat_namespace&quot;)
++  FOREACH(symbol
++    __efree
++    __emalloc
++    __estrdup
++    __object_init_ex
++    __zend_get_parameters_array_ex
++    __zend_list_find
++    __zval_copy_ctor
++    _add_property_zval_ex
++    _alloc_globals
++    _compiler_globals
++    _convert_to_double
++    _convert_to_long
++    _zend_error
++    _zend_hash_find
++    _zend_register_internal_class_ex
++    _zend_register_list_destructors_ex
++    _zend_register_resource
++    _zend_rsrc_list_get_rsrc_type
++    _zend_wrong_param_count
++    _zval_used_for_init
++    )
++    SET(CMAKE_SHARED_MODULE_CREATE_C_FLAGS 
++      &quot;${CMAKE_SHARED_MODULE_CREATE_C_FLAGS},-U,${symbol}&quot;)
++  ENDFOREACH(symbol)
++ENDIF(APPLE)
++
++
++FIND_PROGRAM(PHP5_CONFIG_EXECUTABLE
++  NAMES php5-config php-config
++  PATHS
++  /usr/bin
++  /usr/local/bin
++  )
++
++EXECUTE_PROCESS(COMMAND ${PHP5_CONFIG_EXECUTABLE} --version
++   OUTPUT_VARIABLE PHP5_VERSION)
++
++EXECUTE_PROCESS(COMMAND ${PHP5_CONFIG_EXECUTABLE} --extension-dir
++   OUTPUT_VARIABLE PHP5_EXTENSION_DIR)
++STRING(REPLACE &quot;\n&quot; &quot;&quot; PHP5_EXTENSION_DIR &quot;${PHP5_EXTENSION_DIR}&quot;)
++
++EXECUTE_PROCESS(COMMAND ${PHP5_CONFIG_EXECUTABLE} --includes
++   OUTPUT_VARIABLE PHP5_INCLUDES)
++STRING(REPLACE &quot;-I&quot; &quot;;&quot; PHP5_INCLUDES &quot;${PHP5_INCLUDES}&quot;)
++STRING(REPLACE &quot; &quot; &quot;&quot; PHP5_INCLUDES &quot;${PHP5_INCLUDES}&quot;)
++LIST(GET PHP5_INCLUDES 0 PHP5_INCLUDE_DIR)
++
++set(PHP5_MAIN_INCLUDE_DIR ${PHP5_INCLUDE_DIR}/main)
++set(PHP5_TSRM_INCLUDE_DIR ${PHP5_INCLUDE_DIR}/TSRM)
++set(PHP5_ZEND_INCLUDE_DIR ${PHP5_INCLUDE_DIR}/Zend)
++set(PHP5_REGEX_INCLUDE_DIR ${PHP5_INCLUDE_DIR}/regex)
++set(PHP5_EXT_INCLUDE_DIR ${PHP5_INCLUDE_DIR}/ext)
++set(PHP5_DATE_INCLUDE_DIR ${PHP5_INCLUDE_DIR}/ext/date/lib)
++set(PHP5_STANDARD_INCLUDE_DIR ${PHP5_INCLUDE_DIR}/ext/standard)
++
++MESSAGE(STATUS ${PHP5_MAIN_INCLUDE_DIR})
++
++IF(PHP5_VERSION LESS 5)
++    MESSAGE(FATAL_ERROR &quot;PHP version is not 5 or later&quot;)
++ENDIF(PHP5_VERSION LESS 5)
++
++IF(PHP5_EXECUTABLE AND PHP5_INCLUDES)
++    set(PHP5_FOUND &quot;yes&quot;)
++    MESSAGE(STATUS &quot;Found PHP5-Version ${PHP5_VERSION}&quot;)
++ENDIF(PHP5_EXECUTABLE AND PHP5_INCLUDES)
++
+
+Added: trunk/cmake/modules/FindQScintilla.cmake
+===================================================================
+--- trunk/cmake/modules/FindQScintilla.cmake	2007-02-19 21:34:59 UTC (rev 290)
++++ trunk/cmake/modules/FindQScintilla.cmake	2007-02-19 21:35:39 UTC (rev 291)
+@@ -0,0 +1,57 @@
++# - Try to find the QScintilla2 includes and library
++# which defines
++#
++# QSCINTILLA_FOUND - system has QScintilla2
++# QSCINTILLA_INCLUDE_DIR - where to find qextscintilla.h
++# QSCINTILLA_LIBRARIES - the libraries to link against to use QScintilla
++# QSCINTILLA_LIBRARY - where to find the QScintilla library (not for general use)
++
++# copyright (c) 2007 Thomas Moenicke <A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">thomas.moenicke at kdemail.net</A>
++#
++# Redistribution and use is allowed according to the terms of the BSD license.
++
++IF(NOT QT4_FOUND)
++    INCLUDE(FindQt4)
++ENDIF(NOT QT4_FOUND)
++
++SET(QSCINTILLA_FOUND &quot;NO&quot;)
++
++IF(QT4_FOUND)
++    FIND_PATH(QSCINTILLA_INCLUDE_DIR qsciglobal.h
++    &quot;${QT_INCLUDE_DIR}/Qsci&quot;
++    )
++
++    SET(QSCINTILLA_NAMES ${QSCINTILLA_NAMES} qscintilla2 libqscintilla2)
++    FIND_LIBRARY(QSCINTILLA_LIBRARY
++        NAMES ${QSCINTILLA_NAMES}
++        PATHS ${QT_LIBRARY_DIR}
++    )
++
++    IF (QSCINTILLA_LIBRARY)
++
++        SET(QSCINTILLA_LIBRARIES ${QSCINTILLA_LIBRARY})
++        SET(QSCINTILLA_FOUND &quot;YES&quot;)
++
++        IF (CYGWIN)
++            IF(BUILD_SHARED_LIBS)
++            # No need to define QSCINTILLA_USE_DLL here, because it's default for Cygwin.
++            ELSE(BUILD_SHARED_LIBS)
++            SET (QSCINTILLA_DEFINITIONS -DQSCINTILLA_STATIC)
++            ENDIF(BUILD_SHARED_LIBS)
++        ENDIF (CYGWIN)
++
++    ENDIF (QSCINTILLA_LIBRARY)
++ENDIF(QT4_FOUND)
++
++IF (QSCINTILLA_FOUND)
++  IF (NOT QSCINTILLA_FIND_QUIETLY)
++    MESSAGE(STATUS &quot;Found QScintilla2: ${QSCINTILLA_LIBRARY}&quot;)
++  ENDIF (NOT QSCINTILLA_FIND_QUIETLY)
++ELSE (QSCINTILLA_FOUND)
++  IF (QSCINTILLA_FIND_REQUIRED)
++    MESSAGE(FATAL_ERROR &quot;Could not find QScintilla library&quot;)
++  ENDIF (QSCINTILLA_FIND_REQUIRED)
++ENDIF (QSCINTILLA_FOUND)
++
++MARK_AS_ADVANCED(QSCINTILLA_INCLUDE_DIR QSCINTILLA_LIBRARY)
++
+
+Added: trunk/cmake/modules/FindQwt.cmake
+===================================================================
+--- trunk/cmake/modules/FindQwt.cmake	2007-02-19 21:34:59 UTC (rev 290)
++++ trunk/cmake/modules/FindQwt.cmake	2007-02-19 21:35:39 UTC (rev 291)
+@@ -0,0 +1,60 @@
++# - Try to find the Qwt includes and library
++# which defines
++#
++# QWT_FOUND - system has Qwt
++# QWT_INCLUDE_DIR - where to find qwt.h
++# QWT_LIBRARIES - the libraries to link against to use Qwt
++# QWT_LIBRARY - where to find the Qwt library (not for general use)
++
++# copyright (c) 2006 Thomas Moenicke <A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">thomas.moenicke at kdemail.net</A>
++#
++# Redistribution and use is allowed according to the terms of the BSD license.
++
++IF(NOT QT4_FOUND)
++    INCLUDE(FindQt4)
++ENDIF(NOT QT4_FOUND)
++
++SET(QWT_FOUND &quot;NO&quot;)
++
++IF(QT4_FOUND)
++    FIND_PATH(QWT_INCLUDE_DIR qwt.h
++    /usr/local/qwt/include
++    /usr/local/include
++    /usr/include/qwt
++    /usr/include
++    )
++
++    SET(QWT_NAMES ${QWT_NAMES} qwt libqwt)
++    FIND_LIBRARY(QWT_LIBRARY
++        NAMES ${QWT_NAMES}
++        PATHS /usr/local/qwt/lib /usr/local/lib /usr/lib
++    )
++
++    IF (QWT_LIBRARY)
++
++        SET(QWT_LIBRARIES ${QWT_LIBRARY})
++        SET(QWT_FOUND &quot;YES&quot;)
++
++        IF (CYGWIN)
++            IF(BUILD_SHARED_LIBS)
++            # No need to define QWT_USE_DLL here, because it's default for Cygwin.
++            ELSE(BUILD_SHARED_LIBS)
++            SET (QWT_DEFINITIONS -DQWT_STATIC)
++            ENDIF(BUILD_SHARED_LIBS)
++        ENDIF (CYGWIN)
++
++    ENDIF (QWT_LIBRARY)
++ENDIF(QT4_FOUND)
++
++IF (QWT_FOUND)
++  IF (NOT QWT_FIND_QUIETLY)
++    MESSAGE(STATUS &quot;Found Qwt: ${QWT_LIBRARY}&quot;)
++  ENDIF (NOT QWT_FIND_QUIETLY)
++ELSE (QWT_FOUND)
++  IF (QWT_FIND_REQUIRED)
++    MESSAGE(FATAL_ERROR &quot;Could not find Qwt library&quot;)
++  ENDIF (QWT_FIND_REQUIRED)
++ENDIF (QWT_FOUND)
++
++MARK_AS_ADVANCED(QWT_INCLUDE_DIR QWT_LIBRARY)
++
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000134.html">[Php-qt-svn] r290 - in trunk: . kalyptus php_qt smoke smoke/kde	smoke/qt
+</A></li>
+	<LI>Next message: <A HREF="000136.html">[Php-qt-svn] r292 - trunk/smoke/qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#135">[ date ]</a>
+              <a href="thread.html#135">[ thread ]</a>
+              <a href="subject.html#135">[ subject ]</a>
+              <a href="author.html#135">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

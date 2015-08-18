@@ -1,0 +1,289 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r248 - trunk/tools
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-May/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r248%20-%20trunk/tools&In-Reply-To=%3C200605291121.k4TBLH9q019495%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000091.html">
+   
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r248 - trunk/tools</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r248%20-%20trunk/tools&In-Reply-To=%3C200605291121.k4TBLH9q019495%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r248 - trunk/tools">tm243 at berlios.de
+       </A><BR>
+    <I>Mon May 29 13:21:17 CEST 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000091.html">[Php-qt-svn] r247 - trunk/tools
+</A></li>
+        
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#92">[ date ]</a>
+              <a href="thread.html#92">[ thread ]</a>
+              <a href="subject.html#92">[ subject ]</a>
+              <a href="author.html#92">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-05-29 13:21:15 +0200 (Mon, 29 May 2006)
+New Revision: 248
+
+Modified:
+   trunk/tools/kalyptusCxxToPHP.pm
+Log:
+implementation of protected methods and metaobject handling.
+
+Modified: trunk/tools/kalyptusCxxToPHP.pm
+===================================================================
+--- trunk/tools/kalyptusCxxToPHP.pm	2006-05-25 09:22:52 UTC (rev 247)
++++ trunk/tools/kalyptusCxxToPHP.pm	2006-05-29 11:21:15 UTC (rev 248)
+@@ -21,7 +21,6 @@
+ # sub writeDoc                      $lib, $rootnode, $outputdir, $opt
+ # sub writeClassDoc                 $node
+ 
+-
+ package kalyptusCxxToPHP;
+ 
+ use File::Path;
+@@ -44,6 +43,9 @@
+ 	$pastaccess $pastname $pastreturn $pastparams $nullctor $ctorCount @properties @functions @constructors
+ 
+     %methods
++    @protected;
++    @virtual;
++    @addIncludes;
+ 
+     $classname;
+     *CLASS
+@@ -122,6 +124,8 @@
+     handleAllMethods($class);
+     Inheritance($class);
+ 
++
++
+     closeClassFile();
+ 
+ }
+@@ -418,7 +422,8 @@
+             $for_string = &quot;, 1&quot;;
+         }
+         if($is_constructor){   # constructor
+-            print CLASS $classname.&quot; *selfpointer = new &quot;.$classname.&quot;(&quot;.$cpp_call_params.&quot;);&quot;;
++            my $comma = &quot;,&quot; if($cpp_call_params);
++            print CLASS $classname.&quot;_php_qt *selfpointer = new &quot;.$classname.&quot;_php_qt(getThis()&quot;.$comma.$cpp_call_params.&quot;);&quot;;
+             print CLASS &quot;PHP_QT_REGISTER(selfpointer);&quot;;
+         } else {
+             if($flags =~ /s/){  # static
+@@ -601,7 +606,6 @@
+     print AG_EXTERN_ZEND_CLASS_ENTRY &quot;extern zend_class_entry *&quot;,$node-&gt;{astNodeName},&quot;_ce_ptr;\n&quot;;
+     print AG_EXTERN_ZEND_CLASS_ENTRY &quot;void \t_register_&quot;,$node-&gt;{astNodeName},&quot;();\n&quot;;
+ 
+-
+     print PHP_QT_MINIT &quot;\n\t_register_&quot;,$node-&gt;{astNodeName},&quot;(TSRMLS_C);\n&quot;;
+     print AG_QT_MINIT &quot;\n\t_register_&quot;,$node-&gt;{astNodeName},&quot;(TSRMLS_C);\n&quot;;
+ 
+@@ -714,21 +718,62 @@
+ 
+ sub DerivedClass
+ {
+-    my ($node) = @_;
++    my ($class) = @_;
+ 
++    $constructor = findConstructor($class);
++
++    my $prepared_params;
++    my @paramList = kdocUtil::splitUnnested(&quot;,&quot;, $constructor-&gt;{Params});
++    foreach my $param (@paramList){
++
++        @ch = split(/=/, $param);
++
++        $prepared_params .= &quot;,&quot;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">. at ch</A>[0];
++    }
++
++    $comma = &quot;,&quot; if ($prepared_params);
++
++    my $protected_declaration, $protected_implementation;
++    if(@protected){
++        $protected_declaration = &quot;\nprotected:\n&quot;;
++        foreach my $method (@protected){
++            if($method-&gt;{astNodeName} eq &quot;metaObject&quot; || $method-&gt;{astNodeName} eq &quot;className&quot;){
++                next;
++            }
++            checkAddIncludes($method);
++            $protected_declaration .= &quot;\n&quot;.checkConst($method-&gt;{Flags}).&quot; &quot;.checkFlags($method-&gt;{Flags}).&quot; &quot;.$method-&gt;{ReturnType}.&quot; &quot;.$method-&gt;{astNodeName}.&quot;(&quot;.$method-&gt;{Params}.&quot;);&quot;;
++            $protected_implementation .= &quot;\n &quot;.$method-&gt;{ReturnType}.&quot; &quot;.$classname.&quot;_php_qt::&quot;.$method-&gt;{astNodeName}.&quot;(&quot;.$method-&gt;{Params}.&quot;){}&quot;;
++        }
++    }
++
++    my $includes;
++    foreach $include (@addIncludes){
++        print CLASS &quot;#include &lt;&quot;.$include.&quot;&gt;\n&quot;;
++    }
++
+     print CLASS &quot;#include &lt;QMetaMethod&gt;
+     class &quot;.$classname.&quot;_php_qt : public &quot;.$classname.&quot;{
+ 
+     public:
+-        &quot;.$classname.&quot;_php_qt(zval* zend_ptr);
++        &quot;.$classname.&quot;_php_qt(zval* zend_ptr&quot;.$comma.$constructor-&gt;{Params}.&quot;);
+ 
+         zval* zend_ptr;
+         QMetaObject* dynamicMetaObject;
+ 
+         const QMetaObject* metaObject() const;
+         int qt_metacall(QMetaObject::Call _c, int _id, void **_a);
++    &quot;.$protected_declaration.&quot;
+     };
+-    //PHP_QT_MOC(&quot;.$classname.&quot;);
++    &quot;.$classname.&quot;_php_qt::&quot;.$classname.&quot;_php_qt(zval* zend_ptr&quot;.$prepared_params.&quot;)
++    {
++        this-&gt;zend_ptr = zend_ptr;
++        dynamicMetaObject = new QMetaObject;
++        dynamicMetaObject = php_qt_getMocData(this-&gt;zend_ptr,\&quot;&quot;.$classname.&quot;\&quot;,&amp;staticMetaObject);
++    }&quot;;
++
++    print CLASS $protected_implementation;
++
++    print CLASS &quot;\nPHP_QT_MOC(&quot;.$classname.&quot;);
+ &quot;;
+ # TODO:
+ # virtual and private classes
+@@ -892,6 +937,18 @@
+     return &quot;&quot;;
+ }
+ 
++# checks for const
++sub checkFlags
++{
++    my ($e) = @_;
++    my $return;
++    if($e =~ /v/){
++        $return .= &quot;virtual&quot;;
++    }
++
++    return $return;
++}
++
+ # invokes types for the Z_XVAL macro
+ sub invokeTypeToZ_XVAL
+ {
+@@ -954,12 +1011,19 @@
+         return 1;
+     }
+ #    if($method-&gt;{Flags} =~ /n|v|t/){    # skip slots
+-    if($method-&gt;{Flags} =~ /n|v/){    # skip slots
++    if($method-&gt;{Flags} =~ /n/){    # skip slots
+         return 1;
+     }
++
+     if($method-&gt;{Access} eq &quot;protected&quot;){
++        push @protected, $method;
+         return 1;
+     }
++
++    if($method-&gt;{Flags} =~ /v/){    # skip slots
++        return 1;
++    }
++
+     if($method-&gt;{astNodeName} eq &quot;className&quot;
+         || $method-&gt;{astNodeName} eq &quot;qObject&quot;)
+     {
+@@ -968,4 +1032,64 @@
+ 
+ }
+ 
++#
++#   finds the constructor
++#
++sub findConstructor
++{
++    my ($class) = @_;
++
++    my @return;
++
++    Iter::MembersByType ($class,sub{},
++	sub
++    {
++        my ($class, $kid ) = @_;
++        if($kid-&gt;{NodeType} eq &quot;method&quot;)
++        {
++            # there are some additional protected constructors, skip
++            if($kid-&gt;{Access} ne &quot;protected&quot;){
++                if($kid-&gt;{astNodeName} eq $classname){
++                    push @return, $kid;
++                }
++            }
++        }
++    },sub {}
++	);
++
++    # first is the constructor, second is destructor
++    return @return[0];
++
++}
++
++sub checkAddIncludes
++{
++    my ($method) = @_;
++
++    my @cargs = kdocUtil::splitUnnested(&quot;,&quot;, $method-&gt;{Params});
++
++    foreach my $arg (@cargs){
++        my @arg_ = split(/ /,$arg);
++        foreach my $m (@addIncludes){
++            # skip 'const'
++            if(@arg_[0] eq &quot;const&quot;){
++                if($m eq @arg_[1]){
++                    return;
++                }
++            } else {
++                if($m eq @arg_[0]){
++                    return;
++                }
++            }
++        }
++        if(@arg_[0] eq &quot;const&quot;){
++            push @addIncludes, @arg_[1];
++        } else {
++            push @addIncludes, @arg_[0];
++        }
++
++    }
++
++}
++
+ 1;
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000091.html">[Php-qt-svn] r247 - trunk/tools
+</A></li>
+	
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#92">[ date ]</a>
+              <a href="thread.html#92">[ thread ]</a>
+              <a href="subject.html#92">[ subject ]</a>
+              <a href="author.html#92">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

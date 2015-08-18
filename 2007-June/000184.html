@@ -1,0 +1,737 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r340 - trunk/php_qt
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-June/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r340%20-%20trunk/php_qt&In-Reply-To=%3C200706072021.l57KLI00012277%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000183.html">
+   <LINK REL="Next"  HREF="000185.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r340 - trunk/php_qt</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r340%20-%20trunk/php_qt&In-Reply-To=%3C200706072021.l57KLI00012277%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r340 - trunk/php_qt">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Thu Jun  7 22:21:18 CEST 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000183.html">[Php-qt-svn] r339 - trunk/php_qt
+</A></li>
+        <LI>Next message: <A HREF="000185.html">[Php-qt-svn] r341 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#184">[ date ]</a>
+              <a href="thread.html#184">[ thread ]</a>
+              <a href="subject.html#184">[ subject ]</a>
+              <a href="author.html#184">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2007-06-07 22:21:15 +0200 (Thu, 07 Jun 2007)
+New Revision: 340
+
+Added:
+   trunk/php_qt/qstring.h
+Modified:
+   trunk/php_qt/functions.cpp
+   trunk/php_qt/handlers.cpp
+   trunk/php_qt/marshall_basetypes.h
+   trunk/php_qt/marshall_types.cpp
+   trunk/php_qt/php_qt.cpp
+   trunk/php_qt/php_qt.h
+   trunk/php_qt/phpqt_internals.cpp
+   trunk/php_qt/phpqt_internals.h
+   trunk/php_qt/qstring.cpp
+   trunk/php_qt/smokephp.cpp
+   trunk/php_qt/smokephp.h
+   trunk/php_qt/zend_handlers.cpp
+   trunk/php_qt/zend_handlers.h
+Log:
+* more cleanup
+
+
+
+Modified: trunk/php_qt/functions.cpp
+===================================================================
+--- trunk/php_qt/functions.cpp	2007-06-07 07:57:36 UTC (rev 339)
++++ trunk/php_qt/functions.cpp	2007-06-07 20:21:15 UTC (rev 340)
+@@ -1,8 +1,8 @@
+ /*!
+  * PHP-Qt - The PHP language bindings for Qt
+  *
+- * Copyright (C) 2006
+- * Thomas Moenicke &lt;thomas.moenicke at kdemail.net&gt;
++ * Copyright (C) 2006 - 2007
++ * Thomas Moenicke &lt;tm at php-qt.org&gt;
+  * Katrina Niolet &lt;katrina at niolet.name&gt;
+  *
+  * This program is free software; you can redistribute it and/or
+
+Modified: trunk/php_qt/handlers.cpp
+===================================================================
+--- trunk/php_qt/handlers.cpp	2007-06-07 07:57:36 UTC (rev 339)
++++ trunk/php_qt/handlers.cpp	2007-06-07 20:21:15 UTC (rev 340)
+@@ -1,11 +1,24 @@
+-/***************************************************************************
+- *                                                                         *
+- *   This program is free software; you can redistribute it and/or modify  *
+- *   it under the terms of the GNU General Public License as published by  *
+- *   the Free Software Foundation; either version 2 of the License, or     *
+- *   (at your option) any later version.                                   *
+- *                                                                         *
+- ***************************************************************************/
++/*!
++ * PHP-Qt - The PHP language bindings for Qt
++ *
++ * Copyright (C) 2006 - 2007
++ * Thomas Moenicke &lt;tm at php-qt.org&gt;
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++ *
++ */
+ 
+ #include &lt;QtGui/QWidget&gt;
+ #include &lt;QtCore/qprocess.h&gt;
+
+Modified: trunk/php_qt/marshall_basetypes.h
+===================================================================
+--- trunk/php_qt/marshall_basetypes.h	2007-06-07 07:57:36 UTC (rev 339)
++++ trunk/php_qt/marshall_basetypes.h	2007-06-07 20:21:15 UTC (rev 340)
+@@ -1,15 +1,27 @@
+-/***************************************************************************
+- *                                                                         *
+- *   This program is free software; you can redistribute it and/or modify  *
+- *   it under the terms of the GNU General Public License as published by  *
+- *   the Free Software Foundation; either version 2 of the License, or     *
+- *   (at your option) any later version.                                   *
+- *                                                                         *
+- ***************************************************************************/
++/*!
++ * PHP-Qt - The PHP language bindings for Qt
++ *
++ * Copyright (C) 2006 - 2007
++ * Thomas Moenicke &lt;tm at php-qt.org&gt;
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++ *
++ */
+ 
+ #include &quot;marshall_types.h&quot;
+ #include &lt;QtCore/QHash&gt;
+-// extern QHash&lt;zval*, smokephp_object*&gt; zval_x_smokephp;
+ 
+ template &lt;class T&gt; T* smoke_ptr(Marshall *m) { return (T*) m-&gt;item().s_voidp; }
+ 
+@@ -60,7 +72,7 @@
+ 	zval* v = m-&gt;var();
+ 
+ 	if (Z_TYPE_P(v) == IS_OBJECT) {
+-		// A Qt::Enum is a subclass of Qt::Integer, so 'get_qinteger()' can be called ok
++	// A Qt::Enum is a subclass of Qt::Integer, so 'get_qinteger()' can be called ok
+ 	} else {
+ 		m-&gt;item().s_enum = (long) Z_LVAL_P(v);
+ 	}
+@@ -86,7 +98,6 @@
+ 
+ 	if(!/*SmokePHPObjectExists*/(v)) {
+ 		check_qobject(v);
+-// 		php_error(E_ERROR, &quot;Invalid type, expecting %s, %s given\n&quot;, m-&gt;type().name(), zend_zval_type_name(v));
+ 		php_error(E_ERROR, &quot;Invalid type, expecting %s, %s given (probably PHP-Qt lost the Qt object)\n&quot;, m-&gt;type().name(), Z_OBJCE_P(v)-&gt;name);
+ 		return;
+ 	}
+@@ -175,7 +186,6 @@
+ 			_ce = zend_fetch_class(__className, __strLenClassName, ZEND_FETCH_CLASS_AUTO TSRMLS_DC);
+ 	    }
+ 
+-// #warning parent_ce in createObject
+ 		smokephp_object *o = PHPQt::createObject(m-&gt;var(), __p, _ce, m-&gt;type().classId());
+ 
+ //	    if(m-&gt;type().isConst() &amp;&amp; m-&gt;type().isRef()) {
+
+Modified: trunk/php_qt/marshall_types.cpp
+===================================================================
+--- trunk/php_qt/marshall_types.cpp	2007-06-07 07:57:36 UTC (rev 339)
++++ trunk/php_qt/marshall_types.cpp	2007-06-07 20:21:15 UTC (rev 340)
+@@ -1,21 +1,28 @@
+-/***************************************************************************
+-    marshall_types.cpp - Derived from the QtRuby and PerlQt sources, see AUTHORS
+-                         for details
+-                             -------------------
+-    begin                : March 21 2007
+-    copyright            : (C) 2007 by Thomas Moenicke
+-    email                : <A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">tm at php-qt.org</A>
+- ***************************************************************************/
++/*!
++ * PHP-Qt - The PHP language bindings for Qt
++ *
++ * Copyright (C) 2006 - 2007
++ * Thomas Moenicke &lt;tm at php-qt.org&gt;
++ *
++ * marshall_types.cpp - Derived from the QtRuby and PerlQt sources, see AUTHORS
++ *                       for details
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++ *
++ */
+ 
+-/***************************************************************************
+- *                                                                         *
+- *   This program is free software; you can redistribute it and/or modify  *
+- *   it under the terms of the GNU General Public License as published by  *
+- *   the Free Software Foundation; either version 2 of the License, or     *
+- *   (at your option) any later version.                                   *
+- *                                                                         *
+- ***************************************************************************/
+-
+ #include &quot;marshall_types.h&quot;
+ #include &quot;phpqt_internals.h&quot;
+ 
+
+Modified: trunk/php_qt/php_qt.cpp
+===================================================================
+--- trunk/php_qt/php_qt.cpp	2007-06-07 07:57:36 UTC (rev 339)
++++ trunk/php_qt/php_qt.cpp	2007-06-07 20:21:15 UTC (rev 340)
+@@ -2,7 +2,7 @@
+  * PHP-Qt - The PHP language bindings for Qt
+  *
+  * Copyright (C) 2006 - 2007
+- * Thomas Moenicke &lt;thomas.moenicke at kdemail.net&gt;
++ * Thomas Moenicke &lt;tm at php-qt.org&gt;
+  * Katrina Niolet &lt;katrina at niolet.name&gt;
+  *
+  * This program is free software; you can redistribute it and/or
+@@ -21,16 +21,14 @@
+  *
+  */
+ 
++#include &lt;QtCore/qglobal.h&gt;
++#include &lt;QtCore/QHash&gt;
+ 
+ #include &quot;php_qt.h&quot;
++#include &quot;ext/standard/info.h&quot;
+ #include &quot;ext/standard/php_string.h&quot;
+ 
+-#include &lt;QtCore/qglobal.h&gt;
+-
+-#include &quot;marshall.h&quot;
+-#include &quot;php_qt.h&quot;
+ #include &quot;zend_handlers.h&quot;
+-#include &quot;smokephp.h&quot;
+ #include &quot;smoke.h&quot;
+ #include &quot;marshall_types.h&quot;
+ #include &quot;phpqt_internals.h&quot;
+
+Modified: trunk/php_qt/php_qt.h
+===================================================================
+--- trunk/php_qt/php_qt.h	2007-06-07 07:57:36 UTC (rev 339)
++++ trunk/php_qt/php_qt.h	2007-06-07 20:21:15 UTC (rev 340)
+@@ -2,7 +2,7 @@
+  * PHP-Qt - The PHP language bindings for Qt
+  *
+  * Copyright (C) 2006 - 2007
+- * Thomas Moenicke &lt;thomas.moenicke at kdemail.net&gt;
++ * Thomas Moenicke &lt;tm at php-qt.org&gt;
+  * Katrina Niolet &lt;katrina at niolet.name&gt;
+  *
+  * This program is free software; you can redistribute it and/or
+@@ -38,15 +38,11 @@
+ 
+ #include &lt;zend.h&gt;
+ #include &lt;zend_interfaces.h&gt;
+-#include &quot;php.h&quot;
+-#include &quot;php_ini.h&quot;
+-#include &quot;ext/standard/info.h&quot;
++#include &lt;php.h&gt;
++#include &lt;php_ini.h&gt;
+ 
+ #include &quot;smoke.h&quot;
+-#include &quot;smokephp.h&quot;
+ 
+-#include &lt;QtCore/QStack&gt;
+-#include &lt;QtCore/QHash&gt;
+ #include &lt;QtCore/QString&gt;
+ #include &lt;QtCore/QMetaObject&gt;
+ 
+@@ -165,97 +161,6 @@
+ 
+ };
+ 
+-bool 				smokephp_isQObject(Smoke::Index classId);
+-void				smokephp_prepareMethodName(zval*** args, int argc, QStack&lt;QByteArray*&gt; &amp;methodNameStack);
+-QByteArray* 		smokephp_getSignature(int argc, zval ***argv, MocArgument* mocStack);
+-Smoke::Index		smokephp_getMethod(const char* c, const char* m, int argc, zval*** args);
+-void				smokephp_prepareConnect(zval*** args, int argc, Smoke::StackItem* qargs, const Smoke::Index method);
+-void				smokephp_callMethod(void *obj, Smoke::Index method, Smoke::Stack qargs);
+-void				smokephp_init();
+-
+-void* 				transformArray(zval* args);
+-
+-ZEND_METHOD(QString, __toString);
+-ZEND_METHOD(QString, compare);
+-ZEND_METHOD(QString, utf16);
+-ZEND_METHOD(QString, constData);
+-ZEND_METHOD(QString, insert);
+-ZEND_METHOD(QString, clear);
+-ZEND_METHOD(QString, setUtf16);
+-ZEND_METHOD(QString, prepend);
+-ZEND_METHOD(QString, trimmed);
+-ZEND_METHOD(QString, chop);
+-ZEND_METHOD(QString, leftJustified);
+-ZEND_METHOD(QString, squeeze);
+-ZEND_METHOD(QString, count);
+-ZEND_METHOD(QString, fromAscii);
+-ZEND_METHOD(QString, toLongLong);
+-ZEND_METHOD(QString, toUpper);
+-ZEND_METHOD(QString, __construct);
+-ZEND_METHOD(QString, normalized);
+-ZEND_METHOD(QString, fromUtf16);
+-ZEND_METHOD(QString, isRightToLeft);
+-ZEND_METHOD(QString, setNum);
+-ZEND_METHOD(QString, endsWith);
+-ZEND_METHOD(QString, number);
+-ZEND_METHOD(QString, localeAwareCompare);
+-ZEND_METHOD(QString, section);
+-ZEND_METHOD(QString, isSimpleText);
+-ZEND_METHOD(QString, size);
+-ZEND_METHOD(QString, simplified);
+-ZEND_METHOD(QString, toUInt);
+-ZEND_METHOD(QString, toUShort);
+-ZEND_METHOD(QString, truncate);
+-ZEND_METHOD(QString, toAscii);
+-ZEND_METHOD(QString, length);
+-ZEND_METHOD(QString, right);
+-ZEND_METHOD(QString, push_front);
+-ZEND_METHOD(QString, toUtf8);
+-ZEND_METHOD(QString, toULongLong);
+-ZEND_METHOD(QString, indexOf);
+-ZEND_METHOD(QString, fromRawData);
+-ZEND_METHOD(QString, constEnd);
+-ZEND_METHOD(QString, left);
+-ZEND_METHOD(QString, fromLocal8Bit);
+-ZEND_METHOD(QString, startsWith);
+-ZEND_METHOD(QString, remove);
+-ZEND_METHOD(QString, isEmpty);
+-ZEND_METHOD(QString, arg);
+-ZEND_METHOD(QString, vsprintf);
+-ZEND_METHOD(QString, toFloat);
+-ZEND_METHOD(QString, isDetached);
+-ZEND_METHOD(QString, reserve);
+-ZEND_METHOD(QString, toULong);
+-ZEND_METHOD(QString, toShort);
+-ZEND_METHOD(QString, split);
+-ZEND_METHOD(QString, setUnicode);
+-ZEND_METHOD(QString, fromLatin1);
+-ZEND_METHOD(QString, data);
+-ZEND_METHOD(QString, toLatin1);
+-ZEND_METHOD(QString, end);
+-ZEND_METHOD(QString, contains);
+-ZEND_METHOD(QString, resize);
+-ZEND_METHOD(QString, replace);
+-ZEND_METHOD(QString, fromUtf8);
+-ZEND_METHOD(QString, toLong);
+-ZEND_METHOD(QString, detach);
+-ZEND_METHOD(QString, append);
+-ZEND_METHOD(QString, mid);
+-ZEND_METHOD(QString, toDouble);
+-ZEND_METHOD(QString, fill);
+-ZEND_METHOD(QString, rightJustified);
+-ZEND_METHOD(QString, toLower);
+-ZEND_METHOD(QString, lastIndexOf);
+-ZEND_METHOD(QString, unicode);
+-ZEND_METHOD(QString, at);
+-ZEND_METHOD(QString, begin);
+-ZEND_METHOD(QString, push_back);
+-ZEND_METHOD(QString, capacity);
+-ZEND_METHOD(QString, constBegin);
+-ZEND_METHOD(QString, toLocal8Bit);
+-ZEND_METHOD(QString, toInt);
+-ZEND_METHOD(QString, isNull);
+-
+ ZEND_METHOD(php_qt_generic_class, __construct);
+ ZEND_METHOD(php_qt_generic_class, __destruct);
+ ZEND_METHOD(php_qt_generic_class, __toString);
+
+Modified: trunk/php_qt/phpqt_internals.cpp
+===================================================================
+--- trunk/php_qt/phpqt_internals.cpp	2007-06-07 07:57:36 UTC (rev 339)
++++ trunk/php_qt/phpqt_internals.cpp	2007-06-07 20:21:15 UTC (rev 340)
+@@ -2,7 +2,7 @@
+  * PHP-Qt - The PHP language bindings for Qt
+  *
+  * Copyright (C) 2006 - 2007
+- * Thomas Moenicke &lt;thomas.moenicke at kdemail.net&gt;
++ * Thomas Moenicke &lt;tm at php-qt.org&gt;
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License
+@@ -22,6 +22,7 @@
+ 
+ #include &quot;phpqt_internals.h&quot;
+ 
++#include &lt;QtCore/QHash&gt;
+ #include &lt;QtCore/QMetaMethod&gt;
+ #include &lt;zend.h&gt;
+ #include &quot;smoke.h&quot;
+
+Modified: trunk/php_qt/phpqt_internals.h
+===================================================================
+--- trunk/php_qt/phpqt_internals.h	2007-06-07 07:57:36 UTC (rev 339)
++++ trunk/php_qt/phpqt_internals.h	2007-06-07 20:21:15 UTC (rev 340)
+@@ -1,8 +1,8 @@
+ /*!
+  * PHP-Qt - The PHP language bindings for Qt
+  *
+- * Copyright (C) 2006
+- * Thomas Moenicke &lt;thomas.moenicke at kdemail.net&gt;
++ * Copyright (C) 2006 - 2007
++ * Thomas Moenicke &lt;tm at php-qt.org&gt;
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License
+
+Modified: trunk/php_qt/qstring.cpp
+===================================================================
+--- trunk/php_qt/qstring.cpp	2007-06-07 07:57:36 UTC (rev 339)
++++ trunk/php_qt/qstring.cpp	2007-06-07 20:21:15 UTC (rev 340)
+@@ -1,23 +1,22 @@
+ /*!
+  * PHP-Qt - The PHP language bindings for Qt
+  *
+- * Copyright (C) 2005 - 2007
+- * Thomas Moenicke &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">tm at ippfp.org</A>&gt;,
+- * Jean-Luc Gyger &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">jean_luc.gyger at freesurf.ch</A>&gt;
++ * Copyright (C) 2006 - 2007
++ * Thomas Moenicke &lt;tm at php-qt.org&gt;
+  *
+- * This library is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU Lesser General Public
+- * License as published by the Free Software Foundation; either
+- * version 2.1 of the License, or (at your option) any later version.
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
+  *
+- * This library is distributed in the hope that it will be useful,
++ * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * Lesser General Public License for more details.
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
+  *
+- * You should have received a copy of the GNU Lesser General Public
+- * License along with this library; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+  *
+  * QString.cpp - QString PHP implementation.
+  * begin           : Wed Jan 18 23:31:01 2006
+@@ -26,14 +25,13 @@
+ 
+ #include &lt;iostream&gt;
+ using namespace std;
+-#include &lt;QtCore/QDebug&gt;
+ 
++#include &lt;QtCore/QDebug&gt;
+ #include &lt;QtCore/QString&gt;
+-#include &lt;zend_interfaces.h&gt;
+ 
+-#include &quot;php_qt.h&quot;
+ #include &quot;phpqt_internals.h&quot;
+ using namespace PHPQt;
++#include &quot;qstring.h&quot;
+ 
+ zend_class_entry* qstring_ce;
+ extern Smoke* qt_Smoke;
+
+Added: trunk/php_qt/qstring.h
+===================================================================
+--- trunk/php_qt/qstring.h	2007-06-07 07:57:36 UTC (rev 339)
++++ trunk/php_qt/qstring.h	2007-06-07 20:21:15 UTC (rev 340)
+@@ -0,0 +1,104 @@
++/*!
++ * PHP-Qt - The PHP language bindings for Qt
++ *
++ * Copyright (C) 2006 - 2007
++ * Thomas Moenicke &lt;tm at php-qt.org&gt;
++ * Katrina Niolet &lt;katrina at niolet.name&gt;
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++ *
++ */
++
++ ZEND_METHOD(QString, __toString);
++ZEND_METHOD(QString, compare);
++ZEND_METHOD(QString, utf16);
++ZEND_METHOD(QString, constData);
++ZEND_METHOD(QString, insert);
++ZEND_METHOD(QString, clear);
++ZEND_METHOD(QString, setUtf16);
++ZEND_METHOD(QString, prepend);
++ZEND_METHOD(QString, trimmed);
++ZEND_METHOD(QString, chop);
++ZEND_METHOD(QString, leftJustified);
++ZEND_METHOD(QString, squeeze);
++ZEND_METHOD(QString, count);
++ZEND_METHOD(QString, fromAscii);
++ZEND_METHOD(QString, toLongLong);
++ZEND_METHOD(QString, toUpper);
++ZEND_METHOD(QString, __construct);
++ZEND_METHOD(QString, normalized);
++ZEND_METHOD(QString, fromUtf16);
++ZEND_METHOD(QString, isRightToLeft);
++ZEND_METHOD(QString, setNum);
++ZEND_METHOD(QString, endsWith);
++ZEND_METHOD(QString, number);
++ZEND_METHOD(QString, localeAwareCompare);
++ZEND_METHOD(QString, section);
++ZEND_METHOD(QString, isSimpleText);
++ZEND_METHOD(QString, size);
++ZEND_METHOD(QString, simplified);
++ZEND_METHOD(QString, toUInt);
++ZEND_METHOD(QString, toUShort);
++ZEND_METHOD(QString, truncate);
++ZEND_METHOD(QString, toAscii);
++ZEND_METHOD(QString, length);
++ZEND_METHOD(QString, right);
++ZEND_METHOD(QString, push_front);
++ZEND_METHOD(QString, toUtf8);
++ZEND_METHOD(QString, toULongLong);
++ZEND_METHOD(QString, indexOf);
++ZEND_METHOD(QString, fromRawData);
++ZEND_METHOD(QString, constEnd);
++ZEND_METHOD(QString, left);
++ZEND_METHOD(QString, fromLocal8Bit);
++ZEND_METHOD(QString, startsWith);
++ZEND_METHOD(QString, remove);
++ZEND_METHOD(QString, isEmpty);
++ZEND_METHOD(QString, arg);
++ZEND_METHOD(QString, vsprintf);
++ZEND_METHOD(QString, toFloat);
++ZEND_METHOD(QString, isDetached);
++ZEND_METHOD(QString, reserve);
++ZEND_METHOD(QString, toULong);
++ZEND_METHOD(QString, toShort);
++ZEND_METHOD(QString, split);
++ZEND_METHOD(QString, setUnicode);
++ZEND_METHOD(QString, fromLatin1);
++ZEND_METHOD(QString, data);
++ZEND_METHOD(QString, toLatin1);
++ZEND_METHOD(QString, end);
++ZEND_METHOD(QString, contains);
++ZEND_METHOD(QString, resize);
++ZEND_METHOD(QString, replace);
++ZEND_METHOD(QString, fromUtf8);
++ZEND_METHOD(QString, toLong);
++ZEND_METHOD(QString, detach);
++ZEND_METHOD(QString, append);
++ZEND_METHOD(QString, mid);
++ZEND_METHOD(QString, toDouble);
++ZEND_METHOD(QString, fill);
++ZEND_METHOD(QString, rightJustified);
++ZEND_METHOD(QString, toLower);
++ZEND_METHOD(QString, lastIndexOf);
++ZEND_METHOD(QString, unicode);
++ZEND_METHOD(QString, at);
++ZEND_METHOD(QString, begin);
++ZEND_METHOD(QString, push_back);
++ZEND_METHOD(QString, capacity);
++ZEND_METHOD(QString, constBegin);
++ZEND_METHOD(QString, toLocal8Bit);
++ZEND_METHOD(QString, toInt);
++ZEND_METHOD(QString, isNull);
++
+
+Modified: trunk/php_qt/smokephp.cpp
+===================================================================
+--- trunk/php_qt/smokephp.cpp	2007-06-07 07:57:36 UTC (rev 339)
++++ trunk/php_qt/smokephp.cpp	2007-06-07 20:21:15 UTC (rev 340)
+@@ -2,7 +2,7 @@
+  * PHP-Qt - The PHP language bindings for Qt
+  *
+  * Copyright (C) 2006 - 2007
+- * Thomas Moenicke &lt;thomas.moenicke at kdemail.net&gt;
++ * Thomas Moenicke &lt;tm at php-qt.org&gt;
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License
+
+Modified: trunk/php_qt/smokephp.h
+===================================================================
+--- trunk/php_qt/smokephp.h	2007-06-07 07:57:36 UTC (rev 339)
++++ trunk/php_qt/smokephp.h	2007-06-07 20:21:15 UTC (rev 340)
+@@ -16,7 +16,8 @@
+ #include &quot;php.h&quot;
+ #define Qnil (zval *) NULL
+ 
+-#include &lt;QtCore/qbytearray.h&gt;
++#include &lt;QtCore/QStack&gt;
++#include &lt;QtCore/QByteArray&gt;
+ 
+ #include &quot;php_qt.h&quot;
+ #include &quot;marshall.h&quot;
+@@ -174,7 +175,7 @@
+     void setAllocated(bool isAllocated) { _isAllocated = isAllocated; }
+ };
+ 
+- 
++
+ /**
+  * SmokeObject is a thin wrapper around zval* objects. Each SmokeObject instance
+  * increments the refcount of its zval* for the duration of its existance.
+@@ -189,16 +190,16 @@
+ public:
+     SmokeObject(zval* obj, Smoke_MAGIC *mag) : rv(obj), m(mag) {
+     }
+-    
++
+     ~SmokeObject() {
+     }
+-    
++
+     SmokeObject(const SmokeObject &amp;other) {
+ 	rv = other.rv;
+ 	m = other.m;
+ 
+     }
+-    
++
+     SmokeObject &amp;operator =(const SmokeObject &amp;other) {
+ 	rv = other.rv;
+ 	m = other.m;
+@@ -320,4 +321,14 @@
+     MocArgumentType argType;
+ };
+ 
++bool 				smokephp_isQObject(Smoke::Index classId);
++void				smokephp_prepareMethodName(zval*** args, int argc, QStack&lt;QByteArray*&gt; &amp;methodNameStack);
++QByteArray* 		smokephp_getSignature(int argc, zval ***argv, MocArgument* mocStack);
++Smoke::Index		smokephp_getMethod(const char* c, const char* m, int argc, zval*** args);
++void				smokephp_prepareConnect(zval*** args, int argc, Smoke::StackItem* qargs, const Smoke::Index method);
++void				smokephp_callMethod(void *obj, Smoke::Index method, Smoke::Stack qargs);
++void				smokephp_init();
++
++void* 				transformArray(zval* args);
++
+ #endif // SMOKEPHP_H
+
+Modified: trunk/php_qt/zend_handlers.cpp
+===================================================================
+--- trunk/php_qt/zend_handlers.cpp	2007-06-07 07:57:36 UTC (rev 339)
++++ trunk/php_qt/zend_handlers.cpp	2007-06-07 20:21:15 UTC (rev 340)
+@@ -2,7 +2,7 @@
+  * PHP-Qt - The PHP language bindings for Qt
+  *
+  * Copyright (C) 2006 - 2007
+- * Thomas Moenicke &lt;thomas.moenicke at kdemail.net&gt;
++ * Thomas Moenicke &lt;tm at php-qt.org&gt;
+  * Katrina Niolet &lt;katrina at niolet.name&gt;
+  *
+  * This program is free software; you can redistribute it and/or
+@@ -24,6 +24,7 @@
+ 
+ #include &quot;zend_handlers.h&quot;
+ #include &quot;php_qt.h&quot;
++#include &quot;smokephp.h&quot;
+ #include &quot;ext/standard/php_string.h&quot;
+ 
+ extern QStack&lt;QByteArray*&gt; methodNameStack;
+
+Modified: trunk/php_qt/zend_handlers.h
+===================================================================
+--- trunk/php_qt/zend_handlers.h	2007-06-07 07:57:36 UTC (rev 339)
++++ trunk/php_qt/zend_handlers.h	2007-06-07 20:21:15 UTC (rev 340)
+@@ -2,7 +2,7 @@
+  * PHP-Qt - The PHP language bindings for Qt
+  *
+  * Copyright (C) 2006
+- * Thomas Moenicke &lt;thomas.moenicke at kdemail.net&gt;
++ * Thomas Moenicke &lt;tm at php-qt.org&gt;
+  * Katrina Niolet &lt;katrina at niolet.name&gt;
+  *
+  * This program is free software; you can redistribute it and/or
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000183.html">[Php-qt-svn] r339 - trunk/php_qt
+</A></li>
+	<LI>Next message: <A HREF="000185.html">[Php-qt-svn] r341 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#184">[ date ]</a>
+              <a href="thread.html#184">[ thread ]</a>
+              <a href="subject.html#184">[ subject ]</a>
+              <a href="author.html#184">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

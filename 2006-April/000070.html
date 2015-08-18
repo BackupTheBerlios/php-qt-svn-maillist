@@ -1,0 +1,104 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r226 - trunk/qt/object_model
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-April/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r226%20-%20trunk/qt/object_model&In-Reply-To=%3C200604272129.k3RLTamS027637%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000069.html">
+   <LINK REL="Next"  HREF="000071.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r226 - trunk/qt/object_model</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r226%20-%20trunk/qt/object_model&In-Reply-To=%3C200604272129.k3RLTamS027637%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r226 - trunk/qt/object_model">tm243 at berlios.de
+       </A><BR>
+    <I>Thu Apr 27 23:29:36 CEST 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000069.html">[Php-qt-svn] r225 - trunk/qt
+</A></li>
+        <LI>Next message: <A HREF="000071.html">[Php-qt-svn] r227 - trunk/qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#70">[ date ]</a>
+              <a href="thread.html#70">[ thread ]</a>
+              <a href="subject.html#70">[ subject ]</a>
+              <a href="author.html#70">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-04-27 23:28:37 +0200 (Thu, 27 Apr 2006)
+New Revision: 226
+
+Modified:
+   trunk/qt/object_model/qobject.cpp
+Log:
+c casts turned into c++ casts
+
+Modified: trunk/qt/object_model/qobject.cpp
+===================================================================
+--- trunk/qt/object_model/qobject.cpp	2006-04-27 21:26:32 UTC (rev 225)
++++ trunk/qt/object_model/qobject.cpp	2006-04-27 21:28:37 UTC (rev 226)
+@@ -96,23 +96,23 @@
+         if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ozoz&quot;, &amp;sender, &amp;signal, &amp;receiver, &amp;slot) == FAILURE) {
+             RETURN_NULL(); 
+         }
+-        receiver_ptr = (QObject*) php_qt_fetch(receiver);    
++        receiver_ptr = static_cast&lt;QObject*&gt;(php_qt_fetch(receiver));    
+     } else {
+         if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ozz&quot;, &amp;sender, &amp;signal, &amp;slot) == FAILURE) {
+             RETURN_NULL(); 
+         }
+-        receiver_ptr = (QObject*) PHP_QT_FETCH();
++        receiver_ptr = static_cast&lt;QObject*&gt;(PHP_QT_FETCH());
+     }
+ 
+-    QObject *sender_ptr = (QObject*) php_qt_fetch(sender);
++    QObject *sender_ptr = static_cast&lt;QObject*&gt;(php_qt_fetch(sender));
+ 
+     const char* __signal = Z_STRVAL_P(signal);
+     const char* __slot = Z_STRVAL_P(slot);
+ 
+     if(num_args==4){
+-        RETURN_BOOL(QObject::connect((const QObject*) sender_ptr, __signal, (const QObject*) receiver_ptr, __slot));
++        RETURN_BOOL(QObject::connect(static_cast&lt;const QObject*&gt;(sender_ptr), __signal, static_cast&lt;const QObject*&gt;(receiver_ptr), __slot));
+     } else if(num_args==3){
+-        RETURN_BOOL(receiver_ptr-&gt;connect((const QObject*) sender_ptr, __signal, __slot));
++        RETURN_BOOL(receiver_ptr-&gt;connect(static_cast&lt;const QObject*&gt;(sender_ptr), __signal, __slot));
+     }
+ 
+ }
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000069.html">[Php-qt-svn] r225 - trunk/qt
+</A></li>
+	<LI>Next message: <A HREF="000071.html">[Php-qt-svn] r227 - trunk/qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#70">[ date ]</a>
+              <a href="thread.html#70">[ thread ]</a>
+              <a href="subject.html#70">[ subject ]</a>
+              <a href="author.html#70">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

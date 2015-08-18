@@ -1,0 +1,311 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r234 - in trunk/qt: . classes
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-May/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r234%20-%20in%20trunk/qt%3A%20.%20classes&In-Reply-To=%3C200605092247.k49Mlwl1020221%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000077.html">
+   <LINK REL="Next"  HREF="000079.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r234 - in trunk/qt: . classes</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r234%20-%20in%20trunk/qt%3A%20.%20classes&In-Reply-To=%3C200605092247.k49Mlwl1020221%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r234 - in trunk/qt: . classes">tm243 at berlios.de
+       </A><BR>
+    <I>Wed May 10 00:47:58 CEST 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000077.html">[Php-qt-svn] r233 - in trunk/qt: . classes
+</A></li>
+        <LI>Next message: <A HREF="000079.html">[Php-qt-svn] r235 - in trunk: qt qt/classes qt/object_model tutorials tutorials/t7
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#78">[ date ]</a>
+              <a href="thread.html#78">[ thread ]</a>
+              <a href="subject.html#78">[ subject ]</a>
+              <a href="author.html#78">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-05-10 00:47:53 +0200 (Wed, 10 May 2006)
+New Revision: 234
+
+Modified:
+   trunk/qt/classes/qwidget.cpp
+   trunk/qt/php_qt.cpp
+   trunk/qt/php_qt.h
+Log:
+the metaobject generator uses QString for unicode support in future, signals are computed.
+
+Modified: trunk/qt/classes/qwidget.cpp
+===================================================================
+--- trunk/qt/classes/qwidget.cpp	2006-05-08 17:32:49 UTC (rev 233)
++++ trunk/qt/classes/qwidget.cpp	2006-05-09 22:47:53 UTC (rev 234)
+@@ -36,7 +36,11 @@
+ class QWidget_moc : public QWidget
+ {
+     public:
++        QWidget_moc(zval* zend_ptr);
++
+         zval* zend_ptr;
++        QMetaObject* dynamicMetaObject;
++
+         const QMetaObject* metaObject() const;
+         int qt_metacall(QMetaObject::Call _c, int _id, void **_a);
+         
+@@ -44,20 +48,14 @@
+ 
+ const QMetaObject *QWidget_moc::metaObject() const
+ {
++    return php_qt_getMocData(this-&gt;zend_ptr,&quot;QWidget&quot;,&amp;staticMetaObject);;
++}
+ 
+-    QMetaObject *superdata = (QMetaObject*) &staticMetaObject;
+-
+-    static const moc* m = php_qt_getMocData(this-&gt;zend_ptr,&quot;QWidget&quot;);
+-
+-    QMetaObject ob = {
+-        {superdata,m-&gt;stringdata,m-&gt;signature,0}
+-    };
+-
+-    QMetaObject *meta = new QMetaObject;
+-    *meta = ob;
+-
+-    return meta;
+-
++QWidget_moc::QWidget_moc(zval* zend_ptr)
++{
++    this-&gt;zend_ptr = zend_ptr;
++    dynamicMetaObject = new QMetaObject;
++    dynamicMetaObject = php_qt_getMocData(this-&gt;zend_ptr,&quot;QWidget&quot;,&amp;staticMetaObject);
+ }
+ 
+ int QWidget_moc::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
+@@ -2845,13 +2843,14 @@
+ {
+ ///QWidget*
+   if (ZEND_NUM_ARGS() == 0) {
+-          QWidget_moc *QWidget_ptr = new QWidget_moc();
+-          QWidget_ptr-&gt;zend_ptr = this_ptr;
+ 
++          QWidget_moc *QWidget_ptr = new QWidget_moc(this_ptr);
++
+           PHP_QT_REGISTER(QWidget_ptr);
+           RETURN_NULL();
+-  }
+ 
++    }
++
+ /*! ol public*/
+ /*! QWidget* parent, int f,  */
+   if (ZEND_NUM_ARGS() == 2) {
+
+Modified: trunk/qt/php_qt.cpp
+===================================================================
+--- trunk/qt/php_qt.cpp	2006-05-08 17:32:49 UTC (rev 233)
++++ trunk/qt/php_qt.cpp	2006-05-09 22:47:53 UTC (rev 234)
+@@ -1162,63 +1162,67 @@
+  *  example: &quot;QWidget\0\0value\0test(int)\0&quot;
+  */
+ 
+-moc* php_qt_getMocData(zval* this_ptr, char* classname){
++QMetaObject* php_qt_getMocData(zval* this_ptr, char* classname, const QMetaObject* superdata){
+ 
+-    /*! readout the slots table */
++    /// readout the slots table
++    zval **slotdata;
++
+     zval *zslot;
+     zslot = zend_read_property(QWidget_ce_ptr,this_ptr,&quot;slots&quot;,5,0);
+-    zval **slotdata;
+ 
+-// TODO: is it really an array?
+-    HashTable* hash = HASH_OF(zslot);
+-    char* assocKey;
+-    ulong numKey;
++    zval *zsignal;
++    zsignal = zend_read_property(QWidget_ce_ptr,this_ptr,&quot;signals&quot;,7,0);
+ 
+-    int signaturecount;
+-    signaturecount = 2 + strlen(classname);
+ 
+-    char* stringdata;
+-    stringdata = (char*) malloc(2 + strlen(classname)+(zend_hash_num_elements(hash)*20));
+-    uint* signature = (uint*) malloc(sizeof(uint)*zend_hash_num_elements(hash)*5+10);
++    if((zslot)-&gt;type==IS_ARRAY &amp;&amp; (zsignal)-&gt;type==IS_ARRAY ) {
+ 
+-    /*! write class signature */
++        HashTable* slots_hash = HASH_OF(zslot);
++        HashTable* signals_hash = HASH_OF(zsignal);
++
++        char* assocKey;
++        ulong numKey;
++
++        int signaturecount;
++        signaturecount = 2 + strlen(classname);
++
++        uint* signature = (uint*) new uint[sizeof(uint)*zend_hash_num_elements(slots_hash)*zend_hash_num_elements(signals_hash)*5+10];
++        QString *q = new QString();
++
++
++    /// write class signature
+     signature[0] = 1;
+     signature[1] = 0;
+     signature[2] = 0;
+     signature[3] = 0;
+-    signature[4] = zend_hash_num_elements(hash);
++    signature[4] = zend_hash_num_elements(slots_hash)+zend_hash_num_elements(signals_hash);
+     signature[5] = 10;
+     signature[6] = 0;
+     signature[7] = 0;
+     signature[8] = 0;
+     signature[9] = 0;
+ 
+-    /*! write classname */
+-    strcpy(stringdata, classname);  
+-    strncat(stringdata,&quot;++&quot;,2);
++    /// write classname
++    q-&gt;append(classname);
++    q-&gt;append(QChar::Null);
++    q-&gt;append(QChar::Null);
++
+     int i;
+     i = 10;
+ 
+-    zend_hash_internal_pointer_reset(hash);
++    zend_hash_internal_pointer_reset(signals_hash);
+ 
+-    while(zend_hash_has_more_elements(hash) == SUCCESS){
++    while(zend_hash_has_more_elements(signals_hash) == SUCCESS){
+ 
+-        /* read slot from hashtable */
+-        zend_hash_get_current_key(hash,&amp;assocKey,&amp;numKey,0);
+-        zend_hash_get_current_data(hash,(void**)&amp;slotdata);
+-        
+-        convert_to_string(*slotdata);
++        /// read slot from hashtable
++        zend_hash_get_current_key(signals_hash,&amp;assocKey,&amp;numKey,0);
++        zend_hash_get_current_data(signals_hash,(void**)&amp;slotdata);
+ 
+-        char *buf;
+-        buf = (char*) malloc(1+strlen(Z_STRVAL_PP(slotdata)));
+-        strcpy(buf, Z_STRVAL_PP(slotdata));
++        q-&gt;append(Z_STRVAL_PP(slotdata));
++        q-&gt;append(QChar::Null);
+ 
+-        strncat(stringdata,buf,strlen(Z_STRVAL_PP(slotdata)));
+-        strncat(stringdata,&quot;+&quot;,1);
++        zend_hash_move_forward(signals_hash);
+ 
+-        zend_hash_move_forward(hash);
+-
+-        /*! write slot signature */
++        /// write slot signature
+         signature[i++] = signaturecount;
+         signature[i++] = 8;        
+         signature[i++] = 8;
+@@ -1229,19 +1233,47 @@
+ 
+     }
+ 
+-    /// transform '+' into \0
+-    for(int i=0;i&lt;=signaturecount;i++){
+-        if((int) stringdata[i] == 43){
+-            stringdata[i] = NULL;
+-        }
++    zend_hash_internal_pointer_reset(slots_hash);
++
++    while(zend_hash_has_more_elements(slots_hash) == SUCCESS){
++
++        /// read slot from hashtable
++        zend_hash_get_current_key(slots_hash,&amp;assocKey,&amp;numKey,0);
++        zend_hash_get_current_data(slots_hash,(void**)&amp;slotdata);
++
++        q-&gt;append(Z_STRVAL_PP(slotdata));
++        q-&gt;append(QChar::Null);
++
++        zend_hash_move_forward(slots_hash);
++
++        /// write slot signature
++        signature[i++] = signaturecount;
++        signature[i++] = 8;        
++        signature[i++] = 8;
++        signature[i++] = 8;
++        signature[i++] = 0x0a;
++
++        signaturecount += strlen(Z_STRVAL_PP(slotdata)) + 1;
++
+     }
+ 
+-    moc *m = new moc;
+-    m-&gt;stringdata = stringdata;
+-    m-&gt;signature = signature;
+ 
+-    return m;
++    QMetaObject ob = {
++        {superdata,(q-&gt;toAscii()).data(),signature,0}
++    };
+ 
++
++    QMetaObject *meta = new QMetaObject;
++    *meta = ob;
++
++    return meta;
++
++  } else {
++
++    return (QMetaObject*) superdata;
++
++  }
++
+ }
+ 
+ ///
+
+Modified: trunk/qt/php_qt.h
+===================================================================
+--- trunk/qt/php_qt.h	2006-05-08 17:32:49 UTC (rev 233)
++++ trunk/qt/php_qt.h	2006-05-09 22:47:53 UTC (rev 234)
+@@ -334,7 +334,7 @@
+ void php_qt_setObject(zval* this_ptr, void* obj);
+ static void destroy_php_qt_hashtable(zend_rsrc_list_entry *rsrc);
+ void php_qt_callmethod(zval* zend_ptr, char* methodname, zend_uint param_count, zval** params[]);
+-moc* php_qt_getMocData(zval* this_ptr, char* classname);
++QMetaObject* php_qt_getMocData(zval* this_ptr, char* classname, const QMetaObject* superdata);
+ 
+ extern int le_php_qt_hashtype;
+ extern HashTable php_qt_objptr_hash;
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000077.html">[Php-qt-svn] r233 - in trunk/qt: . classes
+</A></li>
+	<LI>Next message: <A HREF="000079.html">[Php-qt-svn] r235 - in trunk: qt qt/classes qt/object_model tutorials tutorials/t7
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#78">[ date ]</a>
+              <a href="thread.html#78">[ thread ]</a>
+              <a href="subject.html#78">[ subject ]</a>
+              <a href="author.html#78">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

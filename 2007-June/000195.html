@@ -1,0 +1,121 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r351 - trunk/tests
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-June/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r351%20-%20trunk/tests&In-Reply-To=%3C200706200932.l5K9WUBU023088%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000194.html">
+   
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r351 - trunk/tests</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r351%20-%20trunk/tests&In-Reply-To=%3C200706200932.l5K9WUBU023088%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r351 - trunk/tests">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Wed Jun 20 11:32:30 CEST 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000194.html">[Php-qt-svn] r350 - trunk/tests
+</A></li>
+        
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#195">[ date ]</a>
+              <a href="thread.html#195">[ thread ]</a>
+              <a href="subject.html#195">[ subject ]</a>
+              <a href="author.html#195">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2007-06-20 11:32:29 +0200 (Wed, 20 Jun 2007)
+New Revision: 351
+
+Modified:
+   trunk/tests/QtBasicTestCase.php
+Log:
+* added unittest for virtual method calls
+
+
+
+Modified: trunk/tests/QtBasicTestCase.php
+===================================================================
+--- trunk/tests/QtBasicTestCase.php	2007-06-20 08:44:54 UTC (rev 350)
++++ trunk/tests/QtBasicTestCase.php	2007-06-20 09:32:29 UTC (rev 351)
+@@ -49,6 +49,20 @@
+ 	
+     }
+ 
++    class myWidget extends QWidget
++    {
++	public function __construct()
++	{
++	    parent::__construct();
++	}
++	
++	public function sizeHint()
++	{
++	  echo &quot;.&quot;;
++	    return parent::sizeHint();
++	}
++	
++    }
+ 
+ 
+     class QtBasicTestCase extends PHPUnit_Framework_TestCase {
+@@ -236,6 +250,23 @@
+ 	    echo &quot; passed&quot;;
+ 	}
+ 
++      function testVirtualMethodCall()
++      {
++	echo &quot;\ntesting virtual method call 'sizeHint()' in a loop: &quot;;
++	$argc=1;
++	$argv=array(&quot;argv&quot;);
++	$app = new QApplication($argc, $argv);
++    
++	$m = new myWidget();
++    
++	for( $i = 0; $i &lt; 10; $i++ )
++	  {
++	    $m-&gt;show();
++	    $m-&gt;hide();
++	  }
++	echo &quot; passed&quot;;
++      }
++
+     }    
+     
+ ?&gt;
+\ No newline at end of file
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000194.html">[Php-qt-svn] r350 - trunk/tests
+</A></li>
+	
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#195">[ date ]</a>
+              <a href="thread.html#195">[ thread ]</a>
+              <a href="subject.html#195">[ subject ]</a>
+              <a href="author.html#195">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

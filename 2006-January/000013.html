@@ -1,0 +1,169 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r164 - trunk/playground/classes
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-January/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r164%20-%20trunk/playground/classes&In-Reply-To=%3C200601082331.46133.tm%40ippfp.org%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000012.html">
+   <LINK REL="Next"  HREF="000014.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r164 - trunk/playground/classes</H1>
+    <B>Thomas Moenicke</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r164%20-%20trunk/playground/classes&In-Reply-To=%3C200601082331.46133.tm%40ippfp.org%3E"
+       TITLE="[Php-qt-svn] r164 - trunk/playground/classes">tm at ippfp.org
+       </A><BR>
+    <I>Sun Jan  8 23:31:45 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000012.html">[Php-qt-svn] r163 - trunk/tools
+</A></li>
+        <LI>Next message: <A HREF="000014.html">[Php-qt-svn] r165 - trunk/qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#13">[ date ]</a>
+              <a href="thread.html#13">[ thread ]</a>
+              <a href="subject.html#13">[ subject ]</a>
+              <a href="author.html#13">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-01-08 23:22:25 +0100 (Sun, 08 Jan 2006)
+New Revision: 164
+
+Modified:
+   trunk/playground/classes/qabstractbutton.cpp
+   trunk/playground/classes/qabstractslider.cpp
+   trunk/playground/classes/qactionevent.cpp
+   trunk/playground/classes/qapplication.cpp
+   trunk/playground/classes/qboxlayout.cpp
+   trunk/playground/classes/qchar.cpp
+   trunk/playground/classes/qcharref.cpp
+   trunk/playground/classes/qclipboardevent.cpp
+   trunk/playground/classes/qcloseevent.cpp
+   trunk/playground/classes/qcontextmenuevent.cpp
+   trunk/playground/classes/qcoreapplication.cpp
+   trunk/playground/classes/qdate.cpp
+   trunk/playground/classes/qdatetime.cpp
+   trunk/playground/classes/qdragenterevent.cpp
+   trunk/playground/classes/qdragleaveevent.cpp
+   trunk/playground/classes/qdragmoveevent.cpp
+   trunk/playground/classes/qdragresponseevent.cpp
+   trunk/playground/classes/qdropevent.cpp
+   trunk/playground/classes/qfileopenevent.cpp
+   trunk/playground/classes/qfocusevent.cpp
+   trunk/playground/classes/qfont.cpp
+   trunk/playground/classes/qframe.cpp
+   trunk/playground/classes/qgridlayout.cpp
+   trunk/playground/classes/qhboxlayout.cpp
+   trunk/playground/classes/qhelpevent.cpp
+   trunk/playground/classes/qhideevent.cpp
+   trunk/playground/classes/qhoverevent.cpp
+   trunk/playground/classes/qicondragevent.cpp
+   trunk/playground/classes/qinputevent.cpp
+   trunk/playground/classes/qinputmethodevent.cpp
+   trunk/playground/classes/qinputmethodevent__attribute.cpp
+   trunk/playground/classes/qkeyevent.cpp
+   trunk/playground/classes/qlabel.cpp
+   trunk/playground/classes/qlatin1char.cpp
+   trunk/playground/classes/qlatin1string.cpp
+   trunk/playground/classes/qlayout.cpp
+   trunk/playground/classes/qlayoutitem.cpp
+   trunk/playground/classes/qlcdnumber.cpp
+   trunk/playground/classes/qlineedit.cpp
+   trunk/playground/classes/qmouseevent.cpp
+   trunk/playground/classes/qmoveevent.cpp
+   trunk/playground/classes/qobject.cpp
+   trunk/playground/classes/qobjectdata.cpp
+   trunk/playground/classes/qobjectuserdata.cpp
+   trunk/playground/classes/qpainter.cpp
+   trunk/playground/classes/qpaintevent.cpp
+   trunk/playground/classes/qpushbutton.cpp
+   trunk/playground/classes/qresizeevent.cpp
+   trunk/playground/classes/qshortcutevent.cpp
+   trunk/playground/classes/qshowevent.cpp
+   trunk/playground/classes/qslider.cpp
+   trunk/playground/classes/qspaceritem.cpp
+   trunk/playground/classes/qstatustipevent.cpp
+   trunk/playground/classes/qstring.cpp
+   trunk/playground/classes/qtabletevent.cpp
+   trunk/playground/classes/qtime.cpp
+   trunk/playground/classes/qtimer.cpp
+   trunk/playground/classes/qtoolbarchangeevent.cpp
+   trunk/playground/classes/qvboxlayout.cpp
+   trunk/playground/classes/qwhatsthisclickedevent.cpp
+   trunk/playground/classes/qwheelevent.cpp
+   trunk/playground/classes/qwidget.cpp
+   trunk/playground/classes/qwidgetdata.cpp
+   trunk/playground/classes/qwidgetitem.cpp
+   trunk/playground/classes/qwindowstatechangeevent.cpp
+Log:
+playground updated after bughunting, thanks to Jean-Luc.
+
+Modified: trunk/playground/classes/qabstractbutton.cpp
+===================================================================
+--- trunk/playground/classes/qabstractbutton.cpp	2006-01-08 21:05:22 UTC (rev 
+163)
++++ trunk/playground/classes/qabstractbutton.cpp	2006-01-08 22:22:25 UTC (rev 
+164)
+@@ -20,7 +20,7 @@
+  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  *
+  * QAbstractButton.cpp - QAbstractButton PHP implementation.
+- * begin           : Sun Jan  8 12:02:25 2006
++ * begin           : Sun Jan  8 23:20:48 2006
+  * generated by    : moni using kalyptus 0.9.
+  */
+ 
+@@ -31,9 +31,6 @@
+ #include &quot;../php_qt.h&quot;
+ 
+ 
+-#include &lt;QAbstractButton&gt;
+-
+-
+ /*********************************
+  *    class     QAbstractButton */
+ /*
+@@ -55,6 +52,13 @@
+ 			QAbstractButton *obj = (QAbstractButton*) PHP_QT_FETCH();
+ 
+ 			
++			QString return_object = (QString) obj-&gt;tr( (const char*) var_ss_0 , (const 
+char*) var_ss_1);
++				zend_class_entry *ce;                                   
++				object_init_ex(return_value, QAbst
+-- 
+Thomas
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000012.html">[Php-qt-svn] r163 - trunk/tools
+</A></li>
+	<LI>Next message: <A HREF="000014.html">[Php-qt-svn] r165 - trunk/qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#13">[ date ]</a>
+              <a href="thread.html#13">[ thread ]</a>
+              <a href="subject.html#13">[ subject ]</a>
+              <a href="author.html#13">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

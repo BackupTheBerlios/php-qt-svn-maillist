@@ -1,0 +1,406 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r323 - in trunk: php_qt tests
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-May/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r323%20-%20in%20trunk%3A%20php_qt%20tests&In-Reply-To=%3C200705302050.l4UKolVh004534%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000166.html">
+   <LINK REL="Next"  HREF="000168.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r323 - in trunk: php_qt tests</H1>
+    <B>Katrina.Niolet at mail.berlios.de</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r323%20-%20in%20trunk%3A%20php_qt%20tests&In-Reply-To=%3C200705302050.l4UKolVh004534%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r323 - in trunk: php_qt tests">Katrina.Niolet at mail.berlios.de
+       </A><BR>
+    <I>Wed May 30 22:50:47 CEST 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000166.html">[Php-qt-svn] r322 - trunk/php_qt
+</A></li>
+        <LI>Next message: <A HREF="000168.html">[Php-qt-svn] r324 - in trunk: php_qt tests
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#167">[ date ]</a>
+              <a href="thread.html#167">[ thread ]</a>
+              <a href="subject.html#167">[ subject ]</a>
+              <a href="author.html#167">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: Katrina Niolet
+Date: 2007-05-30 22:50:45 +0200 (Wed, 30 May 2007)
+New Revision: 323
+
+Added:
+   trunk/tests/qFunctions.php
+Modified:
+   trunk/php_qt/functions.cpp
+   trunk/php_qt/php_qt.cpp
+   trunk/php_qt/php_qt.h
+Log:
+Added support for the following Qt namespace functions:
+qDebug,qWarning,qCritical,qAbs,qRound,qRound64,qMin,qMax,qBound,qPrintable; 
+also qFunctions.php file in test folder to demonstrate and test these 
+functions.
+
+Modified: trunk/php_qt/functions.cpp
+===================================================================
+--- trunk/php_qt/functions.cpp	2007-05-24 22:16:57 UTC (rev 322)
++++ trunk/php_qt/functions.cpp	2007-05-30 20:50:45 UTC (rev 323)
+@@ -3,6 +3,7 @@
+  *
+  * Copyright (C) 2006 
+  * Thomas Moenicke &lt;thomas.moenicke at kdemail.net&gt;
++ * Katrina Niolet &lt;katrina at niolet.name&gt;
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License
+@@ -140,6 +141,195 @@
+ 
+ }
+ 
++/**
++ * qDebug($message) triggers a notice with the given message.
++ */
++PHP_FUNCTION(qDebug) {
++	const char* msg;
++	int msglen;
++	
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s&quot;,&amp;msg,&amp;msglen)==FAILURE) {
++		php_error(E_PARSE,&quot;wrong parameters for qDebug&quot;);
++		return;
++	}
++	php_error(E_NOTICE,msg);
++	return;
++}
++
++/**
++ * qWarning($message) triggers a warning with the given message.
++ */
++PHP_FUNCTION(qWarning) {
++	const char* msg;
++	int msglen;
++	
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s&quot;,&amp;msg,&amp;msglen)==FAILURE) {
++		php_error(E_PARSE,&quot;wrong parameters for qWarning&quot;);
++		return;
++	}
++	php_error(E_WARNING,msg);
++	return;
++}
++
++/**
++ * qCritical($message) triggers a fatal error with the given message.
++ */
++PHP_FUNCTION(qCritical) {
++	const char* msg;
++	int msglen;
++	
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s&quot;,&amp;msg,&amp;msglen)==FAILURE) {
++		php_error(E_PARSE,&quot;wrong parameters for qCritical&quot;);
++		return;
++	}
++	php_error(E_ERROR,msg);
++	return;
++}
++
++/**
++ * Returns the absolute value of a number.
++ */
++PHP_FUNCTION(qAbs) {
++	double x;
++	
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;d&quot;,&amp;x)==FAILURE) {
++		php_error(E_PARSE,&quot;wrong parameters for qAbs&quot;);
++		return;
++	}
++	RETURN_DOUBLE(0.0 &gt;= x ? -x : x);
++}
++	
++/**
++ * Returns this number rounded to the nearest integer
++ * if decimal is greater than .5 it rounds up, otherwise it rounds down
++ */
++PHP_FUNCTION(qRound) {
++	double x;
++	
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;d&quot;,&amp;x)==FAILURE) {
++		php_error(E_PARSE,&quot;wrong parameters for qRound&quot;);
++		return;
++	}
++	RETURN_DOUBLE(x &gt;= 0.00 ? (int)(x+0.5) : (int)(x - (int)(x-1) + 0.5) + (int)(x-1));
++}
++
++/**
++ * Returns this number rounded to the nearest integer
++ * if decimal is greater than .5 it rounds up, otherwise it rounds down
++ */
++PHP_FUNCTION(qRound64) {
++	double x;
++	
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;d&quot;,&amp;x)==FAILURE) {
++		php_error(E_PARSE,&quot;wrong parameters for qRound&quot;);
++		return;
++	}
++	RETURN_DOUBLE(x &gt;= 0.00 ? (int)(x+0.5) : (int)(x - (int)(x-1) + 0.5) + (int)(x-1));
++}
++
++/**
++ * Return the smaller of two numbers
++ * TODO: Make this capable of dealing with objects
++ */
++PHP_FUNCTION(qMin) {
++	double x;
++	double y;
++	
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;dd&quot;,&amp;x,&amp;y)==FAILURE) {
++		php_error(E_PARSE,&quot;wrong paramters for qMin&quot;);
++		return;
++	}
++	if(x&gt;y)
++		RETURN_DOUBLE(y);
++	RETURN_DOUBLE(x);
++}
++
++/**
++ * Return the larger of two numbers
++ * TODO: Make this capable of dealing with objects
++ */
++PHP_FUNCTION(qMax) {
++	double x;
++	double y;
++	
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;dd&quot;,&amp;x,&amp;y)==FAILURE) {
++		php_error(E_PARSE,&quot;wrong parameters for qMax&quot;);
++		return;
++	}
++	if(x&gt;y)
++		RETURN_DOUBLE(x);
++	RETURN_DOUBLE(y);
++}
++
++/**
++ * Return a value bound by a minimum and maximum value.
++ * TODO: Make this capable of dealing with objects
++ */
++PHP_FUNCTION(qBound) {
++	double min;
++	double val;
++	double max;
++	
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ddd&quot;,&amp;min,&amp;val,&amp;max)==FAILURE) {
++		php_error(E_PARSE,&quot;wrong parameters for qBound&quot;);
++		return;
++	}
++	if(min&gt;max) {
++		php_error(E_PARSE,&quot;minimum cannot be greater than maximum for qBound&quot;);
++		return;
++	}
++	if(val&gt;max)
++		val=max;
++	if(val&lt;min)
++		val=min;
++	RETURN_DOUBLE(val);
++}
++
++/**
++ * Convert a string or character code into a printable character based on local 8 bit character set
++ */
++PHP_FUNCTION(qPrintable) {
++	zval* string;
++	QString *ptr;
++	//int string_len;
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;,&amp;string)==FAILURE) {
++		php_error(E_PARSE,&quot;wrong parameters for qPrintable&quot;);
++		return;
++	}
++	switch(Z_TYPE_P(string)) {
++		case IS_NULL:
++			RETURN_STRING(&quot;&quot;,1);
++			break;
++		case IS_BOOL:
++			RETURN_STRING (&quot;&quot;,1);
++			break;
++		case IS_LONG:
++			ptr = new QString((int)Z_LVAL_P(string));
++			RETURN_STRING((char *)ptr-&gt;toLocal8Bit().constData(),1);
++			break;
++		case IS_DOUBLE:
++			ptr = new QString((int)Z_DVAL_P(string));
++			RETURN_STRING((char*)ptr-&gt;toLocal8Bit().constData(),1);
++			break;
++		case IS_RESOURCE:
++			RETURN_STRING(&quot;Resource&quot;,1);
++			break;
++		case IS_ARRAY:
++			RETURN_STRING(&quot;Array&quot;,1);
++			break;
++		case IS_STRING:
++			ptr = new QString(Z_STRVAL_P(string));
++			RETURN_STRING((char*)ptr-&gt;toLocal8Bit().constData(),1);
++			break;
++		case IS_OBJECT:
++			if(strcmp(Z_OBJCE_P(string)-&gt;name,&quot;QString&quot;)==0) {
++				ptr = (QString*) phpqt_getQtObjectFromZval(string);
++				RETURN_STRING((char*)ptr-&gt;toLocal8Bit().constData(),1);
++			}
++			RETURN_STRING(Z_OBJCE_P(string)-&gt;name,1);
++			break;
++	}
++}
+ /*!
+  *	tr() returns QObject::tr()
+  *
+
+Modified: trunk/php_qt/php_qt.cpp
+===================================================================
+--- trunk/php_qt/php_qt.cpp	2007-05-24 22:16:57 UTC (rev 322)
++++ trunk/php_qt/php_qt.cpp	2007-05-30 20:50:45 UTC (rev 323)
+@@ -3,6 +3,7 @@
+  *
+  * Copyright (C) 2006 
+  * Thomas Moenicke &lt;thomas.moenicke at kdemail.net&gt;
++ * Katrina Niolet &lt;katrina at niolet.name&gt;
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License
+@@ -70,7 +71,17 @@
+ 	PHP_FE(confirm_php_qt_compiled,	NULL)		/* For testing, remove later. */
+ 	PHP_FE(SIGNAL,	NULL)
+ 	PHP_FE(SLOT,	NULL)	
+-	PHP_FE(emit,	NULL)	
++	PHP_FE(emit,	NULL)
++	PHP_FE(qDebug,	NULL)
++	PHP_FE(qWarning,	NULL)
++	PHP_FE(qCritical,	NULL)
++	PHP_FE(qAbs, 		NULL)
++	PHP_FE(qRound,		NULL)
++	PHP_FE(qRound64,	NULL)
++	PHP_FE(qMin,		NULL)
++	PHP_FE(qMax,		NULL)
++	PHP_FE(qBound,		NULL)
++	PHP_FE(qPrintable,	NULL)
+ 	PHP_FE(qobject_cast,	phpqt_cast_arginfo)
+ 	PHP_FE(tr,	NULL)
+ 	PHP_FE(check_qobject,	NULL)
+
+Modified: trunk/php_qt/php_qt.h
+===================================================================
+--- trunk/php_qt/php_qt.h	2007-05-24 22:16:57 UTC (rev 322)
++++ trunk/php_qt/php_qt.h	2007-05-30 20:50:45 UTC (rev 323)
+@@ -3,6 +3,7 @@
+  *
+  * Copyright (C) 2006 
+  * Thomas Moenicke &lt;thomas.moenicke at kdemail.net&gt;
++ * Katrina Niolet &lt;katrina at niolet.name&gt;
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License
+@@ -95,6 +96,16 @@
+ PHP_FUNCTION(SLOT);
+ #undef emit
+ PHP_FUNCTION(emit);
++PHP_FUNCTION(qDebug);
++PHP_FUNCTION(qWarning);
++PHP_FUNCTION(qCritical);
++PHP_FUNCTION(qAbs);
++PHP_FUNCTION(qRound);
++PHP_FUNCTION(qRound64);
++PHP_FUNCTION(qMin);
++PHP_FUNCTION(qMax);
++PHP_FUNCTION(qBound);
++PHP_FUNCTION(qPrintable);
+ PHP_FUNCTION(qobject_cast);
+ PHP_FUNCTION(tr);
+ PHP_FUNCTION(check_qobject);
+
+Added: trunk/tests/qFunctions.php
+===================================================================
+--- trunk/tests/qFunctions.php	2007-05-24 22:16:57 UTC (rev 322)
++++ trunk/tests/qFunctions.php	2007-05-30 20:50:45 UTC (rev 323)
+@@ -0,0 +1,52 @@
++&lt;?php
++
++if(!extension_loaded('php_qt')) {
++	dl('php_qt.' . PHP_SHLIB_SUFFIX);
++}
++
++echo &quot;\nTesting qAbs:\n&quot;;
++echo &quot;qAbs(4) = &quot;.qAbs(4).&quot;\n&quot;;
++echo &quot;qAbs(-4) = &quot;.qAbs(-4).&quot;\n&quot;;
++echo &quot;qAbs(4.3) = &quot;.qAbs(4.3).&quot;\n&quot;;
++echo &quot;qAbs(-4.3) = &quot;.qAbs(-4.3).&quot;\n&quot;;
++
++echo &quot;\nTesting qRound:\n&quot;;
++echo &quot;qRound(1) = &quot;.qRound(1).&quot;\n&quot;;
++echo &quot;qRound(4.5) = &quot;.qRound(4.5).&quot;\n&quot;;
++echo &quot;qRound(-4.47837289) = &quot;.qRound(-4.478327289).&quot;\n&quot;;
++
++echo &quot;\nTesting qRound64:\n&quot;;
++echo &quot;qRound64(1) = &quot;.qRound64(1).&quot;\n&quot;;
++echo &quot;qRound64(4.5) = &quot;.qRound64(4.5).&quot;\n&quot;;
++echo &quot;qRound64(-4.47837289) = &quot;.qRound64(-4.478327289).&quot;\n&quot;;
++
++echo &quot;\nTesting qMin:\n&quot;;
++echo &quot;qMin(4,5) = &quot;.qMin(4,5).&quot;\n&quot;;
++echo &quot;qMin(7,-1.567) = &quot;.qMin(7,-1.567).&quot;\n&quot;;
++
++echo &quot;\nTesting qMax:\n&quot;;
++echo &quot;qMax(4,5) = &quot;.qMax(4,5).&quot;\n&quot;;
++echo &quot;qMax(7,-1.567) = &quot;.qMax(7,-1.567).&quot;\n&quot;;
++
++echo &quot;\nTesting qBound:\n&quot;;
++echo &quot;qBound(3,4,5) = &quot;.qBound(3,4,5).&quot;\n&quot;;
++echo &quot;qBound(4,3,5) = &quot;.qBound(4,3,5).&quot;\n&quot;;
++echo &quot;qBound(4,6,5) = &quot;.qBound(4,6,5).&quot;\n&quot;;
++
++echo &quot;\nTesting qPrintable:\n&quot;;
++echo &quot;qPrintable(\&quot;bob\&quot;) = &quot;.qPrintable(&quot;bob&quot;).&quot;\n&quot;;
++echo &quot;qPrintable(new QString(\&quot;fred\&quot;) = &quot;.qPrintable(new QString(&quot;fred&quot;)).&quot;\n&quot;;
++echo 'qPrintable(45) = '.qPrintable(45).&quot;\n&quot;;
++class test {}
++echo &quot;qPrintable(new test) = &quot;.qPrintable(new test).&quot;\n&quot;;
++
++echo &quot;\nTesting qDebug:\n&quot;;
++qDebug(&quot;This is a debug message&quot;);
++
++echo &quot;Testing qWarning:\n&quot;;
++qWarning(&quot;This is a warning message&quot;);
++
++echo &quot;Testing qCritical:\n&quot;;
++qCritical(&quot;This is a fatal error&quot;);
++
++?&gt;
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000166.html">[Php-qt-svn] r322 - trunk/php_qt
+</A></li>
+	<LI>Next message: <A HREF="000168.html">[Php-qt-svn] r324 - in trunk: php_qt tests
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#167">[ date ]</a>
+              <a href="thread.html#167">[ thread ]</a>
+              <a href="subject.html#167">[ subject ]</a>
+              <a href="author.html#167">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

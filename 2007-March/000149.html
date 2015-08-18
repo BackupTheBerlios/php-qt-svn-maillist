@@ -1,0 +1,3087 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r305 - in trunk: . examples/calculator php_qt tests
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-March/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r305%20-%20in%20trunk%3A%20.%20examples/calculator%20php_qt%20tests&In-Reply-To=%3C200703211308.l2LD8YWO018140%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000148.html">
+   <LINK REL="Next"  HREF="000150.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r305 - in trunk: . examples/calculator php_qt tests</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r305%20-%20in%20trunk%3A%20.%20examples/calculator%20php_qt%20tests&In-Reply-To=%3C200703211308.l2LD8YWO018140%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r305 - in trunk: . examples/calculator php_qt tests">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Wed Mar 21 14:08:34 CET 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000148.html">[Php-qt-svn] r304 - trunk/tests
+</A></li>
+        <LI>Next message: <A HREF="000150.html">[Php-qt-svn] r306 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#149">[ date ]</a>
+              <a href="thread.html#149">[ thread ]</a>
+              <a href="subject.html#149">[ subject ]</a>
+              <a href="author.html#149">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2007-03-21 14:08:26 +0100 (Wed, 21 Mar 2007)
+New Revision: 305
+
+Added:
+   trunk/php_qt/handlers.cpp
+   trunk/php_qt/marshall.h
+   trunk/php_qt/marshall_basetypes.h
+   trunk/php_qt/marshall_primitives.h
+   trunk/php_qt/marshall_types.cpp
+   trunk/php_qt/marshall_types.h
+Modified:
+   trunk/CREDITS
+   trunk/ChangeLog
+   trunk/examples/calculator/main.php
+   trunk/php_qt/CMakeLists.txt
+   trunk/php_qt/functions.cpp
+   trunk/php_qt/php_qt.cpp
+   trunk/php_qt/php_qt.h
+   trunk/php_qt/qstring.cpp
+   trunk/php_qt/smokephp.cpp
+   trunk/tests/QtBasicTestCase.php
+Log:
+* object oriented handlers
+
+
+
+Modified: trunk/CREDITS
+===================================================================
+--- trunk/CREDITS	2007-03-08 21:16:51 UTC (rev 304)
++++ trunk/CREDITS	2007-03-21 13:08:26 UTC (rev 305)
+@@ -3,10 +3,15 @@
+ Thomas Moenicke &lt;thomas.moenicke at kdemail.net&gt;
+     main developer, maintainer
+ 
+-Katrina Niolet  &lt;kniolet at ildiinc.com&gt;&#160;
+-    contributor
++contributors
++    Katrina Niolet
++    Jean-Luc Gyger
++    Ferenc Veres
+ 
+-Jean-Luc Gyger &lt;jean_luc.gyger at freesurf.ch&gt;
+-    developer
++parts of PHP-Qt are derived from the QtRuby sources, written by:
++	Richard Dale
+ 
+-Thanks to Ferenc Veres for testing and suggestions.
++	which is a ruby version of the PerlQt/Smoke project, written by:
++	    Ashley Winters
++	    Germain Garand
++	    David Faure
+
+Modified: trunk/ChangeLog
+===================================================================
+--- trunk/ChangeLog	2007-03-08 21:16:51 UTC (rev 304)
++++ trunk/ChangeLog	2007-03-21 13:08:26 UTC (rev 305)
+@@ -1,5 +1,9 @@
+ 2007-003-4  Thomas Moenicke &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">thomas.moenicke at kdemail.net</A>&gt;
+ 
++		* object oriented handlers (see QtRuby)
++
++2007-003-4  Thomas Moenicke &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">thomas.moenicke at kdemail.net</A>&gt;
++
+ 		* Debugging for metaobject system added
+ 		* parent_ce_ptr
+ 
+
+Modified: trunk/examples/calculator/main.php
+===================================================================
+--- trunk/examples/calculator/main.php	2007-03-08 21:16:51 UTC (rev 304)
++++ trunk/examples/calculator/main.php	2007-03-21 13:08:26 UTC (rev 305)
+@@ -15,7 +15,7 @@
+ 
+     require_once('calculator.php');
+ 
+-    $app = new QApplication(&amp;$argc,$argv);
++    $app = new QApplication($argc,$argv);
+ 
+     $calc = new Calculator();
+     $calc-&gt;show();
+
+Modified: trunk/php_qt/CMakeLists.txt
+===================================================================
+--- trunk/php_qt/CMakeLists.txt	2007-03-08 21:16:51 UTC (rev 304)
++++ trunk/php_qt/CMakeLists.txt	2007-03-21 13:08:26 UTC (rev 305)
+@@ -18,6 +18,8 @@
+     php_qt.cpp
+     smokephp.cpp
+     qstring.cpp
++    marshall_types.cpp
++    handlers.cpp
+     )
+ 
+ add_library(php_qt SHARED ${phpqt_LIB_SRCS})
+
+Modified: trunk/php_qt/functions.cpp
+===================================================================
+--- trunk/php_qt/functions.cpp	2007-03-08 21:16:51 UTC (rev 304)
++++ trunk/php_qt/functions.cpp	2007-03-21 13:08:26 UTC (rev 305)
+@@ -98,6 +98,31 @@
+     return;
+ }
+ 
++/*!
++ *  emits a signal
++ */
++
++PHP_FUNCTION(emit)
++{
++    const char* string;
++    int string_len;
++    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s&quot;,&amp;string,&amp;string_len)) {
++        return;
++    }
++
++    char* tmp = (char*) emalloc((int) string_len + 2);
++    strcpy(tmp,&quot;1&quot;);
++
++    strncat(tmp, string, (int) string_len);
++
++    ZVAL_STRING(return_value,tmp,1);
++
++    efree(tmp);
++
++    return;
++}
++
++
+ /**
+  *	simply returns the first parameter because objects are casted automatically in smokephp_convertReturn(...)
+  *
+@@ -152,13 +177,14 @@
+  *
+  */
+ 
+-PHP_FUNCTION(check_qobject)
++
++void check_object(zval* zobject)
+ {
+-    zval* zobject;
+-    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;,&amp;zobject)) {
+-        return;
+-    }
+ 
++	if(!phpqt_SmokePHPObjectExists(zobject)) {
++	    php_error(E_ERROR,&quot;Object is not registered.&quot;);
++	}
++
+ 	smokephp_object* o = phpqt_getSmokePHPObjectFromZval(zobject);
+ 
+ 	cout &lt;&lt; &quot;PHP-Qt object \n(&quot; &lt;&lt; endl;
+@@ -167,7 +193,7 @@
+ 	cout &lt;&lt; &quot;\tclass entry =&gt; &quot; &lt;&lt; Z_OBJCE_P(zobject)-&gt;name &lt;&lt; endl;
+ 	cout &lt;&lt; &quot;\t  ref count =&gt; &quot; &lt;&lt; zobject-&gt;refcount &lt;&lt; endl;
+ 	cout &lt;&lt; &quot;\t     is_ref =&gt; &quot; &lt;&lt; zobject-&gt;is_ref &lt;&lt; endl;
+-	cout &lt;&lt; &quot;\t       type =&gt; &quot; &lt;&lt; zobject-&gt;type &lt;&lt; endl;
++	cout &lt;&lt; &quot;\t       type =&gt; &quot; &lt;&lt; Z_TYPE_P(zobject) &lt;&lt; endl;
+ 
+ 	cout &lt;&lt; endl;
+ 
+@@ -182,3 +208,14 @@
+ 	cout &lt;&lt; &quot;)&quot; &lt;&lt; endl;
+ 
+ }
++
++PHP_FUNCTION(check_qobject)
++{
++
++    zval* zobject;
++    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;,&amp;zobject)) {
++        return;
++    }
++
++    check_object(zobject);
++}
+
+Added: trunk/php_qt/handlers.cpp
+===================================================================
+--- trunk/php_qt/handlers.cpp	2007-03-08 21:16:51 UTC (rev 304)
++++ trunk/php_qt/handlers.cpp	2007-03-21 13:08:26 UTC (rev 305)
+@@ -0,0 +1,339 @@
++/***************************************************************************
++ *                                                                         *
++ *   This program is free software; you can redistribute it and/or modify  *
++ *   it under the terms of the GNU General Public License as published by  *
++ *   the Free Software Foundation; either version 2 of the License, or     *
++ *   (at your option) any later version.                                   *
++ *                                                                         *
++ ***************************************************************************/
++
++#include &lt;QtCore/qprocess.h&gt;
++#include &lt;QtCore/qtextcodec.h&gt;
++
++#include &quot;smoke.h&quot;
++#include &quot;marshall.h&quot;
++#include &quot;php_qt.h&quot;
++#include &quot;smokephp.h&quot;
++
++extern zend_class_entry* qstring_ce;
++
++bool
++matches_arg(Smoke *smoke, Smoke::Index meth, Smoke::Index argidx, const char *argtype)
++{
++	Smoke::Index *arg = smoke-&gt;argumentList + smoke-&gt;methods[meth].args + argidx;
++	SmokeType type = SmokeType(smoke, *arg);
++	if (type.name() &amp;&amp; qstrcmp(type.name(), argtype) == 0) {
++		return true;
++	}
++	return false;
++}
++
++void*
++construct_copy(smokephp_object *o)
++{
++    const char *className = o-&gt;smoke-&gt;className(o-&gt;classId);
++    int classNameLen = strlen(className);
++    char *ccSig = new char[classNameLen + 2];       // copy constructor signature
++    strcpy(ccSig, className);
++    strcat(ccSig, &quot;#&quot;);
++    Smoke::Index ccId = o-&gt;smoke-&gt;idMethodName(ccSig);
++    delete[] ccSig;
++
++    char *ccArg = new char[classNameLen + 8];
++    sprintf(ccArg, &quot;const %s&amp;&quot;, className);
++
++    Smoke::Index ccMeth = o-&gt;smoke-&gt;findMethod(o-&gt;classId, ccId);
++
++    if(!ccMeth) {
++	delete[] ccArg;
++	return 0;
++    }
++
++    Smoke::Index method = o-&gt;smoke-&gt;methodMaps[ccMeth].method;
++    if(method &gt; 0) {
++	// Make sure it's a copy constructor
++	if(!matches_arg(o-&gt;smoke, method, 0, ccArg)) {
++            delete[] ccArg;
++	    return 0;
++        }
++        delete[] ccArg;
++        ccMeth = method;
++    } else {
++        // ambiguous method, pick the copy constructor
++	Smoke::Index i = -method;
++	while(o-&gt;smoke-&gt;ambiguousMethodList[i]) {
++	    if(matches_arg(o-&gt;smoke, o-&gt;smoke-&gt;ambiguousMethodList[i], 0, ccArg))
++		break;
++            i++;
++	}
++        delete[] ccArg;
++	ccMeth = o-&gt;smoke-&gt;ambiguousMethodList[i];
++	if(!ccMeth)
++	    return 0;
++    }
++
++    // Okay, ccMeth is the copy constructor. Time to call it.
++    Smoke::StackItem args[2];
++    args[0].s_voidp = 0;
++    args[1].s_voidp = o-&gt;ptr;
++    Smoke::ClassFn fn = o-&gt;smoke-&gt;classes[o-&gt;classId].classFn;
++    (*fn)(o-&gt;smoke-&gt;methods[ccMeth].method, 0, args);
++    return args[0].s_voidp;
++}
++
++
++#include &quot;marshall_basetypes.h&quot;
++template &lt;class T&gt;
++static void marshall_it(Marshall *m)
++{
++	switch(m-&gt;action()) {
++		case Marshall::FromZVAL:
++			marshall_from_php&lt;T&gt;(m);
++		break;
++ 
++		case Marshall::ToZVAL:
++			marshall_to_php&lt;T&gt;( m );
++		break;
++				
++		default:
++			m-&gt;unsupported();
++		break;
++	}
++}
++
++void
++marshall_basetype(Marshall *m)
++{
++	switch(m-&gt;type().elem()) {
++
++		case Smoke::t_bool:
++			marshall_it&lt;bool&gt;(m);
++		break;
++
++		case Smoke::t_char:
++			marshall_it&lt;signed char&gt;(m);
++		break;
++		
++		case Smoke::t_uchar:
++			marshall_it&lt;unsigned char&gt;(m);
++		break;
++ 
++		case Smoke::t_short:
++			marshall_it&lt;short&gt;(m);
++		break;
++      
++		case Smoke::t_ushort:
++			marshall_it&lt;unsigned short&gt;(m);
++		break;
++
++		case Smoke::t_int:
++			marshall_it&lt;int&gt;(m);
++		break;
++		
++		case Smoke::t_uint:
++			marshall_it&lt;unsigned int&gt;(m);
++		break;
++ 
++		case Smoke::t_long:
++			marshall_it&lt;long&gt;(m);
++		break;
++
++		case Smoke::t_ulong:
++			marshall_it&lt;unsigned long&gt;(m);
++		break;
++ 
++		case Smoke::t_float:
++			marshall_it&lt;float&gt;(m);
++		break;
++
++		case Smoke::t_double:
++			marshall_it&lt;double&gt;(m);
++		break;
++
++		case Smoke::t_enum:
++			marshall_it&lt;SmokeEnumWrapper&gt;(m);
++		break;
++     
++		case Smoke::t_class:
++			marshall_it&lt;SmokeClassWrapper&gt;(m);
++		break;
++
++		default:
++			m-&gt;unsupported();
++		break;	
++	}
++
++}
++
++static void marshall_void(Marshall * /*m*/) {}
++static void marshall_unknown(Marshall *m) {
++    m-&gt;unsupported();
++}
++
++static void marshall_charPP(Marshall *m) {
++    m-&gt;item().s_voidp = transformArray(m-&gt;var());
++    m-&gt;next();
++}
++
++static void marshall_charP(Marshall *m) {
++  marshall_it&lt;char *&gt;(m);
++}
++
++void marshall_ucharP(Marshall *m) {
++  marshall_it&lt;unsigned char *&gt;(m);
++}
++
++static const char * KCODE = &quot;NONE&quot;;
++static QTextCodec *codec = 0;
++
++static void 
++init_codec() {
++//	zval* temp = read from php.ini
++//	KCODE = temp-&gt;value.str.val;
++
++	if (qstrcmp(KCODE, &quot;EUC&quot;) == 0) {
++		codec = QTextCodec::codecForName(&quot;eucJP&quot;);
++	} else if (qstrcmp(KCODE, &quot;SJIS&quot;) == 0) {
++		codec = QTextCodec::codecForName(&quot;Shift-JIS&quot;);
++	}
++}
++
++
++QString* 
++qstringFromZString(zval* zstring) {
++	if (KCODE == 0) {
++		init_codec();
++	}
++
++	if (qstrcmp(KCODE, &quot;UTF8&quot;) == 0)
++		return new QString(QString::fromUtf8(zstring-&gt;value.str.val, zstring-&gt;value.str.len));
++	else if (qstrcmp(KCODE, &quot;EUC&quot;) == 0)
++		return new QString(codec-&gt;toUnicode(zstring-&gt;value.str.val));
++	else if (qstrcmp(KCODE, &quot;SJIS&quot;) == 0)
++		return new QString(codec-&gt;toUnicode(zstring-&gt;value.str.val));
++	else if(qstrcmp(KCODE, &quot;NONE&quot;) == 0)
++		return new QString(QString::fromLatin1(zstring-&gt;value.str.val));
++
++	return new QString(QString::fromLocal8Bit(zstring-&gt;value.str.val, zstring-&gt;value.str.len));
++}
++
++zval* 
++zstringFromQString(QString * s) {
++	if (KCODE == 0) {
++		init_codec();
++	}
++
++	zval* return_value = (zval*) emalloc(sizeof(zval));
++	if (qstrcmp(KCODE, &quot;UTF8&quot;) == 0) {
++		ZVAL_STRING(return_value, (char*) s-&gt;toUtf8().constData(), /* duplicate */ 1);
++	} else if (qstrcmp(KCODE, &quot;EUC&quot;) == 0) {
++		ZVAL_STRING(return_value, (char*) codec-&gt;fromUnicode(*s).constData(), /* duplicate */ 1);
++	} else if (qstrcmp(KCODE, &quot;SJIS&quot;) == 0) {
++		ZVAL_STRING(return_value, (char*) codec-&gt;fromUnicode(*s).constData(), /* duplicate */ 1);
++	} else if (qstrcmp(KCODE, &quot;NONE&quot;) == 0) {
++		ZVAL_STRING(return_value, (char*) s-&gt;toLatin1().constData(), /* duplicate */ 1);
++	} else {
++		ZVAL_STRING(return_value, (char*) s-&gt;toUtf8().constData(), /* duplicate */ 1);
++	}
++	return return_value;
++}
++
++
++static void marshall_QString(Marshall *m) {
++	switch(m-&gt;action()) {
++		case Marshall::FromZVAL:
++		{
++			if(Z_TYPE_P(m-&gt;var()) != IS_STRING){ // is object
++			    m-&gt;item().s_voidp = phpqt_getQtObjectFromZval(m-&gt;var());
++			    m-&gt;next();
++			    break;
++			}
++
++			QString* s = 0;
++			if( m-&gt;var() != Qnil) {
++				s = qstringFromZString(m-&gt;var());
++			} else {
++				s = new QString();
++			}
++
++			m-&gt;item().s_voidp = s;
++			m-&gt;next();
++
++			if (!m-&gt;type().isConst() &amp;&amp; m-&gt;var() != Qnil &amp;&amp; s != 0 &amp;&amp; !s-&gt;isNull()) {
++				m-&gt;var()-&gt;value.str.len = 0;
++				zval* temp = zstringFromQString(s);
++				ZVAL_STRING(m-&gt;var(), temp-&gt;value.str.val, 1);
++			}
++
++			if (s != 0 &amp;&amp; m-&gt;cleanup()) {
++				delete s;
++			}
++		}
++		break;
++
++		case Marshall::ToZVAL:
++		{
++			QString* s = (QString*) m-&gt;item().s_voidp;
++			phpqt_createObject(m-&gt;retval(), (void*) s, qstring_ce);
++
++			if(s) {
++				if (s-&gt;isNull()) {
++					m-&gt;setRetval(Qnil);
++				}
++			} else {
++				m-&gt;setRetval(Qnil);
++			}
++		}
++		break;
++ 
++		default:
++			m-&gt;unsupported();
++		break;
++
++   }
++}
++
++static void marshall_IntR(Marshall *m) {
++    m-&gt;item().s_voidp = &amp;Z_LVAL_P(m-&gt;var());
++    m-&gt;next();
++}
++
++TypeHandler Qt_handlers[] = {
++    { &quot;WId&quot;, marshall_it&lt;WId&gt; },
++    { &quot;Q_PID&quot;, marshall_it&lt;Q_PID&gt; },
++    { &quot;QString&quot;, marshall_QString },
++    { &quot;QString&amp;&quot;, marshall_QString },
++    { &quot;QString*&quot;, marshall_QString },
++    { &quot;int&amp;&quot;, marshall_IntR },
++    { &quot;char**&quot;, marshall_charPP },
++    { &quot;char*&quot;, marshall_charP },
++    { 0, 0 }
++};
++
++QHash&lt;QByteArray, TypeHandler*&gt; type_handlers;
++
++void install_handlers(TypeHandler *h) {
++	while(h-&gt;name) {
++		type_handlers.insert(h-&gt;name, h);
++		h++;
++	}
++}
++
++Marshall::HandlerFn getMarshallFn(const SmokeType &amp;type) {
++	if(type.elem())
++		return marshall_basetype;
++	if(!type.name())
++		return marshall_void;
++
++	TypeHandler *h = type_handlers[type.name()];
++
++	if(h == 0 &amp;&amp; type.isConst() &amp;&amp; strlen(type.name()) &gt; strlen(&quot;const &quot;)) {
++			h = type_handlers[type.name() + strlen(&quot;const &quot;)];
++	}
++	
++	if(h != 0) {
++		return h-&gt;fn;
++	}
++
++	return marshall_unknown;
++}
+
+Added: trunk/php_qt/marshall.h
+===================================================================
+--- trunk/php_qt/marshall.h	2007-03-08 21:16:51 UTC (rev 304)
++++ trunk/php_qt/marshall.h	2007-03-21 13:08:26 UTC (rev 305)
+@@ -0,0 +1,69 @@
++#ifndef MARSHALL_H
++#define MARSHALL_H
++
++#include &lt;smoke.h&gt;
++#include &lt;php.h&gt;
++
++class SmokeType;
++
++class Marshall {
++public:
++    /**
++     * FromZVAL is used for virtual function return ce_ptrs and regular
++     * method arguments.
++     *
++     * ToZVAL is used for method return-values and virtual function
++     * arguments.
++     */
++    typedef void (*HandlerFn)(Marshall *);
++    enum Action { FromZVAL, ToZVAL };
++    virtual SmokeType type() = 0;
++    virtual Action action() = 0;
++    virtual Smoke::StackItem &amp;item() = 0;
++    virtual zval* var() = 0;
++    virtual void unsupported() = 0;
++    virtual Smoke *smoke() = 0;
++    /**
++     * For return-values, next() does nothing.
++     * For FromRV, next() calls the method and returns.
++     * For ToRV, next() calls the virtual function and returns.
++     *
++     * Required to reset Marshall object to the state it was
++     * before being called when it returns.
++     */
++    virtual void next() = 0;
++    /**
++     * For FromSV, cleanup() returns false when the handler should free
++     * any allocated memory after next().
++     *
++     * For ToSV, cleanup() returns true when the handler should delete
++     * the pointer passed to it.
++     */
++    virtual bool cleanup() = 0;
++
++    zval* retval() {return _retval;};
++    zval* setRetval(zval* retval) {_retval = retval;};
++
++    virtual ~Marshall() {}
++
++protected:
++    zval* _retval;
++
++};    
++
++class SmokeEnumWrapper {
++public:
++	Marshall *m;
++};	
++
++class SmokeClassWrapper {
++public:
++  Marshall *m;
++};
++
++struct TypeHandler {
++    const char *name;
++    Marshall::HandlerFn fn;
++};
++
++#endif
+
+Added: trunk/php_qt/marshall_basetypes.h
+===================================================================
+--- trunk/php_qt/marshall_basetypes.h	2007-03-08 21:16:51 UTC (rev 304)
++++ trunk/php_qt/marshall_basetypes.h	2007-03-21 13:08:26 UTC (rev 305)
+@@ -0,0 +1,220 @@
++/***************************************************************************
++ *                                                                         *
++ *   This program is free software; you can redistribute it and/or modify  *
++ *   it under the terms of the GNU General Public License as published by  *
++ *   the Free Software Foundation; either version 2 of the License, or     *
++ *   (at your option) any later version.                                   *
++ *                                                                         *
++ ***************************************************************************/
++
++template &lt;class T&gt; T* smoke_ptr(Marshall *m) { return (T*) m-&gt;item().s_voidp; }
++
++template&lt;&gt; bool* smoke_ptr&lt;bool&gt;(Marshall *m) { return &amp;m-&gt;item().s_bool; }
++template&lt;&gt; signed char* smoke_ptr&lt;signed char&gt;(Marshall *m) { return &amp;m-&gt;item().s_char; }
++template&lt;&gt; unsigned char* smoke_ptr&lt;unsigned char&gt;(Marshall *m) { return &amp;m-&gt;item().s_uchar; }
++template&lt;&gt; short* smoke_ptr&lt;short&gt;(Marshall *m) { return &amp;m-&gt;item().s_short; }
++template&lt;&gt; unsigned short* smoke_ptr&lt;unsigned short&gt;(Marshall *m) { return &amp;m-&gt;item().s_ushort; }
++template&lt;&gt; int* smoke_ptr&lt;int&gt;(Marshall *m) { return &amp;m-&gt;item().s_int; }
++template&lt;&gt; unsigned int* smoke_ptr&lt;unsigned int&gt;(Marshall *m) { return &amp;m-&gt;item().s_uint; }
++template&lt;&gt; long* smoke_ptr&lt;long&gt;(Marshall *m) { 	return &amp;m-&gt;item().s_long; }
++template&lt;&gt; unsigned long* smoke_ptr&lt;unsigned long&gt;(Marshall *m) { return &amp;m-&gt;item().s_ulong; }
++template&lt;&gt; float* smoke_ptr&lt;float&gt;(Marshall *m) { return &amp;m-&gt;item().s_float; }
++template&lt;&gt; double* smoke_ptr&lt;double&gt;(Marshall *m) { return &amp;m-&gt;item().s_double; }
++template&lt;&gt; void* smoke_ptr&lt;void&gt;(Marshall *m) { return m-&gt;item().s_voidp; }
++
++template &lt;class T&gt; T php_to_primitive(zval*);
++template &lt;class T&gt; zval* primitive_to_php(T, zval* return_value);
++
++template &lt;class T&gt; 
++static void marshall_from_php(Marshall *m) 
++{
++	zval* obj = m-&gt;var();
++	(*smoke_ptr&lt;T&gt;(m)) = php_to_primitive&lt;T&gt;(obj);
++}
++
++template &lt;class T&gt;
++static void marshall_to_php(Marshall *m)
++{
++	m-&gt;setRetval(primitive_to_php&lt;T&gt;( *smoke_ptr&lt;T&gt;(m) , m-&gt;retval()));
++}
++
++#include &quot;marshall_primitives.h&quot;
++//#include &quot;marshall_complex.h&quot;
++
++// Special case marshallers
++
++template &lt;&gt; 
++static void marshall_from_php&lt;char *&gt;(Marshall *m) 
++{
++	zval* obj = m-&gt;var();
++	m-&gt;item().s_voidp = php_to_primitive&lt;char*&gt;(obj);
++}
++
++template &lt;&gt;
++static void marshall_from_php&lt;SmokeEnumWrapper&gt;(Marshall *m)
++{
++	zval* v = m-&gt;var();
++
++	if (Z_TYPE_P(v) == IS_OBJECT) {
++		// A Qt::Enum is a subclass of Qt::Integer, so 'get_qinteger()' can be called ok
++	} else {
++		m-&gt;item().s_enum = (long) Z_LVAL_P(v);
++	}
++
++}
++
++template &lt;&gt;
++static void marshall_to_php&lt;SmokeEnumWrapper&gt;(Marshall *m)
++{
++	long val = m-&gt;item().s_enum;
++}
++
++template &lt;&gt;
++static void marshall_from_php&lt;SmokeClassWrapper&gt;(Marshall *m)
++{
++	zval* v = m-&gt;var();
++
++	if(v == NULL) {
++		m-&gt;item().s_class = 0;
++		return;
++	}
++
++	if(!phpqt_SmokePHPObjectExists(v)) {
++		php_error(E_ERROR, &quot;Invalid type, expecting %s, %s given\n&quot;, m-&gt;type().name(), zend_zval_type_name(v));
++		return;
++	}
++
++	smokephp_object *o = phpqt_getSmokePHPObjectFromZval(v);
++	if(!o || !o-&gt;ptr) {
++		if(m-&gt;type().isRef()) {
++			php_error(E_WARNING, &quot;References can't be nil\n&quot;);
++			m-&gt;unsupported();
++		}
++					
++		m-&gt;item().s_class = 0;
++		return;
++	}
++
++	void *ptr = o-&gt;ptr;
++
++//	if((!m-&gt;cleanup() &amp;&amp; m-&gt;type().isStack())) {
++	if(m-&gt;type().isRef()){
++		ptr = construct_copy(o);
++#ifdef DEBUG
++			php_error(E_WARNING, &quot;copying %s %p to %p\n&quot;, resolve_classname(o-&gt;smoke, o-&gt;classId, o-&gt;ptr), o-&gt;ptr, ptr);
++#endif
++	}
++
++	const Smoke::Class &amp;cl = m-&gt;smoke()-&gt;classes[m-&gt;type().classId()];
++
++	ptr = o-&gt;smoke-&gt;cast(
++		ptr,				// pointer
++		o-&gt;classId,			// from
++		o-&gt;smoke-&gt;idClass(cl.className)	// to
++		);
++
++	m-&gt;item().s_class = ptr;
++	return;
++}
++
++template &lt;&gt;
++static void marshall_to_php&lt;SmokeClassWrapper&gt;(Marshall *m)
++{
++
++	if(m-&gt;item().s_voidp == 0) {
++		m-&gt;setRetval(Qnil);
++		return;
++	}
++	void *p = m-&gt;item().s_voidp;
++
++	smokephp_object* o = (smokephp_object*) emalloc(sizeof(smokephp_object));
++	zval* obj = m-&gt;var();
++
++	if(phpqt_SmokePHPObjectExists(p)) {
++	    smokephp_object* o = phpqt_getSmokePHPObjectFromQt(p);
++	    ZVAL_ZVAL(obj, o-&gt;zval_ptr,0,0);
++	    zend_rsrc_list_entry le;
++	    le.ptr = o;
++	    phpqt_register(obj, le);
++	// create a new object
++	} else {
++	    o-&gt;ptr = m-&gt;item().s_class;
++	    o-&gt;smoke = m-&gt;smoke();
++
++	    if (Z_TYPE_P(m-&gt;var()) == IS_OBJECT) {
++		// do nothing
++	    } else if(!strcmp((char*) m-&gt;smoke()-&gt;classes[m-&gt;type().classId()].className, &quot;QObject&quot;)){
++		// cast from, to
++		o-&gt;ptr = o-&gt;smoke-&gt;cast(o-&gt;ptr, m-&gt;smoke()-&gt;idClass(&quot;QObject&quot;), m-&gt;type().classId());
++		object_init_ex(obj, 
++			    zend_fetch_class((char*)((QObject*) o-&gt;ptr)-&gt;metaObject()-&gt;className(),
++			    strlen(((QObject*) o-&gt;ptr)-&gt;metaObject()-&gt;className()), 
++			    ZEND_FETCH_CLASS_AUTO TSRMLS_DC));
++	    // fallback, already with correct type
++	    } else {
++		object_init_ex(obj, 
++		zend_fetch_class((char*) m-&gt;smoke()-&gt;classes[m-&gt;type().classId()].className,
++				strlen(m-&gt;smoke()-&gt;classes[m-&gt;type().classId()].className), 
++				ZEND_FETCH_CLASS_AUTO TSRMLS_DC));
++	    }
++
++	    Z_TYPE_P(m-&gt;var()) = IS_OBJECT;
++	    o-&gt;zval_ptr = obj;
++	    o-&gt;ce_ptr = Z_OBJCE_P(obj);
++	    o-&gt;parent_ce_ptr = o-&gt;ce_ptr;
++	    o-&gt;classId = m-&gt;type().classId();
++
++	    if(!phpqt_SmokePHPObjectExists(o-&gt;ptr))
++		phpqt_setSmokePHPObject(o);
++
++	    zend_rsrc_list_entry le;
++	    le.ptr = o;
++	    phpqt_register(obj, le);
++	    phpqt_setZvalPtr(o, obj);
++
++	    const char * classname = o-&gt;ce_ptr-&gt;name;
++//	    if(m-&gt;type().isConst() &amp;&amp; m-&gt;type().isRef()) {
++	    if(m-&gt;type().isRef()) {
++		p = construct_copy( o );
++#ifdef DEBUG
++			php_error(E_WARNING, &quot;copying %s %p to %p\n&quot;, classname, o-&gt;ptr, p);
++#endif
++
++		if(p) {
++			o-&gt;ptr = p;
++			o-&gt;allocated = true;
++		}
++	}
++
++#ifdef DEBUG
++		php_error(E_WARNING, &quot;allocating %s %p -&gt; %p\n&quot;, classname, o-&gt;ptr, (void*)obj);
++#endif
++
++	if(m-&gt;type().isStack()) {
++		o-&gt;allocated = true;
++	}
++
++	}
++}
++
++template &lt;&gt;
++static void marshall_to_php&lt;char *&gt;(Marshall *m)
++{
++	char *sv = (char*)m-&gt;item().s_voidp;
++	zval* obj;
++	if(sv) {
++	    ZVAL_STRING(obj,sv,/*duplicate*/ 1);
++	} else {
++	    obj = Qnil;
++	}
++	if(m-&gt;cleanup())
++		delete[] sv;
++
++	m-&gt;setRetval(obj);
++}
++
++template &lt;&gt;
++static void marshall_to_php&lt;unsigned char *&gt;(Marshall *m)
++{
++	m-&gt;unsupported();
++}
+
+Added: trunk/php_qt/marshall_primitives.h
+===================================================================
+--- trunk/php_qt/marshall_primitives.h	2007-03-08 21:16:51 UTC (rev 304)
++++ trunk/php_qt/marshall_primitives.h	2007-03-21 13:08:26 UTC (rev 305)
+@@ -0,0 +1,266 @@
++/***************************************************************************
++ *                                                                         *
++ *   This program is free software; you can redistribute it and/or modify  *
++ *   it under the terms of the GNU General Public License as published by  *
++ *   the Free Software Foundation; either version 2 of the License, or     *
++ *   (at your option) any later version.                                   *
++ *                                                                         *
++ ***************************************************************************/
++
++template &lt;&gt;
++static bool php_to_primitive&lt;bool&gt;(zval* v)
++{
++	if (v-&gt;type == IS_OBJECT) {
++		// A Qt::Boolean has been passed as a value
++		php_error(E_WARNING,&quot;A Qt::Boolean has been passed as a value&quot;);
++	} else {
++		return ZEND_NORMALIZE_BOOL(v);
++	}
++}
++
++template &lt;&gt;
++static zval* primitive_to_php&lt;bool&gt;(bool sv, zval* return_value)
++{
++	RETVAL_BOOL(sv);
++	return return_value;
++}
++
++template &lt;&gt;
++static signed char php_to_primitive&lt;signed char&gt;(zval* v)
++{
++	return v-&gt;value.str.val[0];
++}
++
++template &lt;&gt;
++static zval* primitive_to_php&lt;signed char&gt;(signed char sv, zval* return_value)
++{
++    php_error(E_ERROR,&quot;signed char not implemented&quot;);
++}
++
++template &lt;&gt;
++static unsigned char php_to_primitive&lt;unsigned char&gt;(zval* v)
++{
++	return v-&gt;value.str.val[0];
++}
++
++template &lt;&gt;
++static zval* primitive_to_php&lt;unsigned char&gt;(unsigned char sv, zval* return_value)
++{
++    php_error(E_ERROR,&quot;unsigned char not implemented&quot;);
++}
++
++template &lt;&gt;
++static short php_to_primitive&lt;short&gt;(zval* v)
++{
++	return Z_LVAL_P(v);
++}
++
++template &lt;&gt;
++static zval* primitive_to_php&lt;short&gt;(short sv, zval* return_value)
++{
++        RETVAL_LONG(sv);
++	return return_value;
++}
++
++template &lt;&gt;
++static unsigned short php_to_primitive&lt;unsigned short&gt;(zval* v)
++{
++	return Z_LVAL_P(v);
++}
++
++template &lt;&gt;
++static zval* primitive_to_php&lt;unsigned short&gt;(unsigned short sv, zval* return_value)
++{
++        RETVAL_LONG(sv);
++	return return_value;
++}
++
++template &lt;&gt;
++static int php_to_primitive&lt;int&gt;(zval* v)
++{
++	if (v-&gt;type == IS_OBJECT) {
++	    php_error(E_WARNING,&quot;An integer has been passed as an object&quot;);
++	} else {
++	    return Z_LVAL_P(v);
++	}
++}
++
++template &lt;&gt;
++static zval* primitive_to_php&lt;int&gt;(int sv, zval* return_value)
++{
++        RETVAL_LONG(sv);
++	return return_value;
++}
++
++template &lt;&gt;
++static unsigned int php_to_primitive&lt;unsigned int&gt;(zval* v)
++{
++	if (v-&gt;type == IS_OBJECT) {
++	    php_error(E_WARNING,&quot;An unsigned integer has been passed as an object&quot;);
++	} else {
++	    return Z_LVAL_P(v);
++	}
++}
++
++template &lt;&gt;
++static zval* primitive_to_php&lt;unsigned int&gt;(unsigned int sv, zval* return_value)
++{
++        RETVAL_LONG(sv);
++	return return_value;
++}
++
++template &lt;&gt;
++static long php_to_primitive&lt;long&gt;(zval* v)
++{
++	if (v-&gt;type == IS_OBJECT) {
++	    php_error(E_WARNING,&quot;A long has been passed as an object&quot;);
++	} else {
++	    return Z_LVAL_P(v);
++	}
++}
++
++template &lt;&gt;
++static zval* primitive_to_php&lt;long&gt;(long sv, zval* return_value)
++{
++        RETVAL_LONG(sv);
++	return return_value;
++}
++
++template &lt;&gt;
++static unsigned long php_to_primitive&lt;unsigned long&gt;(zval* v)
++{
++	if (v-&gt;type == IS_OBJECT) {
++	    php_error(E_WARNING,&quot;An unsigned long has been passed as an object&quot;);
++	} else {
++	    return Z_LVAL_P(v);
++	}
++}
++
++template &lt;&gt;
++static zval* primitive_to_php&lt;unsigned long&gt;(unsigned long sv, zval* return_value)
++{
++        RETVAL_LONG(sv);
++	return return_value;
++}
++
++template &lt;&gt;
++static long long php_to_primitive&lt;long long&gt;(zval* v)
++{
++	return Z_LVAL_P(v);
++}
++
++template &lt;&gt;
++static zval* primitive_to_php&lt;long long&gt;(long long sv, zval* return_value)
++{
++        RETVAL_LONG(sv);
++	return return_value;
++}
++
++template &lt;&gt;
++static unsigned long long php_to_primitive&lt;unsigned long long&gt;(zval* v)
++{
++        return Z_LVAL_P(v);
++}
++
++template &lt;&gt;
++static zval* primitive_to_php&lt;unsigned long long&gt;(unsigned long long sv, zval* return_value)
++{
++        RETVAL_LONG(sv);
++	return return_value;
++}
++
++template &lt;&gt;
++static float php_to_primitive&lt;float&gt;(zval* v)
++{
++        return Z_DVAL_P(v);
++}
++
++template &lt;&gt;
++static zval* primitive_to_php&lt;float&gt;(float sv, zval* return_value)
++{
++        RETVAL_DOUBLE(sv);
++	return return_value;
++}
++
++template &lt;&gt;
++static double php_to_primitive&lt;double&gt;(zval* v)
++{
++        return Z_DVAL_P(v);
++}
++
++template &lt;&gt;
++static zval* primitive_to_php&lt;double&gt;(double sv, zval* return_value)
++{
++        RETVAL_DOUBLE(sv);
++	return return_value;
++}
++
++template &lt;&gt;
++static char* php_to_primitive&lt;char *&gt;(zval* rv)
++{
++	if(rv == Qnil)
++		return 0;
++	
++	int len = rv-&gt;value.str.len;
++	char* mem = (char*) malloc(len+1);
++	memcpy(mem, rv-&gt;value.str.val, len);
++	mem[len] ='\0';
++	return (char*) mem;
++}
++
++template &lt;&gt;
++static unsigned char* php_to_primitive&lt;unsigned char *&gt;(zval* rv)
++{
++	if(rv == Qnil)
++		return 0;
++
++	int len = rv-&gt;value.str.len;
++	char* mem = (char*) malloc(len+1);
++	memcpy(mem, rv-&gt;value.str.val, len);
++	mem[len] ='\0';
++	return (unsigned char*) mem;
++}
++
++template &lt;&gt;
++static zval* primitive_to_php&lt;int*&gt;(int* sv, zval* return_value)
++{
++	if(!sv) {
++		return Qnil;
++	}
++
++	return primitive_to_php&lt;int&gt;(*sv, return_value);
++}
++
++#if defined(Q_OS_WIN32)
++template &lt;&gt;
++static WId php_to_primitive&lt;WId&gt;(zval* v)
++{
++	if(v == Qnil)
++		return 0;
++	
++	return (WId) Z_LVAL_P(v);
++}
++
++template &lt;&gt;
++static zval* primitive_to_php&lt;WId&gt;(WId sv, zval* return_value)
++{
++        RETVAL_LONG((unsigned long) sv);
++	return return_value;
++}
++
++template &lt;&gt;
++static Q_PID php_to_primitive&lt;Q_PID&gt;(zval* v)
++{
++	if(v == Qnil)
++		return 0;
++	
++	return (Q_PID) Z_LVAL_P(v);
++}
++
++template &lt;&gt;
++static zval* primitive_to_php&lt;Q_PID&gt;(Q_PID sv, zval* return_value)
++{
++        RETVAL_LONG((unsigned long) sv);
++	return return_value;
++}
++#endif
+
+Added: trunk/php_qt/marshall_types.cpp
+===================================================================
+--- trunk/php_qt/marshall_types.cpp	2007-03-08 21:16:51 UTC (rev 304)
++++ trunk/php_qt/marshall_types.cpp	2007-03-21 13:08:26 UTC (rev 305)
+@@ -0,0 +1,679 @@
++/***************************************************************************
++    marshall_types.cpp - Derived from the QtRuby and PerlQt sources, see AUTHORS
++                         for details
++                             -------------------
++    begin                : March 21 2007
++    copyright            : (C) 2007 by Thomas Moenicke
++    email                : <A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">tm at php-qt.org</A>
++ ***************************************************************************/
++
++/***************************************************************************
++ *                                                                         *
++ *   This program is free software; you can redistribute it and/or modify  *
++ *   it under the terms of the GNU General Public License as published by  *
++ *   the Free Software Foundation; either version 2 of the License, or     *
++ *   (at your option) any later version.                                   *
++ *                                                                         *
++ ***************************************************************************/
++
++#include &quot;marshall_types.h&quot;
++
++void
++smokeStackToQtStack(Smoke::Stack stack, void ** o, int items, MocArgument* args)
++{
++	for (int i = 0; i &lt; items; i++) {
++		Smoke::StackItem *si = stack + i;
++		switch(args[i].argType) {
++		case xmoc_bool:
++			o[i] = &amp;si-&gt;s_bool;
++			break;
++		case xmoc_int:
++			o[i] = &amp;si-&gt;s_int;
++			break;
++		case xmoc_double:
++			o[i] = &amp;si-&gt;s_double;
++			break;
++		case xmoc_charstar:
++			o[i] = &amp;si-&gt;s_voidp;
++			break;
++		case xmoc_QString:
++			o[i] = si-&gt;s_voidp;
++			break;
++		default:
++		{
++			const SmokeType &amp;t = args[i].st;
++			void *p;
++			switch(t.elem()) {
++			case Smoke::t_bool:
++				p = &amp;si-&gt;s_bool;
++				break;
++			case Smoke::t_char:
++				p = &amp;si-&gt;s_char;
++				break;
++			case Smoke::t_uchar:
++				p = &amp;si-&gt;s_uchar;
++				break;
++			case Smoke::t_short:
++				p = &amp;si-&gt;s_short;
++				break;
++			case Smoke::t_ushort:
++				p = &amp;si-&gt;s_ushort;
++				break;
++			case Smoke::t_int:
++				p = &amp;si-&gt;s_int;
++				break;
++			case Smoke::t_uint:
++				p = &amp;si-&gt;s_uint;
++				break;
++			case Smoke::t_long:
++				p = &amp;si-&gt;s_long;
++				break;
++			case Smoke::t_ulong:
++				p = &amp;si-&gt;s_ulong;
++				break;
++			case Smoke::t_float:
++				p = &amp;si-&gt;s_float;
++				break;
++			case Smoke::t_double:
++				p = &amp;si-&gt;s_double;
++				break;
++			case Smoke::t_enum:
++			{
++				// allocate a new enum value
++				Smoke::EnumFn fn = SmokeClass(t).enumFn();
++				if (!fn) {
++					php_error(E_WARNING, &quot;Unknown enumeration %s\n&quot;, t.name());
++					p = new int((int)si-&gt;s_enum);
++					break;
++				}
++				Smoke::Index id = t.typeId();
++				(*fn)(Smoke::EnumNew, id, p, si-&gt;s_enum);
++				(*fn)(Smoke::EnumFromLong, id, p, si-&gt;s_enum);
++				// FIXME: MEMORY LEAK
++				break;
++			}
++			case Smoke::t_class:
++			case Smoke::t_voidp:
++				if (strchr(t.name(), '*') != 0) {
++					p = &amp;si-&gt;s_voidp;
++				} else {
++					p = si-&gt;s_voidp;
++				}
++				break;
++			default:
++				p = 0;
++				break;
++			}
++			o[i] = p;
++		}
++		}
++	}
++}
++
++void
++smokeStackFromQtStack(Smoke::Stack stack, void ** _o, int items, MocArgument* args)
++{
++	for (int i = 0; i &lt; items; i++) {
++		void *o = _o[i];
++		switch(args[i].argType) {
++		case xmoc_bool:
++		stack[i].s_bool = *(bool*)o;
++		break;
++		case xmoc_int:
++		stack[i].s_int = *(int*)o;
++		break;
++		case xmoc_double:
++		stack[i].s_double = *(double*)o;
++		break;
++		case xmoc_charstar:
++		stack[i].s_voidp = o;
++		break;
++		case xmoc_QString:
++		stack[i].s_voidp = o;
++		break;
++		default:	// case xmoc_ptr:
++		{
++			const SmokeType &amp;t = args[i].st;
++			void *p = o;
++			switch(t.elem()) {
++			case Smoke::t_bool:
++			stack[i].s_bool = **(bool**)o;
++			break;
++			case Smoke::t_char:
++			stack[i].s_char = **(char**)o;
++			break;
++			case Smoke::t_uchar:
++			stack[i].s_uchar = **(unsigned char**)o;
++			break;
++			case Smoke::t_short:
++			stack[i].s_short = **(short**)p;
++			break;
++			case Smoke::t_ushort:
++			stack[i].s_ushort = **(unsigned short**)p;
++			break;
++			case Smoke::t_int:
++			stack[i].s_int = **(int**)p;
++			break;
++			case Smoke::t_uint:
++			stack[i].s_uint = **(unsigned int**)p;
++			break;
++			case Smoke::t_long:
++			stack[i].s_long = **(long**)p;
++			break;
++			case Smoke::t_ulong:
++			stack[i].s_ulong = **(unsigned long**)p;
++			break;
++			case Smoke::t_float:
++			stack[i].s_float = **(float**)p;
++			break;
++			case Smoke::t_double:
++			stack[i].s_double = **(double**)p;
++			break;
++			case Smoke::t_enum:
++			{
++				Smoke::EnumFn fn = SmokeClass(t).enumFn();
++				if (!fn) {
++					php_error(E_WARNING, &quot;Unknown enumeration %s\n&quot;, t.name());
++					stack[i].s_enum = **(int**)p;
++					break;
++				}
++				Smoke::Index id = t.typeId();
++				(*fn)(Smoke::EnumToLong, id, p, stack[i].s_enum);
++			}
++			break;
++			case Smoke::t_class:
++			case Smoke::t_voidp:
++				if (strchr(t.name(), '*') != 0) {
++					stack[i].s_voidp = *(void **)p;
++				} else {
++					stack[i].s_voidp = p;
++				}
++			break;
++			}
++		}
++		}
++	}
++}
++
++MethodReturnValueBase::MethodReturnValueBase(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack) :
++	_smoke(smoke), _method(meth), _stack(stack)
++{ 
++	_st.set(_smoke, method().ret);
++}
++
++const Smoke::Method&amp;
++MethodReturnValueBase::method() 
++{ 
++	return _smoke-&gt;methods[_method]; 
++}
++
++Smoke::StackItem&amp;
++MethodReturnValueBase::item() 
++{ 
++	return _stack[0]; 
++}
++
++Smoke *
++MethodReturnValueBase::smoke() 
++{ 
++	return _smoke; 
++}
++
++SmokeType 
++MethodReturnValueBase::type() 
++{ 
++	return _st; 
++}
++
++void 
++MethodReturnValueBase::next() {}
++
++bool 
++MethodReturnValueBase::cleanup() 
++{ 
++	return false; 
++}
++
++void 
++MethodReturnValueBase::unsupported() 
++{
++	php_error(E_ERROR, &quot;Cannot handle '%s' as return-type of %s::%s&quot;,
++	type().name(),
++	classname(),
++	_smoke-&gt;methodNames[method().name]);	
++}
++
++zval* 
++MethodReturnValueBase::var() 
++{ 
++	return _retval; 
++}
++
++const char *
++MethodReturnValueBase::classname() 
++{ 
++	return _smoke-&gt;className(method().classId); 
++}
++
++
++VirtualMethodReturnValue::VirtualMethodReturnValue(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval retval) :
++	MethodReturnValueBase(smoke,meth,stack), _retval2(retval) 
++{
++	_retval = &amp;_retval2;
++	Marshall::HandlerFn fn = getMarshallFn(type());
++	(*fn)(this);
++}
++
++Marshall::Action 
++VirtualMethodReturnValue::action() 
++{ 
++	return Marshall::FromZVAL; 
++}
++
++MethodReturnValue::MethodReturnValue(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval* retval) :
++	MethodReturnValueBase(smoke,meth,stack) 
++{
++	_retval = retval;
++
++	Marshall::HandlerFn fn = getMarshallFn(type());
++	(*fn)(this);
++}
++
++Marshall::Action 
++MethodReturnValue::action() 
++{ 
++	return Marshall::ToZVAL; 
++}
++
++const char *
++MethodReturnValue::classname() 
++{ 
++	return qstrcmp(MethodReturnValueBase::classname(), &quot;QGlobalSpace&quot;) == 0 ? &quot;&quot; : MethodReturnValueBase::classname(); 
++}
++
++
++MethodCallBase::MethodCallBase(Smoke *smoke, Smoke::Index meth) :
++	_smoke(smoke), _method(meth), _cur(-1), _called(false), _sp(0)  
++{  
++}
++
++MethodCallBase::MethodCallBase(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack) :
++	_smoke(smoke), _method(meth), _stack(stack), _cur(-1), _called(false), _sp(0) 
++{  
++}
++
++Smoke *
++MethodCallBase::smoke() 
++{ 
++	return _smoke; 
++}
++
++SmokeType 
++MethodCallBase::type() 
++{ 
++	return SmokeType(_smoke, _args[_cur]); 
++}
++
++Smoke::StackItem &amp;
++MethodCallBase::item() 
++{ 
++	return _stack[_cur + 1]; 
++}
++
++const Smoke::Method &amp;
++MethodCallBase::method() 
++{ 
++	return _smoke-&gt;methods[_method]; 
++}
++	
++void 
++MethodCallBase::next() 
++{
++	int oldcur = _cur;
++	_cur++;
++	while(!_called &amp;&amp; _cur &lt; items() ) {
++		Marshall::HandlerFn fn = getMarshallFn(type());
++		(*fn)(this);
++		_cur++;
++	}
++
++	callMethod();
++	_cur = oldcur;
++}
++
++void 
++MethodCallBase::unsupported() 
++{
++	php_error(E_ERROR, &quot;Cannot handle '%s' as argument of %s::%s&quot;,
++		type().name(),
++		classname(),
++		_smoke-&gt;methodNames[method().name]);
++}
++
++const char* 
++MethodCallBase::classname() 
++{ 
++	return _smoke-&gt;className(method().classId); 
++}
++
++
++VirtualMethodCall::VirtualMethodCall(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval obj, zval ***sp) :
++	MethodCallBase(smoke,meth,stack), _obj(obj)
++{		
++	_sp = sp;
++	_args = _smoke-&gt;argumentList + method().args;
++}
++
++VirtualMethodCall::~VirtualMethodCall() 
++{
++}
++
++Marshall::Action 
++VirtualMethodCall::action() 
++{ 
++	return Marshall::ToZVAL; 
++}
++
++zval*
++VirtualMethodCall::var() 
++{ 
++	return (zval*) _sp[_cur]; 
++}
++	
++int 
++VirtualMethodCall::items() 
++{ 
++	return method().numArgs; 
++}
++
++void 
++VirtualMethodCall::callMethod() 
++{
++	if (_called) return;
++	_called = true;
++
++//	zval* _retval = callMethod(_obj, _smoke-&gt;methodNames[method().name],
++//		method().numArgs,	_sp );
++	zval _retval;
++	VirtualMethodReturnValue r(_smoke, _method, _stack, _retval);
++}
++
++bool 
++VirtualMethodCall::cleanup() 
++{ 
++	return false; 
++}
++
++MethodCall::MethodCall(Smoke *smoke, Smoke::Index method, zval* target, zval ***sp, int items, zval *retval) :
++	MethodCallBase(smoke,method), _target(target), _current_object(0), _sp(sp), _items(items)
++{
++
++    if(target != NULL) {
++	if (phpqt_SmokePHPObjectExists(_target)) {
++		smokephp_object *o = phpqt_getSmokePHPObjectFromZval(_target);
++		if (o &amp;&amp; o-&gt;ptr) {
++			_current_object = o-&gt;ptr;
++			_current_object_class = o-&gt;classId;
++		}
++	}
++    } else {_target = new zval;}
++
++    _args = _smoke-&gt;argumentList + _smoke-&gt;methods[_method].args;
++    _items = _smoke-&gt;methods[_method].numArgs;
++    _stack = new Smoke::StackItem[items + 1];
++    _retval = retval;
++}
++
++MethodCall::~MethodCall() 
++{
++	delete[] _stack;
++}
++
++Marshall::Action 
++MethodCall::action() 
++{ 
++	return Marshall::FromZVAL; 
++}
++
++zval* 
++MethodCall::var() 
++{
++	if (_cur &lt; 0) return _retval;
++	return (zval*) *_sp[_cur];
++}
++
++int 
++MethodCall::items() 
++{ 
++	return _items; 
++}
++
++bool 
++MethodCall::cleanup() 
++{ 
++	return true; 
++}
++
++const char *
++MethodCall::classname() 
++{ 
++	return qstrcmp(MethodCallBase::classname(), &quot;QGlobalSpace&quot;) == 0 ? &quot;&quot; : MethodCallBase::classname(); 
++}
++
++SigSlotBase::SigSlotBase(zval ***args) : _cur(-1), _called(false) 
++{ 
++}
++
++SigSlotBase::~SigSlotBase() 
++{ 
++	delete[] _stack; 
++}
++
++const MocArgument &amp;
++SigSlotBase::arg() 
++{ 
++	return _args[_cur + 1]; 
++}
++
++SmokeType 
++SigSlotBase::type() 
++{ 
++	return arg().st; 
++}
++
++Smoke::StackItem &amp;
++SigSlotBase::item() 
++{ 
++	return _stack[_cur]; 
++}
++
++zval* 
++SigSlotBase::var() 
++{ 
++	return *_sp[_cur]; 
++}
++
++Smoke *
++SigSlotBase::smoke() 
++{ 
++	return type().smoke(); 
++}
++
++void 
++SigSlotBase::unsupported() 
++{
++	php_error(E_ERROR, &quot;Cannot handle '%s' as %s argument\n&quot;, type().name(), mytype() );
++}
++
++void
++SigSlotBase::next() 
++{
++	int oldcur = _cur;
++	_cur++;
++
++	while(!_called &amp;&amp; _cur &lt; _items - 1) {
++		Marshall::HandlerFn fn = getMarshallFn(type());
++		(*fn)(this);
++		_cur++;
++	}
++
++	mainfunction();
++	_cur = oldcur;
++}
++
++/*
++	Converts a zval* returned by a slot invocation to a Qt slot 
++	reply type
++*/
++class SlotReturnValue : public Marshall {
++    MocArgument *	_replyType;
++    Smoke::Stack _stack;
++	zval* _result;
++public:
++	SlotReturnValue(void ** o, zval* result, MocArgument * replyType) 
++	{
++		_result = result;
++		_replyType = replyType;
++		_stack = new Smoke::StackItem[1];
++		Marshall::HandlerFn fn = getMarshallFn(type());
++		(*fn)(this);
++		// Save any address in zeroth element of the arrary of 'void*'s passed to 
++		// qt_metacall()
++		void * ptr = o[0];
++		smokeStackToQtStack(_stack, o, 1, _replyType);
++		// Only if the zeroth element of the array of 'void*'s passed to qt_metacall()
++		// contains an address, is the return value of the slot needed.
++		if (ptr != 0) {
++			*(void**)ptr = *(void**)(o[0]);
++		}
++    }
++
++    SmokeType type() { 
++		return _replyType[0].st; 
++	}
++    Marshall::Action action() { return Marshall::FromZVAL; }
++    Smoke::StackItem &amp;item() { return _stack[0]; }
++    zval* var() {
++    	return _result;
++    }
++	
++	void unsupported() 
++	{
++		php_error(E_ERROR, &quot;Cannot handle '%s' as slot reply-type&quot;, type().name());
++    }
++	Smoke *smoke() { return type().smoke(); }
++    
++	void next() {}
++    
++	bool cleanup() { return false; }
++	
++	~SlotReturnValue() {
++		delete[] _stack;
++	}
++};
++/*
++InvokeSlot::InvokeSlot(zval* obj, ID slotname, zval*** args, void ** o) : SigSlotBase(args),
++    _obj(obj), _slotname(slotname), _o(o)
++{
++//	_sp = (zval *) ALLOC_N(VALUE, _items - 1);
++	copyArguments();
++}
++
++InvokeSlot::~InvokeSlot() 
++{ 
++	xfree(_sp);	
++}
++
++Marshall::Action 
++InvokeSlot::action() 
++{ 
++	return Marshall::ToZVAL; 
++}
++
++const char *
++InvokeSlot::mytype() 
++{ 
++	return &quot;slot&quot;; 
++}
++
++bool 
++InvokeSlot::cleanup() 
++{ 
++	return false; 
++}
++
++void 
++InvokeSlot::copyArguments() 
++{
++	smokeStackFromQtStack(_stack, _o + 1, _items - 1, _args + 1);
++}
++
++void 
++InvokeSlot::invokeSlot() 
++{
++	if (_called) return;
++	_called = true;
++	if (_args[0].argType != xmoc_void) {
++		SlotReturnValue r(_o, &amp;result, _args);
++	}
++}
++
++void 
++InvokeSlot::mainfunction() 
++{ 
++	invokeSlot(); 
++}
++*/
++
++EmitSignal::EmitSignal(QObject *obj, int id, int items, zval*** args, zval ***sp, zval * result) : SigSlotBase(args),
++    _obj(obj), _id(id)
++{ 
++	_sp = sp;
++	_result = result;
++}
++
++Marshall::Action 
++EmitSignal::action() 
++{ 
++	return Marshall::FromZVAL; 
++}
++
++Smoke::StackItem &amp;
++EmitSignal::item() 
++{ 
++	return _stack[_cur]; 
++}
++
++const char *
++EmitSignal::mytype() 
++{ 
++	return &quot;signal&quot;; 
++}
++
++void 
++EmitSignal::emitSignal() 
++{
++	if (_called) return;
++	_called = true;
++	void ** o = new void*[_items];
++//	smokeStackToQtStack(_stack, o + 1, _items - 1, _args + 1);
++	_obj-&gt;metaObject()-&gt;activate(_obj, _id, o);
++	
++	if (_args[0].argType != xmoc_void) {
++		SignalReturnValue r(o, _result, _args);
++	}
++	delete[] o;
++}
++
++void 
++EmitSignal::mainfunction() 
++{ 
++	emitSignal(); 
++}
++
++bool 
++EmitSignal::cleanup() 
++{ 
++	return true; 
++}
++
+
+Added: trunk/php_qt/marshall_types.h
+===================================================================
+--- trunk/php_qt/marshall_types.h	2007-03-08 21:16:51 UTC (rev 304)
++++ trunk/php_qt/marshall_types.h	2007-03-21 13:08:26 UTC (rev 305)
+@@ -0,0 +1,276 @@
++/***************************************************************************
++    marshall_types.cpp - Derived from the QtRuby and PerlQt sources, see AUTHORS
++                         for details
++                             -------------------
++    begin                : March 21 2007
++    copyright            : (C) 2007 by Thomas Moenicke
++    email                : <A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">tm at php-qt.org</A>
++ ***************************************************************************/
++
++/***************************************************************************
++ *                                                                         *
++ *   This program is free software; you can redistribute it and/or modify  *
++ *   it under the terms of the GNU General Public License as published by  *
++ *   the Free Software Foundation; either version 2 of the License, or     *
++ *   (at your option) any later version.                                   *
++ *                                                                         *
++ ***************************************************************************/
++
++#ifndef MARSHALL_TYPES_H
++#define MARSHALL_TYPES_H
++
++#include &lt;QtCore/qstring.h&gt;
++#include &lt;QtCore/qobject.h&gt;
++#include &lt;QtCore/qmetaobject.h&gt;
++
++#include &quot;marshall.h&quot;
++#include &quot;php_qt.h&quot;
++#include &quot;smokephp.h&quot;
++#include &quot;smoke.h&quot;
++
++
++Marshall::HandlerFn getMarshallFn(const SmokeType &amp;type);
++
++extern void smokeStackToQtStack(Smoke::Stack stack, void ** o, int items, MocArgument* args);
++extern void smokeStackFromQtStack(Smoke::Stack stack, void ** _o, int items, MocArgument* args);
++
++class MethodReturnValueBase : public Marshall 
++{
++public:
++	MethodReturnValueBase(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack);
++	const Smoke::Method &amp;method();
++	Smoke::StackItem &amp;item();
++	Smoke *smoke();
++	SmokeType type();
++	void next();
++	bool cleanup();
++	void unsupported();
++	zval* var();
++
++protected:
++	Smoke *_smoke;
++	Smoke::Index _method;
++	Smoke::Stack _stack;
++	SmokeType _st;
++
++	virtual const char *classname();
++};
++
++
++class VirtualMethodReturnValue : public MethodReturnValueBase {
++public:
++	VirtualMethodReturnValue(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval retval);
++	Marshall::Action action();
++
++private:
++	zval _retval2;
++};
++
++
++class MethodReturnValue : public MethodReturnValueBase {
++public:
++	MethodReturnValue(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval *retval);
++    Marshall::Action action();
++
++private:
++	const char *classname();
++};
++
++class MethodCallBase : public Marshall
++{
++public:
++	MethodCallBase(Smoke *smoke, Smoke::Index meth);
++	MethodCallBase(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack);
++	Smoke *smoke();
++	SmokeType type();
++	Smoke::StackItem &amp;item();
++	const Smoke::Method &amp;method();
++	virtual int items() = 0;
++	virtual void callMethod() = 0;	
++	void next();
++	void unsupported();
++
++protected:
++	Smoke *_smoke;
++	Smoke::Index _method;
++	Smoke::Stack _stack;
++	int _cur;
++	Smoke::Index *_args;
++	bool _called;
++	zval ***_sp;
++	virtual const char* classname();
++};
++
++
++class VirtualMethodCall : public MethodCallBase {
++public:
++	VirtualMethodCall(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval obj, zval ***sp);
++	~VirtualMethodCall();
++	Marshall::Action action();
++	zval* var();
++	int items();
++	void callMethod();
++	bool cleanup();
++ 
++private:
++	zval _obj;
++};
++
++
++class MethodCall : public MethodCallBase {
++public:
++	MethodCall(Smoke *smoke, Smoke::Index method, zval* target, zval ***sp, int items, zval *retval);
++	~MethodCall();
++	Marshall::Action action();
++	zval* var();
++	inline void callMethod() {
++		if(_called) return;
++		_called = true;
++
++		QString className(_smoke-&gt;className(method().classId));
++
++		if (	! className.endsWith(_smoke-&gt;methodNames[method().name])
++			&amp;&amp; Z_TYPE_P(_target) == IS_NULL
++			&amp;&amp; !(method().flags &amp; Smoke::mf_static) ) 
++		{
++			php_error(E_ERROR, &quot;Instance is not initialized, cannot call %s&quot;, 
++						_smoke-&gt;methodNames[method().name]);
++		}
++
++		if (Z_TYPE_P(_target) == IS_NULL &amp;&amp; !(method().flags &amp; Smoke::mf_static)) {
++			php_error(E_ERROR, &quot;%s is not a class method\n&quot;, _smoke-&gt;methodNames[method().name]);
++		}
++
++		Smoke::ClassFn fn = _smoke-&gt;classes[method().classId].classFn;
++		void *ptr = _smoke-&gt;cast(_current_object, _current_object_class, method().classId);
++		_items = -1;
++		(*fn)(method().method, ptr, _stack);
++		MethodReturnValue r(_smoke, _method, _stack, _retval);
++	}
++
++	int items();
++	bool cleanup();
++private:
++	zval* _target;
++	void *_current_object;
++	Smoke::Index _current_object_class;
++	zval ***_sp;
++	int _items;
++
++	const char *classname();
++};
++
++
++class SigSlotBase : public Marshall {
++public:
++	SigSlotBase(zval ***args);
++	~SigSlotBase();
++	const MocArgument &amp;arg();
++	SmokeType type();
++	Smoke::StackItem &amp;item();
++	zval* var();
++	Smoke *smoke();
++	virtual const char *mytype() = 0;
++	virtual void mainfunction() = 0;
++	void unsupported();
++	void next(); 
++
++protected:
++	MocArgument *_args;
++	int _cur;
++	bool _called;
++	Smoke::Stack _stack;
++	int _items;
++	zval ***_sp;
++};
++
++
++class EmitSignal : public SigSlotBase {
++    QObject *_obj;
++    int _id;
++	zval * _result;
++ public:
++    EmitSignal(QObject *obj, int id, int items, zval*** args, zval ***sp, zval * result);
++    Marshall::Action action();
++    Smoke::StackItem &amp;item();
++	const char *mytype();
++	void emitSignal();
++	void mainfunction();
++	bool cleanup();
++};
++
++class InvokeNativeSlot : public SigSlotBase {
++    QObject *_obj;
++    int _id;
++	zval * _result;
++ public:
++    InvokeNativeSlot(QObject *obj, int id, int items, zval* args, zval ***sp, zval * result);
++    Marshall::Action action();
++    Smoke::StackItem &amp;item();
++	const char *mytype();
++	void invokeSlot();
++	void mainfunction();
++	bool cleanup();
++};
++/*
++class InvokeSlot : public SigSlotBase {
++    zval _obj;
++    ID _slotname;
++    void **_o;
++public:
++    InvokeSlot(zval obj, ID slotname, zval args, void ** o);
++	~InvokeSlot();
++    Marshall::Action action();
++	const char *mytype();
++    bool cleanup();
++	void copyArguments();
++	void invokeSlot(); 
++	void mainfunction();
++};
++*/
++
++/*
++	Converts a C++ value returned by a signal invocation to a PHP 
++	reply type
++*/
++class SignalReturnValue : public Marshall {
++    MocArgument *	_replyType;
++    Smoke::Stack _stack;
++	zval * _result;
++public:
++	SignalReturnValue(void ** o, zval * result, MocArgument * replyType) 
++	{
++		_result = result;
++		_replyType = replyType;
++		_stack = new Smoke::StackItem[1];
++//		smokeStackFromQtStack(_stack, o, 1, _replyType);
++		Marshall::HandlerFn fn = getMarshallFn(type());
++		(*fn)(this);
++    }
++
++    SmokeType type() { 
++		return _replyType[0].st; 
++	}
++    Marshall::Action action() { return Marshall::ToZVAL; }
++    Smoke::StackItem &amp;item() { return _stack[0]; }
++    zval* var() {
++    	return _result;
++    }
++	
++	void unsupported() 
++	{
++		php_error(E_ERROR, &quot;Cannot handle '%s' as signal reply-type&quot;, type().name());
++    }
++	Smoke *smoke() { return type().smoke(); }
++    
++	void next() {}
++    
++	bool cleanup() { return false; }
++	
++	~SignalReturnValue() {
++		delete[] _stack;
++	}
++};
++
++
++#endif
+
+Modified: trunk/php_qt/php_qt.cpp
+===================================================================
+--- trunk/php_qt/php_qt.cpp	2007-03-08 21:16:51 UTC (rev 304)
++++ trunk/php_qt/php_qt.cpp	2007-03-21 13:08:26 UTC (rev 305)
+@@ -23,23 +23,28 @@
+ // TODO		references, arrays
+ // TODO		emit()
+ 
+-//#define DEBUG=0
+ 
++
+ #include &lt;QtCore/qglobal.h&gt;
+ #include &lt;zend_interfaces.h&gt;
+ #include &quot;php_qt.h&quot;
+ 
+ #include &quot;ext/standard/php_string.h&quot;
+ 
++#include &quot;marshall.h&quot;
++#include &quot;php_qt.h&quot;
++#include &quot;smokephp.h&quot;
++#include &quot;smoke.h&quot;
++#include &quot;marshall_types.h&quot;
++
++#define DEBUG 0
+ #define MOC_DEBUG 0
+ 
+ extern Smoke *qt_Smoke;
+ extern void init_qt_Smoke();
++extern TypeHandler Qt_handlers[];
++void install_handlers(TypeHandler *);
+ 
+-/* If you declare any globals in php_php_qt.h uncomment this:
+-ZEND_DECLARE_MODULE_GLOBALS(php_qt)
+-*/
+-
+ /* True global resources - no need for thread safety here */
+ static int le_php_qt;
+ 
+@@ -119,6 +124,7 @@
+ 	PHP_FE(confirm_php_qt_compiled,	NULL)		/* For testing, remove later. */
+ 	PHP_FE(SIGNAL,	NULL)
+ 	PHP_FE(SLOT,	NULL)	
++	PHP_FE(emit,	NULL)	
+ 	PHP_FE(qobject_cast,	NULL)
+ 	PHP_FE(tr,	NULL)
+ 	PHP_FE(check_qobject,	NULL)
+@@ -148,7 +154,7 @@
+ ZEND_GET_MODULE(php_qt)
+ #endif
+ 
+-static QHash&lt;smokephp_object*, zval*&gt; zval_x_qt;
++static QHash&lt;smokephp_object*, zval*&gt; smoke_x_zval;
+ QHash&lt;void*, smokephp_object*&gt; SmokeQtObjects;
+ QStack&lt;QString*&gt; methodNameStack;
+ 
+@@ -214,23 +220,26 @@
+ 
+ ZEND_METHOD(php_qt_generic_class, __destruct)
+ {
++    if(phpqt_SmokePHPObjectExists(getThis())) {
+     smokephp_object *o = phpqt_getSmokePHPObjectFromZval(getThis());
+     phpqt_removeZvalPtr(o);
+     SmokeQtObjects.remove(o-&gt;ptr);
++    }
+ 	RETVAL_NULL();
+ }
+ 
+-// TODO cache idClass
+-
+ ZEND_METHOD(php_qt_generic_class, __construct)
+ {
+-
+     // find parents
+     zend_class_entry *ce = Z_OBJCE_P(getThis());
++    zend_class_entry *ce_parent = Z_OBJCE_P(getThis());
++
+     while (qt_Smoke-&gt;idClass(ce-&gt;name) &lt;= 0) {
+-	    ce = ce-&gt;parent;
+-	}
++	    ce_parent = ce-&gt;parent;
++	    ce = ce-&gt;parent; // orig
++    }
+ 
++    // get arguments
+     int i, argc = ZEND_NUM_ARGS();
+     zval ***args = (zval ***) safe_emalloc(argc, sizeof(zval **), 0);    
+     if(zend_get_parameters_array_ex(argc, args) == FAILURE){
+@@ -239,43 +248,14 @@
+     }
+ 
+     methodNameStack.push(new QString(ce-&gt;name));
+-    Smoke::StackItem* qargs = (Smoke::StackItem*) safe_emalloc(argc+10, sizeof(Smoke::StackItem), 0);
+-    smokephp_convertArgsZendToCxx(args, ZEND_NUM_ARGS(), qargs, methodNameStack);
+-    Smoke::Index method = smokephp_getMethod(qt_Smoke,ce-&gt;name, (methodNameStack.top())-&gt;toAscii(), &amp;qargs, ZEND_NUM_ARGS(), args);
++    smokephp_prepareMethodName(args, argc, methodNameStack);
++    Smoke::Index method = smokephp_getMethod(qt_Smoke,ce-&gt;name, (methodNameStack.top())-&gt;toAscii(), ZEND_NUM_ARGS(), args);
++    MethodCall c(qt_Smoke, method, getThis(), args, argc-1, getThis());
++    c.next();
+ 
+-	smokephp_object *o = (smokephp_object*) emalloc(sizeof(smokephp_object));
++    smokephp_object* o = phpqt_getSmokePHPObjectFromZval(getThis());
++    o-&gt;parent_ce_ptr = ce_parent; // = ce if no parent
+ 
+-	if (!strcmp(ce-&gt;name, &quot;QString&quot;)){
+-		if(argc &gt; 0){
+-        	qargs[0].s_class = new QString(Z_STRVAL_PP(args[0]));
+-    	} else {
+-    		qargs[0].s_class = new QString(&quot;&quot;);	// create an empty string
+-    	}
+-	} else {
+-	    // call Qt method via Smoke
+-    	smokephp_callMethod(qt_Smoke, 0, method, qargs);
+- 	}
+-
+-	o-&gt;ptr = qargs[0].s_class;
+-	o-&gt;zval_ptr = getThis();
+-	o-&gt;ce_ptr = ce;
+-	o-&gt;parent_ce_ptr = ce;
+-	o-&gt;classId = qt_Smoke-&gt;idClass(ce-&gt;name);
+-	o-&gt;smoke = qt_Smoke;
+-
+-	// store relations
+-
+-	PHP_QT_REGISTER(o);
+-	phpqt_setSmokePHPObject(o);
+-	phpqt_setZvalPtr(o, return_value);
+-
+-    // return value
+-    smokephp_convertReturn(&amp;qargs[0], qt_Smoke-&gt;types[qt_Smoke-&gt;methods[method].ret], qt_Smoke-&gt;methods[method].ret, return_value);
+-
+-	// make sure it is the right object
+-	o-&gt;zval_ptr = return_value;
+-	o-&gt;ce_ptr = Z_OBJCE_P(return_value);	// overwrite
+-
+ 	// if QObject
+ 	if(smokephp_isQObject(qt_Smoke, qt_Smoke-&gt;idClass(ce-&gt;name))){
+ 
+@@ -312,12 +292,10 @@
+ 			o-&gt;meta = superdata;
+ 		}
+ 
+-	} 
++	}
+ 
+-
+     // cleanup
+     efree(args);
+-    efree(qargs);
+     methodNameStack.pop();
+ 
+     return;
+@@ -344,7 +322,7 @@
+     while (qt_Smoke-&gt;idClass(ce-&gt;name) &lt;= 0) {
+ 	    ce = ce-&gt;parent;
+ 	}
+-	// arguments
++    // arguments
+     int j, argc = ZEND_NUM_ARGS();
+     zval ***args;
+     args = (zval ***) safe_emalloc(argc, sizeof(zval **), 0);
+@@ -353,58 +331,24 @@
+ 	    WRONG_PARAM_COUNT;
+     }
+ 
+-    Smoke::StackItem* qargs = (Smoke::StackItem*) safe_emalloc(argc+10, sizeof(Smoke::StackItem), 0);
+-    smokephp_convertArgsZendToCxx(args, argc, qargs, methodNameStack);
+-    Smoke::Index method = smokephp_getMethod(qt_Smoke,ce-&gt;name, (methodNameStack.top())-&gt;toAscii(), &amp;qargs, argc, args);
++    smokephp_prepareMethodName(args, argc, methodNameStack);
++    Smoke::Index method = smokephp_getMethod(qt_Smoke,ce-&gt;name, (methodNameStack.top())-&gt;toAscii(), argc, args);
+ 
+     if(method &lt;= 0) {
+ 	if(methodNameStack.top()-&gt;toAscii().constData()) 
+-	    php_error(E_ERROR,&quot;Call to undefined method %s %s!&quot;, ce-&gt;name, methodNameStack.top()-&gt;toAscii().constData());
++	    php_error(E_ERROR,&quot;Call to undefined method %s::%s()&quot;, ce-&gt;name, methodNameStack.top()-&gt;toAscii().constData());
+ 	else 
+ 	    php_error(E_ERROR,&quot;Call to undefined method!&quot;);
+     }
+ 
+-    if(smokephp_isConnect(method)){
+-	smokephp_prepareConnect(args, argc, qargs, method);
+-//	smokephp_callMethod(qt_Smoke, qargs[0].s_class, method, qargs);
++    MethodCall c(qt_Smoke, method, getThis(), args, argc-1, return_value);
++    c.next();
+ 
+-	QString* o1 = (QString*) phpqt_getQtObjectFromZval(*args[1]);
+-	QString* o2 = (QString*) phpqt_getQtObjectFromZval(*args[3]);
+-	smokephp_object *oo1 = phpqt_getSmokePHPObjectFromZval(((zval*) *args[0]));
+-	smokephp_object *oo2 = phpqt_getSmokePHPObjectFromZval(((zval*) *args[2]));
+-
+-#if MOC_DEBUG
+-	cout &lt;&lt; &quot;QObject::connect(&quot; &lt;&lt; ((QObject*) oo1-&gt;ptr)-&gt;metaObject()-&gt;className();;
+-	cout &lt;&lt; &quot;, &quot; &lt;&lt; o1-&gt;toAscii().constData();
+-	cout &lt;&lt; &quot;, &quot; &lt;&lt; ((QObject*) oo2-&gt;ptr)-&gt;metaObject()-&gt;className();;
+-	cout &lt;&lt; &quot;, &quot; &lt;&lt; o2-&gt;toAscii().constData();
+-	cout &lt;&lt; &quot;)&quot; &lt;&lt; endl;
+-#endif
+-
+-	QObject::connect((QObject*) oo1-&gt;ptr, o1-&gt;toAscii().constData(), (QObject*)oo2-&gt;ptr, o2-&gt;toAscii().constData());
+-	return;
+-    }
+-
+-    // self
+-    if(getThis()){
+-    	smokephp_object *o = phpqt_getSmokePHPObjectFromZval(getThis());
+-        qargs[0].s_class = o-&gt;ptr;
+-    }
+-
+-
+-    // call
+-    smokephp_callMethod(qt_Smoke, qargs[0].s_class, method, qargs);
+-
+-    // return now
+-    smokephp_convertReturn(&amp;qargs[0], qt_Smoke-&gt;types[qt_Smoke-&gt;methods[method].ret], qt_Smoke-&gt;methods[method].ret, return_value);
+-
+     // cleanup
+     efree(args);
+-    efree(qargs);
+     methodNameStack.pop();
+ 
+     return;
+-
+ }
+ 
+ /*! 
+@@ -414,6 +358,8 @@
+ PHP_MINIT_FUNCTION(php_qt)
+ {
+ 
++        install_handlers(Qt_handlers);
++
+ 	// object list
+ 	le_php_qt_hashtype = zend_register_list_destructors_ex(phpqt_destroyHashtable, NULL, &quot;PHP-Qt object list&quot;, module_number);
+ 	// FIXME: 50 is fix
+@@ -891,22 +837,22 @@
+ 
+ void
+ phpqt_setZvalPtr(smokephp_object *o, zval* z) {
+-	zval_x_qt.insert(o,z);
++	smoke_x_zval.insert(o,z);
+ }
+ 
+ void
+ phpqt_removeZvalPtr(smokephp_object *o) {
+-	zval_x_qt.remove(o);
++	smoke_x_zval.remove(o);
+ }
+ 
+ zval* 
+ phpqt_fetchZvalPtr(smokephp_object *o){
+-	return zval_x_qt.value(o);
++	return smoke_x_zval.value(o);
+ }
+ 
+ bool
+ phpqt_ZvalPtrExists(smokephp_object *o){
+-	return (zval_x_qt.find(o) != zval_x_qt.end());
++	return (smoke_x_zval.find(o) != smoke_x_zval.end());
+ }
+ 
+ /**
+@@ -919,6 +865,25 @@
+ 	return (char*) fname;
+ }
+ 
++bool
++phpqt_SmokePHPObjectExists(zval* this_ptr){
++
++	if(this_ptr == NULL){
++	  php_error(E_ERROR,&quot;fatal: object does not exists and could not be fetched, %s&quot;,Z_OBJCE_P(this_ptr)-&gt;name);
++	}
++
++	smokephp_object *ptr;
++	zval **listhandle;
++	int type;
++	TSRMLS_FETCH();
++
++	if(zend_hash_index_find(Z_OBJPROP_P(this_ptr), 0, (void**) &amp;listhandle) == FAILURE){
++	    return false;
++	}
++
++	return true;
++}
++
+ smokephp_object* 
+ phpqt_getSmokePHPObjectFromZval(zval* this_ptr){
+ 
+@@ -969,23 +934,27 @@
+ }
+ 
+ void
+-phpqt_createObject(zval* zval_ptr, void* ptr, zend_class_entry* ce){
++phpqt_createObject(zval* zval_ptr, void* ptr, zend_class_entry* ce, Smoke::Index classId){
+ 
+ 	if(!ce) {
+ 	    ce = Z_OBJCE_P(zval_ptr);
++	    // classID here
+ 	}
+ 
++	Z_TYPE_P(zval_ptr) = IS_OBJECT;
++
+ 	smokephp_object* o = (smokephp_object*) emalloc(sizeof(smokephp_object));
+ 	o-&gt;ptr = ptr;
+ 	o-&gt;zval_ptr = zval_ptr;
+ 	o-&gt;ce_ptr = ce;
+-	o-&gt;classId = 0;	// QString is not in smoke
++	o-&gt;parent_ce_ptr = ce;
++	o-&gt;classId = classId;
+ 	o-&gt;smoke = qt_Smoke;
+ 	phpqt_setSmokePHPObject(o);
+ 	// register all 
+ 	zend_rsrc_list_entry le;
+ 	le.ptr = o;
+-	object_init_ex(zval_ptr, qstring_ce);
++	object_init_ex(zval_ptr, ce);
+ 	phpqt_register(o-&gt;zval_ptr,le);
+ 	phpqt_setZvalPtr(o, o-&gt;zval_ptr);
+ 
+
+Modified: trunk/php_qt/php_qt.h
+===================================================================
+--- trunk/php_qt/php_qt.h	2007-03-08 21:16:51 UTC (rev 304)
++++ trunk/php_qt/php_qt.h	2007-03-21 13:08:26 UTC (rev 305)
+@@ -20,7 +20,9 @@
+  *
+  */
+ 
+-#define debug
++#ifndef QTPHP_H
++#define QTPHP_H
++
+ #define MONITOR
+ 
+ #define COMPILE_DL_PHP_QT
+@@ -51,6 +53,7 @@
+ #define ZEND_MN ZEND_FN
+ #endif
+ 
++#define Qnil (zval *) NULL
+ #define QOUT()                                              \
+     extern QTextStream qout(stdout, QIODevice::WriteOnly);  \
+ 
+@@ -92,12 +95,14 @@
+ /* emulate SIGNAL(), SLOT() macros */
+ PHP_FUNCTION(SIGNAL);
+ PHP_FUNCTION(SLOT);
++PHP_FUNCTION(emit);
+ PHP_FUNCTION(qobject_cast);
+ PHP_FUNCTION(tr);
+ 
+ PHP_FUNCTION(check_qobject);
+ 
+ struct smokephp_object {
++    bool allocated;
+     Smoke *smoke;
+     int classId;
+     void *ptr;
+@@ -108,7 +113,7 @@
+ };
+ 
+ //zend_class_entry* php_qt_generic_class;
+-
++void check_object(zval* zobject);
+ static void 		phpqt_destroyHashtable(zend_rsrc_list_entry *rsrc);
+ 
+ void 				phpqt_register(zval* this_ptr, zend_rsrc_list_entry le);
+@@ -127,8 +132,9 @@
+ smokephp_object* 		phpqt_getSmokePHPObjectFromZval(zval* this_ptr);
+ smokephp_object*		phpqt_getSmokePHPObjectFromQt(void* QtPtr);
+ void				phpqt_setSmokePHPObject(smokephp_object* o);
++bool 				phpqt_SmokePHPObjectExists(zval* this_ptr);
+ bool				phpqt_SmokePHPObjectExists(void* ptr);
+-void				phpqt_createObject(zval* zval_ptr, void* ptr, zend_class_entry* ce = NULL);
++void				phpqt_createObject(zval* zval_ptr, void* ptr, zend_class_entry* ce = NULL, Smoke::Index classId = 0);
+ 
+ extern int le_php_qt_hashtype;
+ extern HashTable php_qt_objptr_hash;
+@@ -136,71 +142,16 @@
+ void 				smokephp_convertArgsCxxToZend(zval*** args, int argc, Smoke::StackItem* qargs);
+ bool 				smokephp_isQObject(Smoke *smoke, Smoke::Index classId);
+ Smoke::Index 			smokephp_getClassId(const char* classname);
+-void				smokephp_convertArgsZendToCxx(zval*** args, int argc, Smoke::StackItem* qargs, QStack&lt;QString*&gt; &amp;methodNameStack);
+-Smoke::Index			smokephp_getMethod(Smoke *smoke, const char* c, const char* m, Smoke::StackItem** qargs, int argc, zval*** args);
++void				smokephp_prepareMethodName(zval*** args, int argc, QStack&lt;QString*&gt; &amp;methodNameStack);
++Smoke::Index			smokephp_getMethod(Smoke *smoke, const char* c, const char* m, int argc, zval*** args);
+ void				smokephp_prepareConnect(zval*** args, int argc, Smoke::StackItem* qargs, const Smoke::Index method);
+ void				smokephp_callMethod(Smoke *smoke, void *obj, Smoke::Index method, Smoke::Stack qargs);
+-void				smokephp_convertReturn(Smoke::StackItem *ret_val, const Smoke::Type type, const Smoke::Index ret, zval* return_value);
+ void				smokephp_init();
+ Smoke::Index			smokephp_findConnect();
+ bool				smokephp_isConnect(Smoke::Index method);
+ 
++void* 				transformArray(zval* args);
+ 
+-
+-class SmokeType {
+-    Smoke::Type *_t;		// derived from _smoke and _id, but cached
+-
+-    Smoke *_smoke;
+-    Smoke::Index _id;
+-public:
+-    SmokeType() : _t(0), _smoke(0), _id(0) {}
+-    SmokeType(Smoke *s, Smoke::Index i) : _smoke(s), _id(i) {
+-	if(_id &lt; 0 || _id &gt; _smoke-&gt;numTypes) _id = 0;
+-	_t = _smoke-&gt;types + _id;
+-    }
+-    // default copy constructors are fine, this is a constant structure
+-
+-    // mutators
+-    void set(Smoke *s, Smoke::Index i) {
+-	_smoke = s;
+-	_id = i;
+-	_t = _smoke-&gt;types + _id;
+-    }
+-
+-    // accessors
+-    Smoke *smoke() const { return _smoke; }
+-    Smoke::Index typeId() const { return _id; }
+-    const Smoke::Type &amp;type() const { return *_t; }
+-    unsigned short flags() const { return _t-&gt;flags; }
+-    unsigned short elem() const { return _t-&gt;flags &amp; Smoke::tf_elem; }
+-    const char *name() const { return _t-&gt;name; }
+-    Smoke::Index classId() const { return _t-&gt;classId; }
+-
+-    // tests
+-    bool isStack() const { return ((flags() &amp; Smoke::tf_ref) == Smoke::tf_stack); }
+-    bool isPtr() const { return ((flags() &amp; Smoke::tf_ref) == Smoke::tf_ptr); }
+-    bool isRef() const { return ((flags() &amp; Smoke::tf_ref) == Smoke::tf_ref); }
+-    bool isConst() const { return (flags() &amp; Smoke::tf_const); }
+-    bool isClass() const {
+-	if(elem() == Smoke::t_class)
+-	    return classId() ? true : false;
+-	return false;
+-    }
+-
+-    bool operator ==(const SmokeType &amp;b) const {
+-	const SmokeType &amp;a = *this;
+-	if(a.name() == b.name()) return true;
+-	if(a.name() &amp;&amp; b.name() &amp;&amp; qstrcmp(a.name(), b.name()) == 0)
+-	    return true;
+-	return false;
+-    }
+-    bool operator !=(const SmokeType &amp;b) const {
+-	const SmokeType &amp;a = *this;
+-	return !(a == b);
+-    }
+-
+-};
+-
+ ZEND_METHOD(QString, __toString);
+ ZEND_METHOD(QString, compare);
+ ZEND_METHOD(QString, utf16);
+@@ -281,3 +232,5 @@
+ ZEND_METHOD(QString, toLocal8Bit);
+ ZEND_METHOD(QString, toInt);
+ ZEND_METHOD(QString, isNull);
++
++#endif
+
+Modified: trunk/php_qt/qstring.cpp
+===================================================================
+--- trunk/php_qt/qstring.cpp	2007-03-08 21:16:51 UTC (rev 304)
++++ trunk/php_qt/qstring.cpp	2007-03-21 13:08:26 UTC (rev 305)
+@@ -2225,9 +2225,9 @@
+ 			if(Z_TYPE_P(z_0) == IS_OBJECT){
+ 			    smokephp_object* o = phpqt_getSmokePHPObjectFromZval(getThis());
+ 			    QString* obj_z_0 = (QString*) phpqt_getQtObjectFromZval(z_0);
+-			    QString s = ((QString*) o-&gt;ptr)-&gt;append((QString) *obj_z_0);
++			    QString* s = new QString(((QString*) o-&gt;ptr)-&gt;append((QString) *obj_z_0));
+ 			    object_init_ex(return_value, qstring_ce);     
+-			    phpqt_createObject(return_value, &amp;s, qstring_ce);
++			    phpqt_createObject(return_value, s, qstring_ce);
+ 			    return;
+ 			}
+ 		}
+
+Modified: trunk/php_qt/smokephp.cpp
+===================================================================
+--- trunk/php_qt/smokephp.cpp	2007-03-08 21:16:51 UTC (rev 304)
++++ trunk/php_qt/smokephp.cpp	2007-03-21 13:08:26 UTC (rev 305)
+@@ -66,6 +66,10 @@
+ 			phpqt_metacall(o, args, (QMetaObject::Call) args[1].s_enum, args[2].s_int, (void**) args[3].s_voidp);
+ 			return true;
+ 		}
++
++//		VirtualMethodCall c(smoke, method, args, obj, ...);
++//		c.next();
++
+ 		return false;
+ 
+     }
+@@ -112,7 +116,7 @@
+  *  @return Smoke::Index        unambiguous method ID
+  */
+ Smoke::Index 
+-smokephp_getMethod(Smoke *smoke, const char* c, const char* m, Smoke::StackItem** qargs, int argc, zval*** args) {
++smokephp_getMethod(Smoke *smoke, const char* c, const char* m, int argc, zval*** args) {
+ 
+     Smoke::Index method = smoke-&gt;findMethod(c, m);	// qt_Smoke-&gt;methods
+     Smoke::Index i = smoke-&gt;methodMaps[method].method;
+@@ -159,8 +163,16 @@
+ 							php_error(E_WARNING,&quot;type enum not yet implemented\n&quot;);
+ 							break;
+ 						case Smoke::t_class:
+-							if(type == IS_OBJECT)
++							if(type == IS_OBJECT){
++							    QByteArray* name = 
++							    new QByteArray(
++								qt_Smoke-&gt;types[
++								    qt_Smoke-&gt;argumentList[
++									qt_Smoke-&gt;methods[
++									    qt_Smoke-&gt;ambiguousMethodList[i]].args+k]].name);
++							    if(name-&gt;contains(Z_OBJCE((zval) **args[k])-&gt;name))
+ 								right = true;
++							}
+ 							break;
+ 						default:
+ 							php_error(E_ERROR, &quot;unknown argument type&quot;);
+@@ -292,7 +304,7 @@
+ 
+ }
+ 
+-static 
++
+ void* transformArray(zval* args){
+ 
+ 	// array informations
+@@ -306,7 +318,7 @@
+ 	uint type = (int) (**first_elem).type;
+ 	if(type &lt; 0 || type &gt; 9){
+ 		// should never happen
+-		php_error(E_ERROR, &quot;could not guess type of array&quot;);
++		php_error(E_ERROR, &quot;Could not get type of array&quot;);
+ 	}
+ 	
+ 	void* e_arrayv;
+@@ -333,231 +345,41 @@
+ 
+ 	zend_hash_apply_with_arguments(((zval) *args).value.ht, (apply_func_args_t) treatArray, 3, type, e_arrayc, e_arrayv);
+ 
++	return e_arrayv;
++
+ }
+ 
+-void 
+-smokephp_convertArgsZendToCxx(zval*** args, int argc, Smoke::StackItem* qargs, QStack&lt;QString*&gt; &amp;methodNameStack) {
++void smokephp_prepareMethodName(zval*** args, int argc, QStack&lt;QString*&gt; &amp;methodNameStack){
+ 
+     for(int i=0;i&lt;argc;i++){
+-
+ 	    uint type = ((int) ((zval) **args[i]).type);
+ 
+-		if (type == IS_RESOURCE){ // TODO
+-
++	    if (type == IS_RESOURCE){ // TODO
+ 	    } else if (type == IS_ARRAY){
+-			// TODO reference
+-      	    qargs[i+1].s_voidp = transformArray(*args[i]);
+-			methodNameStack.top()-&gt;append(&quot;?&quot;);
+-
++		methodNameStack.top()-&gt;append(&quot;?&quot;);
+ 	    } else if (type == IS_BOOL){
+-
+-			// Reference
+-	    	if((((zval) **args[i]).is_ref)){
+-				qargs[i+1].s_voidp = &amp;Z_LVAL_PP(args[i]);
+-	    	} else {
+-    	    	qargs[i+1].s_bool = Z_BVAL_PP(args[i]);
+-    	    }
+-
+-            methodNameStack.top()-&gt;append(&quot;$&quot;);
+-
++        	methodNameStack.top()-&gt;append(&quot;$&quot;);
+ 	    } else if (type == IS_LONG){
+-
+-	    	// Reference
+-	    	if((((zval) **args[i]).is_ref)){
+-				qargs[i+1].s_voidp = &amp;Z_LVAL_PP(args[i]);
+-	    	} else {
+-				qargs[i+1].s_short = Z_LVAL_PP(args[i]);
+-				qargs[i+1].s_ushort = Z_LVAL_PP(args[i]);
+-				qargs[i+1].s_int = Z_LVAL_PP(args[i]);
+-				qargs[i+1].s_uint = Z_LVAL_PP(args[i]);
+-				qargs[i+1].s_long = Z_LVAL_PP(args[i]);
+-				qargs[i+1].s_ulong = Z_LVAL_PP(args[i]);
+-	    	}
+-
+-    	    methodNameStack.top()-&gt;append(&quot;$&quot;);
+-
++    		methodNameStack.top()-&gt;append(&quot;$&quot;);
+ 	    } else if (type == IS_DOUBLE){
+-
+-	    	// Reference
+-	    	if((((zval) **args[i]).is_ref)){
+-				qargs[i+1].s_voidp = &amp;Z_DVAL_PP(args[i]);
+-	    	} else {
+-    	    	qargs[i+1].s_double = Z_DVAL_PP(args[i]);
+-    	    	qargs[i+1].s_float = Z_DVAL_PP(args[i]);
+-    	    }
+-            methodNameStack.top()-&gt;append(&quot;$&quot;);
+-
++        	methodNameStack.top()-&gt;append(&quot;$&quot;);
+ 	    } else if (type == IS_STRING){
+-
+-			if((((zval) **args[i]).is_ref)){
+-				qargs[i+1].s_class = phpqt_getSmokePHPObjectFromZval(*args[i])-&gt;ptr;	
+-			} else {
+-			    // create a new QString object
+-    	    		    qargs[i+1].s_class = emalloc(sizeof(QString) + strlen(Z_STRVAL_PP(args[i]))); // important
+-    	    		    qargs[i+1].s_class = new QString(Z_STRVAL_PP(args[i]));
+-			    // create new smokephp_object
+-			    smokephp_object* o = (smokephp_object*) emalloc(sizeof(smokephp_object));
+-			    o-&gt;ptr = qargs[i+1].s_class;
+-			    o-&gt;zval_ptr = *args[i];
+-			    o-&gt;ce_ptr = qstring_ce;
+-			    o-&gt;classId = 0;	// QString is not in smoke
+-			    o-&gt;smoke = qt_Smoke;
+-			    phpqt_setSmokePHPObject(o);
+-			    // register all 
+-			    zend_rsrc_list_entry le;
+-			    le.ptr = o;
+-			    object_init_ex(*args[i], qstring_ce);
+-			    phpqt_register(o-&gt;zval_ptr,le);
+-			    phpqt_setZvalPtr(o, o-&gt;zval_ptr);
+-        		}
+-        		methodNameStack.top()-&gt;append(&quot;$&quot;);
+-
++        	methodNameStack.top()-&gt;append(&quot;$&quot;);
+ 	    } else if (type == IS_OBJECT){
+-			smokephp_object *o = phpqt_getSmokePHPObjectFromZval(((zval*) *args[i]));
+-        		qargs[i+1].s_class = o-&gt;ptr;
+-            // as default QString is not supported in Smoke
+-            if(!strcmp(Z_OBJCE_P(((zval*) *args[i]))-&gt;name, &quot;QString&quot;)){
+-            	qargs[i+1].s_class = new QString(((QString*) o-&gt;ptr)-&gt;toAscii().constData());
+-            	methodNameStack.top()-&gt;append(&quot;$&quot;);
+-            } else {
+-            	methodNameStack.top()-&gt;append(&quot;#&quot;);
+-            }
+-
++        	// as default QString is not supported in Smoke
++        	if(!strcmp(Z_OBJCE_P(((zval*) *args[i]))-&gt;name, &quot;QString&quot;)){
++            	    methodNameStack.top()-&gt;append(&quot;$&quot;);
++        	} else {
++        	    methodNameStack.top()-&gt;append(&quot;#&quot;);
++        	}
+ 	    } else {
+ 	        php_error(E_ERROR,&quot;Unknown argument or unsupported argument type %d, type %d, exit\n&quot;, i, type);
+ 	        exit(FAILURE);
+ 	    }
+-
+     }
+-
+ }
+ 
+ void 
+-smokephp_convertReturn(Smoke::StackItem *ret_val, const Smoke::Type type, const Smoke::Index ret, zval* return_value){
+-
+-    smokephp_object* o;
+-
+-    switch((type.flags &amp; Smoke::tf_elem)){
+-        case Smoke::t_voidp:
+-	    if(!type.name){
+-        	RETVAL_NULL();
+-	    } else {
+-		if(!strcmp(type.name, &quot;QString&quot;)) {
+-		    // create new smokephp_object
+-		    smokephp_object* o = (smokephp_object*) emalloc(sizeof(smokephp_object));
+-		    o-&gt;ptr = ret_val-&gt;s_voidp;
+-		    o-&gt;zval_ptr = return_value;
+-		    o-&gt;ce_ptr = qstring_ce;
+-		    o-&gt;classId = 0;	// QString is not in smoke
+-		    o-&gt;smoke = qt_Smoke;
+-		    phpqt_setSmokePHPObject(o);
+-		    // register all 
+-		    zend_rsrc_list_entry le;
+-		    le.ptr = o;
+-		    object_init_ex(return_value, qstring_ce);
+-		    phpqt_register(o-&gt;zval_ptr,le);
+-		    phpqt_setZvalPtr(o, o-&gt;zval_ptr);
+-
+-		} else if(!strcmp(type.name, &quot;QString*&quot;)) {
+-		    php_error(E_WARNING,&quot;No handler for returntype %s installed!&quot;, type.name);
+-		} else if(!strcmp(type.name, &quot;QString&amp;&quot;)) {
+-		    php_error(E_WARNING,&quot;No handler for returntype %s installed!&quot;, type.name);
+-		} else {
+-		    php_error(E_WARNING,&quot;No handler for returntype %s installed!&quot;, type.name);
+-		}
+-	    }
+-    	    break;
+-        case Smoke::t_bool:
+-            RETVAL_BOOL(ret_val-&gt;s_bool);
+-            break;
+-        case Smoke::t_char:
+-            RETVAL_STRING((char*)ret_val-&gt;s_char, 1);
+-            break;
+-        case Smoke::t_uchar:
+-            RETVAL_STRING((char*)ret_val-&gt;s_char, 1);
+-            break;
+-        case Smoke::t_short:
+-            RETVAL_LONG(ret_val-&gt;s_short);
+-            break;
+-        case Smoke::t_ushort:
+-            RETVAL_LONG(ret_val-&gt;s_ushort);
+-            break;
+-        case Smoke::t_int:
+-            RETVAL_LONG(ret_val-&gt;s_int);
+-            break;
+-        case Smoke::t_uint:
+-            RETVAL_LONG(ret_val-&gt;s_uint);
+-            break;
+-        case Smoke::t_long:
+-            RETVAL_LONG(ret_val-&gt;s_long);
+-            break;
+-        case Smoke::t_ulong:
+-            RETVAL_LONG(ret_val-&gt;s_ulong);
+-            break;
+-        case Smoke::t_float:
+-            RETVAL_DOUBLE(ret_val-&gt;s_float);
+-            break;
+-        case Smoke::t_double:
+-            RETVAL_DOUBLE(ret_val-&gt;s_double);
+-            break;
+-        case Smoke::t_enum:
+-            php_error(E_WARNING,&quot;type enum not implemented\n&quot;);
+-            break;
+-        case Smoke::t_class:
+- 			o = (smokephp_object*) emalloc(sizeof(smokephp_object));
+-
+-			// zval already exists
+-
+-			    if(phpqt_SmokePHPObjectExists(ret_val-&gt;s_voidp)) {
+-				smokephp_object* o = phpqt_getSmokePHPObjectFromQt(ret_val-&gt;s_voidp);
+-				ZVAL_ZVAL(return_value, o-&gt;zval_ptr,0,0);
+-				zend_rsrc_list_entry le;
+-				le.ptr = o;
+-				phpqt_register(return_value, le);
+-			} else {
+-				o-&gt;ptr = ret_val-&gt;s_class;
+-				o-&gt;smoke = qt_Smoke;
+-				if(!strcmp((char*) qt_Smoke-&gt;classes[qt_Smoke-&gt;types[ret].classId].className, &quot;QObject&quot;)){
+-					// cast from, to
+-					o-&gt;ptr = o-&gt;smoke-&gt;cast(o-&gt;ptr, qt_Smoke-&gt;idClass(&quot;QObject&quot;), qt_Smoke-&gt;types[ret].classId);
+-					object_init_ex(return_value, 
+-									zend_fetch_class((char*)((QObject*) o-&gt;ptr)-&gt;metaObject()-&gt;className(),
+-									strlen(((QObject*) o-&gt;ptr)-&gt;metaObject()-&gt;className()), 
+-									ZEND_FETCH_CLASS_AUTO TSRMLS_DC));
+-				//
+-				} else if (!strcmp((char*) qt_Smoke-&gt;classes[qt_Smoke-&gt;types[ret].classId].className, &quot;QBool&quot;)) {
+-            			    RETVAL_BOOL(*((QBool*) ret_val-&gt;s_class));
+-            			    return;
+-				// fallback, already with correct type
+-				} else {
+-					object_init_ex(return_value, 
+-									zend_fetch_class((char*) qt_Smoke-&gt;classes[qt_Smoke-&gt;types[ret].classId].className,
+-									strlen(qt_Smoke-&gt;classes[qt_Smoke-&gt;types[ret].classId].className), 
+-									ZEND_FETCH_CLASS_AUTO TSRMLS_DC));
+-				}
+-
+-				o-&gt;zval_ptr = return_value;
+-				o-&gt;ce_ptr = Z_OBJCE_P(return_value);
+-				o-&gt;classId = qt_Smoke-&gt;types[ret].classId;
+-
+-				if(!phpqt_SmokePHPObjectExists(o-&gt;ptr))
+-					phpqt_setSmokePHPObject(o);
+-
+-				zend_rsrc_list_entry le;
+-				le.ptr = o;
+-				phpqt_register(return_value, le);
+-
+-			}
+-
+-            return;
+-        default:
+-            php_error(E_ERROR,&quot;unknown return type\n&quot;);
+-            return;
+-    }
+-    return;
+-}
+-
+-void 
+ smokephp_prepareConnect(zval*** args, int argc, Smoke::StackItem* qargs, const Smoke::Index method){
+ 
+     int j;
+
+Modified: trunk/tests/QtBasicTestCase.php
+===================================================================
+--- trunk/tests/QtBasicTestCase.php	2007-03-08 21:16:51 UTC (rev 304)
++++ trunk/tests/QtBasicTestCase.php	2007-03-21 13:08:26 UTC (rev 305)
+@@ -20,7 +20,7 @@
+     class foo extends QObject {
+ 	const a = &quot;a&quot;;
+ 	const b = 24;
+-	
++
+ 	public function testMethod($value = NULL) {
+ 	    if ($value) echo $value.&quot;\n&quot;;
+ 	}
+@@ -31,8 +31,6 @@
+ 
+     class QtBasicTestCase extends PHPUnit_Framework_TestCase {
+     
+-	private $argc = 1; 
+-	private $argv = &quot;init&quot;;
+ 	private $app;
+     
+ 	public function __construct($name) {
+@@ -41,50 +39,59 @@
+ 
+ 	// try to fetch a string constant
+ 	function testFetchStringConstant() {
++	    echo &quot;\ntesting foo::a&quot;;
+ 	    $this-&gt;assertEquals(foo::a, &quot;a&quot;, &quot;Could not fetch string constant!&quot;);
+-	    echo &quot;\ntesting foo::a passed&quot;;
++	    echo &quot; passed&quot;;
+ 	}
+ 
+ 	// try to fetch a numeric constant
+ 	function testFetchNumConstant() {
++	    echo &quot;\ntesting foo::b&quot;;
+ 	    $this-&gt;assertEquals(foo::b, 24, &quot;Could not fetch numeric constant!&quot;);
+-	    echo &quot;\ntesting foo::b passed&quot;;
++	    echo &quot; passed&quot;;
+ 	}
+ 
+ 	// try to fetch a Qt constant
+ 	function testQtConstant() {
++	    echo &quot;\ntesting Qt::Horizontal&quot;;
+ 	    $this-&gt;assertTrue(Qt::Horizontal == 1, &quot;Could not fetch constant from Qt!&quot;);
+-	    echo &quot;\ntesting Qt::Horizontal passed&quot;;
++	    echo &quot; passed&quot;;
+ 	}
+ 
+ 	// test the __toString() method
+ 	function testQString() {
++	    echo &quot;\ntesting QString::__toString()&quot;;
+ 	    $s = new QString(&quot;hello&quot;);
+ 	    $this-&gt;assertEquals($s-&gt;__toString(), &quot;hello&quot;, &quot;Could not handle __toString()!&quot;);
+-	    echo &quot;\ntesting QString::__toString() passed&quot;;
++	    echo &quot; passed&quot;;
+ 	}
+ 
+ 	// try to append a PHP string to a QString
+ 	function testQStringAppendString() {
++	    echo &quot;\ntesting QString::append(\&quot;hello\&quot;)&quot;;
+ 	    $s = new QString(&quot;hello&quot;);
+ 	    $s-&gt;append(&quot; world&quot;);
+ 	    $this-&gt;assertEquals($s-&gt;__toString(), &quot;hello world&quot;, &quot;Could append simple string to QString!&quot;);
+-	    echo &quot;\ntesting QString::append(\&quot;hello\&quot;) passed&quot;;
++	    echo &quot; passed&quot;;
+ 	}
+ 
+ 	// try to create an instance of QApplication
+ 	function testQApplication() {
+-	    $this-&gt;app = new QApplication(&amp;$this-&gt;argc,$this-&gt;argv);
++	    echo &quot;\ntesting QApplication&quot;;
++	    $argc=1;
++	    $argv=array(&quot;argv&quot;);
++	    $this-&gt;app = new QApplication($argc,$argv);
+ 	    $this-&gt;assertTrue(is_object($this-&gt;app), &quot;Could not create an instance of QApplication!&quot;);
+-	    echo &quot;\ntesting QApplication passed&quot;;
++	    echo &quot; passed&quot;;
+ 	}
+ 
+ 	// test returning numbers
+ 	function testReturnNum() {
++	    echo &quot;\ntesting numbers&quot;;
+ 	    $date = new QDate(2007,3,24);
+ 	    $this-&gt;assertTrue((gettype($date-&gt;day()) == &quot;integer&quot;), &quot;Value returned is not integer type, &quot;.gettype($date-&gt;day()).&quot; detected!&quot;);
+ 	    $this-&gt;assertTrue(($date-&gt;day() == 24), &quot;Value returned is wrong!&quot;);
+-	    echo &quot;\ntesting numbers passed&quot;;
++	    echo &quot; passed&quot;;
+ 	}
+ 
+ 	// test returning double
+@@ -93,67 +100,81 @@
+ 
+ 	// test returning boolean
+ 	function testReturnBool() {
++	    echo &quot;\ntesting bool&quot;;
+ 	    $date = new QDate(2007,3,24);
+ 	    $this-&gt;assertTrue((gettype($date-&gt;setDate(2007,3,24)) == &quot;boolean&quot;), &quot;Value returned is not boolean type, &quot;.gettype($date-&gt;setDate(2007,3,24)).&quot; detected!&quot;);
+ 	    $this-&gt;assertTrue(($date-&gt;setDate(2007,3,24) == true), &quot;Value returned is wrong!&quot;);
+-	    echo &quot;\ntesting bool passed&quot;;
++	    echo &quot; passed&quot;;
+ 	}
+ 
+ 	// test returning object
+ 	function testReturnObject() {
++	    echo &quot;\ntesting objects&quot;;
+ 	    $parent = new QObject();
+ 	    $object = new QObject($parent);
+ 	    $parent__ = $object-&gt;parent();
+ 	    $this-&gt;assertTrue(($parent === $parent__),&quot;Object returned by QObject-&gt;parent() is not the same as parent!&quot;);
+-	    echo &quot;\ntesting objects passed&quot;;
++	    echo &quot; passed&quot;;
+ 	}
+ // ???
+ 	// test returning a new object
+ 	function testReturnNewObject() {
++	    echo &quot;\ntesting new objects&quot;;
+ 	    $date = new QDate(2007,3,24);
+ 	    $date__ = $date-&gt;addDays(2);
+ 	    $this-&gt;assertFalse(($date === $date__),&quot;new Object returned by QObject-&gt;parent() is the same as parent!&quot;);
+-	    echo &quot;\ntesting new objects passed&quot;;
++	    echo &quot; passed&quot;;
+ 	}
+ 
+ 	// test returning string
+ 	function testReturnQString() {
++	    echo &quot;\ntesting QString as return&quot;;
+ 	    $object = new QObject();
+ 	    $object-&gt;setObjectName(&quot;hello&quot;);
+ 	    $string = $object-&gt;objectName();
+ 	    $this-&gt;assertTrue(is_object($string), &quot;String is not a QString!&quot;);
+ 	    $this-&gt;assertEquals($string-&gt;toAscii(), &quot;hello&quot;, &quot;Return object does not contain the same text!&quot;);
+-	    echo &quot;\ntesting QString as return passed&quot;;
++	    echo &quot; passed&quot;;
+ 	}
+ 
+ 	// try to give a QString as argument
+ 	function testAddQString() {
++	    echo &quot;\ntesting QString as argument&quot;;
+ 	    $object = new QObject();
+ 	    $object-&gt;setObjectName(new QString(&quot;hello string&quot;));
+ 	    $s = $object-&gt;objectName();
+ 	    $this-&gt;assertEquals($s-&gt;toAscii(),&quot;hello string&quot;, &quot;Return object does not contain the same text!&quot;);
+-	    echo &quot;\ntesting QString as argument passed&quot;;
++	    echo &quot; passed&quot;;
+ 	}
+ 
+ 	// try to append a QString to a QString
+ 	function testQStringAppendObject() {
++	    echo &quot;\ntesting QString::append(new QString(\&quot;hello\&quot;))&quot;;
+ 	    $s = new QString(&quot;hello&quot;);
+ 	    $t = new QString(&quot; world&quot;);
+ 	    $s-&gt;append($t);
+ 	    $this-&gt;assertEquals($s-&gt;__toString(), &quot;hello world&quot;, &quot;Could not append QString to QString!&quot;);
+-	    echo &quot;\ntesting QString::append(new QString(\&quot;hello\&quot;)) passed&quot;;
++	    echo &quot; passed&quot;;
+ 	}
+ 
+ 	// test methods of an derivated object
+ 	function testUnknownMethod() {
++	    echo &quot;\ntesting derivated object&quot;;
+ 	    $date = new QObject();
+ 	    $foo = new foo($date);
+ 	    $foo-&gt;parent();
+ 	    $foo-&gt;testMethod();
+ //	    $foo-&gt;___();	// method not defined
+-	    echo &quot;\ntesting derivated object passed&quot;;
++	    echo &quot; passed&quot;;
+ 	}
+ 
++	function testAmbiguousMethodCall() {
++	    echo &quot;\ntesting ambiguous method call&quot;;
++	    $w = new QWidget();
++	    $w-&gt;setPalette(new QPalette(new QColor(250, 250, 200)));
++	    echo &quot; passed&quot;;
++	}
++
+     }    
+     
+ ?&gt;
+\ No newline at end of file
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000148.html">[Php-qt-svn] r304 - trunk/tests
+</A></li>
+	<LI>Next message: <A HREF="000150.html">[Php-qt-svn] r306 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#149">[ date ]</a>
+              <a href="thread.html#149">[ thread ]</a>
+              <a href="subject.html#149">[ subject ]</a>
+              <a href="author.html#149">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

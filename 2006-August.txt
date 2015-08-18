@@ -1,0 +1,68 @@
+From tm243 at mail.berlios.de  Fri Aug 18 04:40:24 2006
+From: tm243 at mail.berlios.de (tm243 at BerliOS)
+Date: Fri, 18 Aug 2006 04:40:24 +0200
+Subject: [Php-qt-svn] r275 - trunk
+Message-ID: <200608180240.k7I2eOVw025630@sheep.berlios.de>
+
+Author: tm243
+Date: 2006-08-18 04:40:21 +0200 (Fri, 18 Aug 2006)
+New Revision: 275
+
+Modified:
+   trunk/CREDITS
+Log:
+contributor added (thanks Katrina)
+
+Modified: trunk/CREDITS
+===================================================================
+--- trunk/CREDITS	2006-07-23 17:17:29 UTC (rev 274)
++++ trunk/CREDITS	2006-08-18 02:40:21 UTC (rev 275)
+@@ -1,10 +1,12 @@
+ php_qt
+ ==============================================
+-Thomas Moenicke <tm at ippfp.org>
++Thomas Moenicke <tm at kdemail.net>
+     main developer, maintainer
+ 
++Katrina Niolet  <kniolet at ildiinc.com>?
++    contributor
++
+ Jean-Luc Gyger <jean_luc.gyger at freesurf.ch>
+-    main developer
++    developer
+ 
+-
+ Thanks to Ferenc Veres for testing and suggestions.
+
+
+
+From tm243 at mail.berlios.de  Fri Aug 18 05:08:34 2006
+From: tm243 at mail.berlios.de (tm243 at BerliOS)
+Date: Fri, 18 Aug 2006 05:08:34 +0200
+Subject: [Php-qt-svn] r276 - trunk
+Message-ID: <200608180308.k7I38Y2o008268@sheep.berlios.de>
+
+Author: tm243
+Date: 2006-08-18 05:08:32 +0200 (Fri, 18 Aug 2006)
+New Revision: 276
+
+Modified:
+   trunk/CREDITS
+Log:
+typo
+
+Modified: trunk/CREDITS
+===================================================================
+--- trunk/CREDITS	2006-08-18 02:40:21 UTC (rev 275)
++++ trunk/CREDITS	2006-08-18 03:08:32 UTC (rev 276)
+@@ -1,6 +1,6 @@
+ php_qt
+ ==============================================
+-Thomas Moenicke <tm at kdemail.net>
++Thomas Moenicke <thomas.moenicke at kdemail.net>
+     main developer, maintainer
+ 
+ Katrina Niolet  <kniolet at ildiinc.com>?
+
+
+

@@ -1,0 +1,372 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r286 - in trunk: . qt
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-November/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r286%20-%20in%20trunk%3A%20.%20qt&In-Reply-To=%3C200611181251.kAICp5Ae010386%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000129.html">
+   <LINK REL="Next"  HREF="000131.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r286 - in trunk: . qt</H1>
+    <B>tm243 at mail.berlios.de</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r286%20-%20in%20trunk%3A%20.%20qt&In-Reply-To=%3C200611181251.kAICp5Ae010386%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r286 - in trunk: . qt">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Sat Nov 18 13:51:05 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000129.html">[Php-qt-svn] r285 - trunk/qt
+</A></li>
+        <LI>Next message: <A HREF="000131.html">[Php-qt-svn] r287 - in trunk: examples/calculator tutorials/t1	tutorials/t2 tutorials/t3 tutorials/t4 tutorials/t5	tutorials/t6 tutorials/t7
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#130">[ date ]</a>
+              <a href="thread.html#130">[ thread ]</a>
+              <a href="subject.html#130">[ subject ]</a>
+              <a href="author.html#130">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-11-18 13:51:03 +0100 (Sat, 18 Nov 2006)
+New Revision: 286
+
+Modified:
+   trunk/ChangeLog
+   trunk/qt/functions.cpp
+   trunk/qt/php_qt.cpp
+   trunk/qt/php_qt.h
+   trunk/qt/smokephp.cpp
+Log:
+array &amp; reference support in method arguments, new enums, some bugs fixed
+
+Modified: trunk/ChangeLog
+===================================================================
+--- trunk/ChangeLog	2006-11-13 19:14:34 UTC (rev 285)
++++ trunk/ChangeLog	2006-11-18 12:51:03 UTC (rev 286)
+@@ -1,3 +1,10 @@
++2006-011-18  Thomas Moenicke &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">thomas.moenicke at kdemail.net</A>&gt;
++
++		* method argument handling: support for arrays, references
++		* some enums added
++		* internal function check_function
++		* fixed some minor bugs
++
+ 2006-011-7  Thomas Moenicke &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">thomas.moenicke at kdemail.net</A>&gt;
+ 
+ 		* function tr() implemented
+
+Modified: trunk/qt/functions.cpp
+===================================================================
+--- trunk/qt/functions.cpp	2006-11-13 19:14:34 UTC (rev 285)
++++ trunk/qt/functions.cpp	2006-11-18 12:51:03 UTC (rev 286)
+@@ -179,4 +179,4 @@
+ 
+ 	cout &lt;&lt; &quot;)&quot; &lt;&lt; endl;
+ 
+-}
+\ No newline at end of file
++}
+
+Modified: trunk/qt/php_qt.cpp
+===================================================================
+--- trunk/qt/php_qt.cpp	2006-11-13 19:14:34 UTC (rev 285)
++++ trunk/qt/php_qt.cpp	2006-11-18 12:51:03 UTC (rev 286)
+@@ -154,6 +154,8 @@
+ 	RETVAL_NULL();
+ }
+ 
++// TODO cache idClass
++
+ ZEND_METHOD(php_qt_generic_class, __construct)
+ {
+ 
+@@ -182,18 +184,11 @@
+ 
+ 	smokephp_object *o = (smokephp_object*) emalloc(sizeof(smokephp_object));
+ 
+-	// FIXME
+-	if(!strcmp(ce-&gt;name, &quot;QApplication&quot;)){
+-		char** c = new char*[1];
+-		c[0] = &quot;&quot;;
+-		int argc_dummy = 1;
+-		qargs[0].s_class = new QApplication(argc_dummy, c);
+-	// handle QString
+-	} else if (!strcmp(ce-&gt;name, &quot;QString&quot;)){
++	if (!strcmp(ce-&gt;name, &quot;QString&quot;)){
+ 		if(argc &gt; 0){
+         	qargs[0].s_class = new QString(Z_STRVAL_PP(args[0]));
+     	} else {
+-    		qargs[0].s_class = new QString(&quot;&quot;);
++    		qargs[0].s_class = new QString(&quot;&quot;);	// create an empty string
+     	}
+ 	} else {
+ 	    // call Qt method via Smoke
+@@ -414,13 +409,28 @@
+ 			qstring_ce = ce_ptr;
+ 		}
+ 
+-
+         // register enums
+ 		if(!strcmp(qt_Smoke-&gt;classes[i].className, &quot;Qt&quot;)){
+ 			zend_declare_class_constant_long(ce_ptr, &quot;Horizontal&quot;, strlen(&quot;Horizontal&quot;), Qt::Horizontal);
+ 			zend_declare_class_constant_long(ce_ptr, &quot;Vertical&quot;, strlen(&quot;Vertical&quot;), Qt::Vertical);
+ 			zend_declare_class_constant_long(ce_ptr, &quot;AlignRight&quot;, strlen(&quot;AlignRight&quot;), Qt::AlignRight);
++			zend_declare_class_constant_long(ce_ptr, &quot;LeftButton&quot;, strlen(&quot;LeftButton&quot;), Qt::LeftButton);
++		} else if(!strcmp(qt_Smoke-&gt;classes[i].className, &quot;QPalette&quot;)){
++			zend_declare_class_constant_long(ce_ptr, &quot;Button&quot;, strlen(&quot;Button&quot;), QPalette::Button);
++			zend_declare_class_constant_long(ce_ptr, &quot;Text&quot;, strlen(&quot;Text&quot;), QPalette::Text);
++			zend_declare_class_constant_long(ce_ptr, &quot;Base&quot;, strlen(&quot;Base&quot;), QPalette::Base);
++		} else if(!strcmp(qt_Smoke-&gt;classes[i].className, &quot;QSizePolicy&quot;)){
++			zend_declare_class_constant_long(ce_ptr, &quot;Expanding&quot;, strlen(&quot;Expanding&quot;), QSizePolicy::Expanding);
++			zend_declare_class_constant_long(ce_ptr, &quot;Preferred&quot;, strlen(&quot;Preferred&quot;), QSizePolicy::Preferred);
++		} else if(!strcmp(qt_Smoke-&gt;classes[i].className, &quot;QLayout&quot;)){
++			zend_declare_class_constant_long(ce_ptr, &quot;SetFixedSize&quot;, strlen(&quot;SetFixedSize&quot;), QLayout::SetFixedSize);
++		} else if(!strcmp(qt_Smoke-&gt;classes[i].className, &quot;QEvent&quot;)){
++			zend_declare_class_constant_long(ce_ptr, &quot;MouseButtonPress&quot;, strlen(&quot;MouseButtonPress&quot;), QEvent::MouseButtonPress);
++			zend_declare_class_constant_long(ce_ptr, &quot;MouseButtonDblClick&quot;, strlen(&quot;MouseButtonDblClick&quot;), QEvent::MouseButtonDblClick);
++			zend_declare_class_constant_long(ce_ptr, &quot;MouseButtonRelease&quot;, strlen(&quot;MouseButtonRelease&quot;), QEvent::MouseButtonRelease);
++			zend_declare_class_constant_long(ce_ptr, &quot;ContextMenu&quot;, strlen(&quot;ContextMenu&quot;), QEvent::ContextMenu);
+ 		}
++		
+ 	}
+ 
+     for(Smoke::Index i = 1; i &lt;= qt_Smoke-&gt;numClasses; i++){
+
+Modified: trunk/qt/php_qt.h
+===================================================================
+--- trunk/qt/php_qt.h	2006-11-13 19:14:34 UTC (rev 285)
++++ trunk/qt/php_qt.h	2006-11-18 12:51:03 UTC (rev 286)
+@@ -38,6 +38,7 @@
+ #include &lt;QHash&gt;
+ #include &lt;QCoreApplication&gt;
+ #include &lt;QApplication&gt;
++#include &lt;QLayout&gt;
+ 
+ // for older php versions
+ #ifndef ZEND_MN
+@@ -134,4 +135,3 @@
+ void				smokephp_init();
+ Smoke::Index		smokephp_findConnect();
+ bool				smokephp_isConnect(Smoke::Index method);
+-
+
+Modified: trunk/qt/smokephp.cpp
+===================================================================
+--- trunk/qt/smokephp.cpp	2006-11-13 19:14:34 UTC (rev 285)
++++ trunk/qt/smokephp.cpp	2006-11-18 12:51:03 UTC (rev 286)
+@@ -250,36 +250,153 @@
+  *  @param  Smoke::StackItem*       qargs
+  */
+ 
++static
++int treatArray(zval **val, int num_args, va_list args, zend_hash_key *hash_key){
++
++	uint type = va_arg(args, uint);
++	int e_arrayc = va_arg(args, int);
++	void** e_arrayv = va_arg(args, void**);
++
++	smokephp_object *o;
++	if(type == IS_OBJECT)
++		o = phpqt_fetch(((zval*) *val));
++
++	switch(type){
++		case IS_STRING:
++			e_arrayv[e_arrayc] = emalloc(Z_STRLEN(**val)+1);
++ 			e_arrayv[e_arrayc++] = (void*) Z_STRVAL(**val);
++ 			break;
++ 		case IS_LONG:
++ 			e_arrayv[e_arrayc] = emalloc(sizeof(long));
++ 			e_arrayv[e_arrayc++] = (void*) Z_LVAL_PP(val);
++ 			break;
++ 		case IS_DOUBLE:
++ 			e_arrayv[e_arrayc] = emalloc(sizeof(double));
++ 			e_arrayv[e_arrayc++] = (void*) Z_LVAL_PP(val);
++ 			break;
++ 		case IS_BOOL:
++ 			e_arrayv[e_arrayc] = emalloc(sizeof(bool));
++ 			e_arrayv[e_arrayc++] = (void*) Z_BVAL_PP(val);
++ 			break;
++ 		case IS_OBJECT:
++ 			e_arrayv[e_arrayc] = emalloc(sizeof(o-&gt;ptr));
++ 			e_arrayv[e_arrayc++] = o-&gt;ptr;
++ 			break;
++		default:
++			php_error(E_ERROR, &quot;PHP-Qt: unsupported array type %d&quot;, type);
++ 			break;
++	}
++
++	return ZEND_HASH_APPLY_KEEP;
++
++}
++
++static 
++void* transformArray(zval* args){
++
++	// array informations
++	int e_arrayc = zend_hash_num_elements(((zval) *args).value.ht);	// length
++	// find the first type
++	zval** first_elem;
++	if(zend_hash_get_current_data_ex(((zval) *args).value.ht, (void**) &amp;first_elem, 0) == FAILURE){
++		php_error(E_ERROR, &quot;PHP-Qt: could not get first value of hashtable.&quot;);
++	}
++	
++	uint type = (int) (**first_elem).type;
++	if(type &lt; 0 || type &gt; 9){
++		// should never happen
++		php_error(E_ERROR, &quot;could not guess type of array&quot;);
++	}
++	
++	void* e_arrayv;
++
++	switch(type){
++		case IS_STRING:
++			e_arrayv = safe_emalloc(e_arrayc, sizeof(char*), 0);
++			break;
++		case IS_LONG:
++			e_arrayv = safe_emalloc(e_arrayc, sizeof(long), 0);
++			break;
++		case IS_DOUBLE:
++			e_arrayv = safe_emalloc(e_arrayc, sizeof(double), 0);
++			break;
++		case IS_BOOL:
++			e_arrayv = safe_emalloc(e_arrayc, sizeof(bool), 0);
++			break;
++		case IS_OBJECT:
++			e_arrayv = safe_emalloc(e_arrayc, sizeof(QObject*), 0);
++			break;
++		default:
++			php_error(E_ERROR, &quot;PHP-Qt: unsupported array type %d&quot;, type);
++	}
++
++	zend_hash_apply_with_arguments(((zval) *args).value.ht, (apply_func_args_t) treatArray, 3, type, e_arrayc, e_arrayv);
++
++}
++
+ void 
+ smokephp_convertArgsZendToCxx(zval*** args, int argc, Smoke::StackItem* qargs, QStack&lt;QString*&gt; &amp;methodNameStack) {
+ 
+     for(int i=0;i&lt;argc;i++){
++
+ 	    uint type = ((int) ((zval) **args[i]).type);
+-	    if (type == IS_RESOURCE){
++
++		if (type == IS_RESOURCE){ // TODO
++
+ 	    } else if (type == IS_ARRAY){
+-	        // convert array
+-      	    char** c = new char*[1];
+-      	    c[0] = &quot;&quot;;
+-      	    qargs[i+1].s_voidp = (void*) c;
++			// TODO reference
++      	    qargs[i+1].s_voidp = transformArray(*args[i]);
+ 			methodNameStack.top()-&gt;append(&quot;?&quot;);
++
+ 	    } else if (type == IS_BOOL){
+-    	    qargs[i+1].s_bool = Z_BVAL_PP(args[i]);
++
++			// Reference
++	    	if((((zval) **args[i]).is_ref)){
++				qargs[1].s_voidp = &amp;Z_LVAL_PP(args[i]);
++	    	} else {
++    	    	qargs[i+1].s_bool = Z_BVAL_PP(args[i]);
++    	    }
++
+             methodNameStack.top()-&gt;append(&quot;$&quot;);
++
+ 	    } else if (type == IS_LONG){
+-    	    qargs[i+1].s_short = Z_LVAL_PP(args[i]);
+-    	    qargs[i+1].s_ushort = Z_LVAL_PP(args[i]);
+-    	    qargs[i+1].s_int = Z_LVAL_PP(args[i]);
+-    	    qargs[i+1].s_uint = Z_LVAL_PP(args[i]);
+-    	    qargs[i+1].s_long = Z_LVAL_PP(args[i]);
+-    	    qargs[i+1].s_ulong = Z_LVAL_PP(args[i]);
++
++	    	// Reference
++	    	if((((zval) **args[i]).is_ref)){
++				qargs[1].s_voidp = &amp;Z_LVAL_PP(args[i]);
++	    	} else {
++				qargs[i+1].s_short = Z_LVAL_PP(args[i]);
++				qargs[i+1].s_ushort = Z_LVAL_PP(args[i]);
++				qargs[i+1].s_int = Z_LVAL_PP(args[i]);
++				qargs[i+1].s_uint = Z_LVAL_PP(args[i]);
++				qargs[i+1].s_long = Z_LVAL_PP(args[i]);
++				qargs[i+1].s_ulong = Z_LVAL_PP(args[i]);
++	    	}
++
+     	    methodNameStack.top()-&gt;append(&quot;$&quot;);
++
+ 	    } else if (type == IS_DOUBLE){
+-    	    qargs[i+1].s_double = Z_DVAL_PP(args[i]);
++
++	    	// Reference
++	    	if((((zval) **args[i]).is_ref)){
++				qargs[1].s_voidp = &amp;Z_DVAL_PP(args[i]);
++	    	} else {
++    	    	qargs[i+1].s_double = Z_DVAL_PP(args[i]);
++    	    	qargs[i+1].s_float = Z_DVAL_PP(args[i]);
++    	    }
+             methodNameStack.top()-&gt;append(&quot;$&quot;);
++
+ 	    } else if (type == IS_STRING){
+-    	    qargs[i+1].s_class = emalloc(sizeof(QString)+strlen(Z_STRVAL_PP(args[i]))); // important
+-    	    qargs[i+1].s_class = new QString(Z_STRVAL_PP(args[i]));
++
++			if((((zval) **args[i]).is_ref)){
++				qargs[i+1].s_class = phpqt_fetch(*args[i])-&gt;ptr;
++			} else {
++    	    	qargs[i+1].s_class = emalloc(sizeof(QString)+strlen(Z_STRVAL_PP(args[i]))); // important
++    	    	qargs[i+1].s_class = new QString(Z_STRVAL_PP(args[i]));
++            }
++
+             methodNameStack.top()-&gt;append(&quot;$&quot;);
++
+ 	    } else if (type == IS_OBJECT){
+ 			smokephp_object *o = phpqt_fetch(((zval*) *args[i]));
+             qargs[i+1].s_class = o-&gt;ptr;
+@@ -290,10 +407,12 @@
+             } else {
+             	methodNameStack.top()-&gt;append(&quot;#&quot;);
+             }
++
+ 	    } else {
+ 	        php_error(E_ERROR,&quot;Unknown argument or unsupported argument type %d, type %d, exit\n&quot;, i, type);
+ 	        exit(FAILURE);
+ 	    }
++
+     }
+ 
+ }
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000129.html">[Php-qt-svn] r285 - trunk/qt
+</A></li>
+	<LI>Next message: <A HREF="000131.html">[Php-qt-svn] r287 - in trunk: examples/calculator tutorials/t1	tutorials/t2 tutorials/t3 tutorials/t4 tutorials/t5	tutorials/t6 tutorials/t7
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#130">[ date ]</a>
+              <a href="thread.html#130">[ thread ]</a>
+              <a href="subject.html#130">[ subject ]</a>
+              <a href="author.html#130">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

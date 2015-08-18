@@ -1,0 +1,2100 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r172 - in trunk: . qt
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-January/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r172%20-%20in%20trunk%3A%20.%20qt&In-Reply-To=%3C200601122051.k0CKpUp7005122%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000020.html">
+   <LINK REL="Next"  HREF="000022.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r172 - in trunk: . qt</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r172%20-%20in%20trunk%3A%20.%20qt&In-Reply-To=%3C200601122051.k0CKpUp7005122%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r172 - in trunk: . qt">tm243 at berlios.de
+       </A><BR>
+    <I>Thu Jan 12 21:51:30 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000020.html">[Php-qt-svn] r171 - trunk/qt
+</A></li>
+        <LI>Next message: <A HREF="000022.html">[Php-qt-svn] r173 - trunk/qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#21">[ date ]</a>
+              <a href="thread.html#21">[ thread ]</a>
+              <a href="subject.html#21">[ subject ]</a>
+              <a href="author.html#21">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-01-12 21:51:27 +0100 (Thu, 12 Jan 2006)
+New Revision: 172
+
+Modified:
+   trunk/config.m4
+   trunk/qt/ag_extern_zend_class_entry.inc
+   trunk/qt/ag_php_qt_cpp.inc
+   trunk/qt/ag_qt_minit.inc
+   trunk/qt/ag_zend_class_entry.inc
+   trunk/qt/ag_zend_php_qt.inc
+   trunk/qt/php_qt.h
+Log:
+new classes added.
+
+Modified: trunk/config.m4
+===================================================================
+--- trunk/config.m4	2006-01-12 20:45:03 UTC (rev 171)
++++ trunk/config.m4	2006-01-12 20:51:27 UTC (rev 172)
+@@ -104,11 +104,52 @@
+   qt/text_related/qlatin1string.cpp \
+   qt/text_related/qchar.cpp \
+   qt/event/qevent.cpp \
+-  qt/classes/qdate.cpp \
+-  qt/classes/qdatetime.cpp \
+-  qt/classes/qtime.cpp \
++	qt/classes/qactionevent.cpp \ 
++	qt/classes/qcharref.cpp \ 
++	qt/classes/qclipboardevent.cpp \ 
++	qt/classes/qcloseevent.cpp \ 
++	qt/classes/qcontextmenuevent.cpp \ 
++	qt/classes/qdate.cpp \ 
++	qt/classes/qdatetime.cpp \ 
++	qt/classes/qdragenterevent.cpp \ 
++	qt/classes/qdragleaveevent.cpp \ 
++	qt/classes/qdragmoveevent.cpp \ 
++	qt/classes/qdragresponseevent.cpp \ 
++	qt/classes/qdropevent.cpp \ 
++	qt/classes/qfileopenevent.cpp \ 
++	qt/classes/qfocusevent.cpp \ 
++	qt/classes/qfont.cpp \ 
++	qt/classes/qgridlayout.cpp \ 
++	qt/classes/qhelpevent.cpp \ 
++	qt/classes/qhideevent.cpp \ 
++	qt/classes/qhoverevent.cpp \ 
++	qt/classes/qicondragevent.cpp \ 
++	qt/classes/qinputevent.cpp \ 
++	qt/classes/qinputmethodevent.cpp \ 
++	qt/classes/qkeyevent.cpp \ 
++	qt/classes/qlabel.cpp \ 
++	qt/classes/qlatin1char.cpp \ 
++	qt/classes/qmouseevent.cpp \ 
++	qt/classes/qmoveevent.cpp \ 
++	qt/classes/qobjectdata.cpp \ 
++	qt/classes/qobjectuserdata.cpp \ 
++	qt/classes/qpaintevent.cpp \ 
++	qt/classes/qpainter.cpp \  
++	qt/classes/qresizeevent.cpp \ 
++	qt/classes/qshortcutevent.cpp \ 
++	qt/classes/qshowevent.cpp \ 
++	qt/classes/qspaceritem.cpp \ 
++	qt/classes/qstatustipevent.cpp \ 
++	qt/classes/qtabletevent.cpp \ 
++	qt/classes/qtime.cpp \ 
++	qt/classes/qtimer.cpp \ 
++	qt/classes/qtoolbarchangeevent.cpp \ 
++	qt/classes/qwhatsthisclickedevent.cpp \ 
++	qt/classes/qwheelevent.cpp \ 
++	qt/classes/qwidgetdata.cpp \ 
++	qt/classes/qwidgetitem.cpp \ 
++	qt/classes/qwindowstatechangeevent.cpp \ 
+   qt/php_qt.cpp,$ext_shared)
+-
+   PHP_ADD_BUILD_DIR($ext_builddir/qt)
+ 
+ fi
+
+Modified: trunk/qt/ag_extern_zend_class_entry.inc
+===================================================================
+--- trunk/qt/ag_extern_zend_class_entry.inc	2006-01-12 20:45:03 UTC (rev 171)
++++ trunk/qt/ag_extern_zend_class_entry.inc	2006-01-12 20:51:27 UTC (rev 172)
+@@ -1,3 +1,15 @@
++extern zend_class_entry *QActionEvent_ce_ptr;
++void 	_register_QActionEvent();
++extern zend_class_entry *QChar_ce_ptr;
++void 	_register_QChar();
++extern zend_class_entry *QCharRef_ce_ptr;
++void 	_register_QCharRef();
++extern zend_class_entry *QClipboardEvent_ce_ptr;
++void 	_register_QClipboardEvent();
++extern zend_class_entry *QCloseEvent_ce_ptr;
++void 	_register_QCloseEvent();
++extern zend_class_entry *QContextMenuEvent_ce_ptr;
++void 	_register_QContextMenuEvent();
+ extern zend_class_entry *QDate_ce_ptr;
+ void 	_register_QDate();
+ extern zend_class_entry *QDateTime_ce_ptr;
+@@ -2,3 +14,77 @@
+ void 	_register_QDateTime();
++extern zend_class_entry *QDragEnterEvent_ce_ptr;
++void 	_register_QDragEnterEvent();
++extern zend_class_entry *QDragLeaveEvent_ce_ptr;
++void 	_register_QDragLeaveEvent();
++extern zend_class_entry *QDragMoveEvent_ce_ptr;
++void 	_register_QDragMoveEvent();
++extern zend_class_entry *QDragResponseEvent_ce_ptr;
++void 	_register_QDragResponseEvent();
++extern zend_class_entry *QDropEvent_ce_ptr;
++void 	_register_QDropEvent();
++extern zend_class_entry *QFileOpenEvent_ce_ptr;
++void 	_register_QFileOpenEvent();
++extern zend_class_entry *QFocusEvent_ce_ptr;
++void 	_register_QFocusEvent();
++extern zend_class_entry *QFont_ce_ptr;
++void 	_register_QFont();
++extern zend_class_entry *QGridLayout_ce_ptr;
++void 	_register_QGridLayout();
++extern zend_class_entry *QHelpEvent_ce_ptr;
++void 	_register_QHelpEvent();
++extern zend_class_entry *QHideEvent_ce_ptr;
++void 	_register_QHideEvent();
++extern zend_class_entry *QHoverEvent_ce_ptr;
++void 	_register_QHoverEvent();
++extern zend_class_entry *QIconDragEvent_ce_ptr;
++void 	_register_QIconDragEvent();
++extern zend_class_entry *QInputEvent_ce_ptr;
++void 	_register_QInputEvent();
++extern zend_class_entry *QInputMethodEvent_ce_ptr;
++void 	_register_QInputMethodEvent();
++extern zend_class_entry *Attribute_ce_ptr;
++void 	_register_Attribute();
++extern zend_class_entry *QKeyEvent_ce_ptr;
++void 	_register_QKeyEvent();
++extern zend_class_entry *QLabel_ce_ptr;
++void 	_register_QLabel();
++extern zend_class_entry *QLatin1Char_ce_ptr;
++void 	_register_QLatin1Char();
++extern zend_class_entry *QMouseEvent_ce_ptr;
++void 	_register_QMouseEvent();
++extern zend_class_entry *QMoveEvent_ce_ptr;
++void 	_register_QMoveEvent();
++extern zend_class_entry *QObjectData_ce_ptr;
++void 	_register_QObjectData();
++extern zend_class_entry *QObjectUserData_ce_ptr;
++void 	_register_QObjectUserData();
++extern zend_class_entry *QPaintEvent_ce_ptr;
++void 	_register_QPaintEvent();
++extern zend_class_entry *QPainter_ce_ptr;
++void 	_register_QPainter();
++extern zend_class_entry *QResizeEvent_ce_ptr;
++void 	_register_QResizeEvent();
++extern zend_class_entry *QShortcutEvent_ce_ptr;
++void 	_register_QShortcutEvent();
++extern zend_class_entry *QShowEvent_ce_ptr;
++void 	_register_QShowEvent();
++extern zend_class_entry *QStatusTipEvent_ce_ptr;
++void 	_register_QStatusTipEvent();
++extern zend_class_entry *QTabletEvent_ce_ptr;
++void 	_register_QTabletEvent();
+ extern zend_class_entry *QTime_ce_ptr;
+ void 	_register_QTime();
++extern zend_class_entry *QTimer_ce_ptr;
++void 	_register_QTimer();
++extern zend_class_entry *QToolBarChangeEvent_ce_ptr;
++void 	_register_QToolBarChangeEvent();
++extern zend_class_entry *QWhatsThisClickedEvent_ce_ptr;
++void 	_register_QWhatsThisClickedEvent();
++extern zend_class_entry *QWheelEvent_ce_ptr;
++void 	_register_QWheelEvent();
++extern zend_class_entry *QWidgetData_ce_ptr;
++void 	_register_QWidgetData();
++extern zend_class_entry *QWidgetItem_ce_ptr;
++void 	_register_QWidgetItem();
++extern zend_class_entry *QWindowStateChangeEvent_ce_ptr;
++void 	_register_QWindowStateChangeEvent();
+
+Modified: trunk/qt/ag_php_qt_cpp.inc
+===================================================================
+--- trunk/qt/ag_php_qt_cpp.inc	2006-01-12 20:45:03 UTC (rev 171)
++++ trunk/qt/ag_php_qt_cpp.inc	2006-01-12 20:51:27 UTC (rev 172)
+@@ -1,23 +1,178 @@
++static zend_function_entry QActionEvent_methods[] = {
++	ZEND_ME(QActionEvent,action,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QActionEvent,before,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QActionEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QActionEvent&quot;,QActionEvent_methods);
++    QActionEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QChar_methods[] = {
++	ZEND_ME(QChar,combiningClass,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,isUpper,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,joining,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,row,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,isSymbol,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,category,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,isPrint,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,digitValue,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,mirroredChar,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,fromLatin1,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QChar,fromAscii,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QChar,isSpace,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,toLatin1,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,toUpper,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,decomposition,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,isPunct,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,isDigit,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,decompositionTag,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,isLower,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,direction,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,hasMirrored,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,toLower,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,unicode,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,isLetter,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,setRow,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,isLetterOrNumber,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,cell,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,isNumber,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,setCell,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,unicodeVersion,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,toAscii,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,isMark,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QChar,isNull,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QChar(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QChar&quot;,QChar_methods);
++    QChar_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
++
++}
++static zend_function_entry QCharRef_methods[] = {
++	ZEND_ME(QCharRef,isDigit,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,combiningClass,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,decompositionTag,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,joining,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,direction,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,hasMirrored,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,toLower,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,unicode,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,row,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,setRow,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,category,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,isLetter,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,cell,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,digitValue,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,isPrint,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,isLetterOrNumber,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,mirroredChar,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,setCell,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,isNumber,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,unicodeVersion,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,isSpace,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,toLatin1,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,toAscii,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,decomposition,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,toUpper,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,isMark,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,isPunct,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QCharRef,isNull,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QCharRef(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QCharRef&quot;,QCharRef_methods);
++    QCharRef_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
++
++}
++static zend_function_entry QClipboardEvent_methods[] = {
++	ZEND_ME(QClipboardEvent,data,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QClipboardEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QClipboardEvent&quot;,QClipboardEvent_methods);
++    QClipboardEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QCloseEvent_methods[] = {
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QCloseEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QCloseEvent&quot;,QCloseEvent_methods);
++    QCloseEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QContextMenuEvent_methods[] = {
++	ZEND_ME(QContextMenuEvent,y,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QContextMenuEvent,reason,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QContextMenuEvent,globalY,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QContextMenuEvent,pos,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QContextMenuEvent,x,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QContextMenuEvent,globalPos,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QContextMenuEvent,globalX,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QContextMenuEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QContextMenuEvent&quot;,QContextMenuEvent_methods);
++    QContextMenuEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QInputEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
+ static zend_function_entry QDate_methods[] = {
+ 	ZEND_ME(QDate,longDayName,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QDate,isValid,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QDate,dayOfWeek,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDate,daysInMonth,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDate,month,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDate,isValid,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDate,setYMD,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDate,shortMonthName,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+ 	ZEND_ME(QDate,toString,NULL,ZEND_ACC_PUBLIC)
+-	ZEND_ME(QDate,toString,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDate,isLeapYear,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+ 	ZEND_ME(QDate,fromJulianDay,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QDate,currentDate,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+ 	ZEND_ME(QDate,addDays,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDate,day,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDate,gregorianToJulian,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+ 	ZEND_ME(QDate,longMonthName,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+ 	ZEND_ME(QDate,julianToGregorian,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+ 	ZEND_ME(QDate,shortDayName,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+ 	ZEND_ME(QDate,fromString,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QDate,fromString,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QDate,dayOfYear,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDate,weekNumber,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDate,addMonths,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDate,toJulianDay,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDate,addYears,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDate,daysTo,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDate,isNull,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDate,year,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDate,daysInYear,NULL,ZEND_ACC_PUBLIC)
+ 
+     {NULL,NULL,NULL}
+ };
+@@ -30,20 +185,27 @@
+ 
+ }
+ static zend_function_entry QDateTime_methods[] = {
++	ZEND_ME(QDateTime,time,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDateTime,date,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDateTime,isValid,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDateTime,toString,NULL,ZEND_ACC_PUBLIC)
+-	ZEND_ME(QDateTime,toString,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDateTime,toTime_t,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDateTime,setTime_t,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDateTime,addDays,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDateTime,secsTo,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDateTime,toTimeSpec,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDateTime,fromString,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QDateTime,fromString,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QDateTime,timeSpec,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDateTime,setTime,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDateTime,addMonths,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDateTime,addSecs,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDateTime,setDate,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDateTime,currentDateTime,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+ 	ZEND_ME(QDateTime,daysTo,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDateTime,addYears,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDateTime,isNull,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDateTime,toUTC,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDateTime,toLocalTime,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QDateTime,setTimeSpec,NULL,ZEND_ACC_PUBLIC)
+ 
+     {NULL,NULL,NULL}
+@@ -56,17 +218,700 @@
+     QDateTime_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
+ 
+ }
++static zend_function_entry QDragEnterEvent_methods[] = {
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QDragEnterEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QDragEnterEvent&quot;,QDragEnterEvent_methods);
++    QDragEnterEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QDragMoveEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QDragLeaveEvent_methods[] = {
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QDragLeaveEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QDragLeaveEvent&quot;,QDragLeaveEvent_methods);
++    QDragLeaveEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QDragMoveEvent_methods[] = {
++	ZEND_ME(QDragMoveEvent,accept,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDragMoveEvent,answerRect,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDragMoveEvent,ignore,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QDragMoveEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QDragMoveEvent&quot;,QDragMoveEvent_methods);
++    QDragMoveEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QDropEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QDragResponseEvent_methods[] = {
++	ZEND_ME(QDragResponseEvent,dragAccepted,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QDragResponseEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QDragResponseEvent&quot;,QDragResponseEvent_methods);
++    QDragResponseEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QDropEvent_methods[] = {
++	ZEND_ME(QDropEvent,encodedData,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDropEvent,source,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDropEvent,keyboardModifiers,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDropEvent,setDropAction,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDropEvent,acceptProposedAction,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDropEvent,dropAction,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDropEvent,mimeData,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDropEvent,provides,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDropEvent,format,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDropEvent,mouseButtons,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDropEvent,proposedAction,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDropEvent,pos,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDropEvent,possibleActions,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QDropEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QDropEvent&quot;,QDropEvent_methods);
++    QDropEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++	zend_do_inheritance(QDropEvent_ce_ptr, QMimeSource_ce_ptr TSRMLS_CC);
++
++
++}
++static zend_function_entry QFileOpenEvent_methods[] = {
++	ZEND_ME(QFileOpenEvent,file,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QFileOpenEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QFileOpenEvent&quot;,QFileOpenEvent_methods);
++    QFileOpenEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QFocusEvent_methods[] = {
++	ZEND_ME(QFocusEvent,lostFocus,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFocusEvent,reason,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFocusEvent,gotFocus,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QFocusEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QFocusEvent&quot;,QFocusEvent_methods);
++    QFocusEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QFont_methods[] = {
++	ZEND_ME(QFont,setOverline,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,insertSubstitution,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QFont,stretch,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,styleStrategy,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,setKerning,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,underline,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,removeSubstitution,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QFont,substitute,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QFont,setBold,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,resolve,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,fixedPitch,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,italic,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,pixelSize,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,insertSubstitutions,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QFont,key,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,setStrikeOut,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,weight,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,pointSize,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,cleanup,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QFont,fromString,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,exactMatch,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,setWeight,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,styleHint,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,handle,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,setStyle,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,rawName,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,setUnderline,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,family,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,isCopyOf,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,rawMode,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,substitutes,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QFont,setStretch,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,initialize,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QFont,toString,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,defaultFamily,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,setRawMode,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,kerning,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,setStyleHint,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,substitutions,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QFont,setFamily,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,bold,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,style,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,setPointSize,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,setRawName,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,setStyleStrategy,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,cacheStatistics,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QFont,setPixelSize,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,setFixedPitch,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,setItalic,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,strikeOut,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,lastResortFont,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,lastResortFamily,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,overline,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,pointSizeF,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QFont,setPointSizeF,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QFont(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QFont&quot;,QFont_methods);
++    QFont_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
++
++}
++static zend_function_entry QGridLayout_methods[] = {
++	ZEND_ME(QGridLayout,tr,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QGridLayout,addLayout,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,qt_invoke,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,addItem,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,rowMinimumHeight,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,setOriginCorner,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,qt_cast,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,metaObject,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,count,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,originCorner,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,invalidate,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,setGeometry,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,qt_emit,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,setRowStretch,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,getItemPosition,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,setDefaultPositioning,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,className,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,columnStretch,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,addWidget,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,takeAt,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,staticMetaObject,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QGridLayout,itemAt,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,qObject,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,minimumSize,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,sizeHint,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,setColumnMinimumWidth,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,heightForWidth,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,hasHeightForWidth,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,setColumnStretch,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,rowCount,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,columnMinimumWidth,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,cellRect,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,columnCount,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,setRowMinimumHeight,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,trUtf8,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QGridLayout,maximumSize,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,qt_property,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,minimumHeightForWidth,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,expandingDirections,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QGridLayout,rowStretch,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QGridLayout(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QGridLayout&quot;,QGridLayout_methods);
++    QGridLayout_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QLayout_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QHelpEvent_methods[] = {
++	ZEND_ME(QHelpEvent,y,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QHelpEvent,globalY,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QHelpEvent,pos,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QHelpEvent,x,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QHelpEvent,globalPos,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QHelpEvent,globalX,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QHelpEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QHelpEvent&quot;,QHelpEvent_methods);
++    QHelpEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QHideEvent_methods[] = {
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QHideEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QHideEvent&quot;,QHideEvent_methods);
++    QHideEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QHoverEvent_methods[] = {
++	ZEND_ME(QHoverEvent,oldPos,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QHoverEvent,pos,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QHoverEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QHoverEvent&quot;,QHoverEvent_methods);
++    QHoverEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QIconDragEvent_methods[] = {
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QIconDragEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QIconDragEvent&quot;,QIconDragEvent_methods);
++    QIconDragEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QInputEvent_methods[] = {
++	ZEND_ME(QInputEvent,modifiers,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QInputEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QInputEvent&quot;,QInputEvent_methods);
++    QInputEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QInputMethodEvent_methods[] = {
++	ZEND_ME(QInputMethodEvent,commitString,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QInputMethodEvent,replacementStart,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QInputMethodEvent,setCommitString,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QInputMethodEvent,replacementLength,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QInputMethodEvent,preeditString,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QInputMethodEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QInputMethodEvent&quot;,QInputMethodEvent_methods);
++    QInputMethodEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry Attribute_methods[] = {
++
++    {NULL,NULL,NULL}
++};
++
++void _register_Attribute(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;Attribute&quot;,Attribute_methods);
++    Attribute_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
++
++}
++static zend_function_entry QKeyEvent_methods[] = {
++	ZEND_ME(QKeyEvent,count,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QKeyEvent,text,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QKeyEvent,isAutoRepeat,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QKeyEvent,modifiers,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QKeyEvent,key,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QKeyEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QKeyEvent&quot;,QKeyEvent_methods);
++    QKeyEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QInputEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QLabel_methods[] = {
++	ZEND_ME(QLabel,tr,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QLabel,setMargin,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,clear,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,qt_invoke,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,setBuddy,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,movie,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,hasScaledContents,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,qt_cast,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,metaObject,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,setScaledContents,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,event,NULL,ZEND_ACC_PROTECTED)
++	ZEND_ME(QLabel,indent,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,qt_emit,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,pixmap,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,setAlignment,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,className,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,buddy,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,textFormat,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,setMovie,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,setPicture,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,setNum,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,wordWrap,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,staticMetaObject,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QLabel,setTextFormat,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,qObject,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,setText,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,text,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,alignment,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,sizeHint,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,minimumSizeHint,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,heightForWidth,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,setPixmap,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,picture,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,setWordWrap,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,trUtf8,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QLabel,qt_property,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,setIndent,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLabel,margin,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QLabel(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QLabel&quot;,QLabel_methods);
++    QLabel_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QFrame_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QLatin1Char_methods[] = {
++	ZEND_ME(QLatin1Char,unicode,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLatin1Char,toLatin1,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QLatin1Char(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QLatin1Char&quot;,QLatin1Char_methods);
++    QLatin1Char_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
++
++}
++static zend_function_entry QMouseEvent_methods[] = {
++	ZEND_ME(QMouseEvent,x,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QMouseEvent,globalX,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QMouseEvent,globalPos,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QMouseEvent,y,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QMouseEvent,globalY,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QMouseEvent,pos,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QMouseEvent,button,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QMouseEvent,buttons,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QMouseEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QMouseEvent&quot;,QMouseEvent_methods);
++    QMouseEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QInputEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QMoveEvent_methods[] = {
++	ZEND_ME(QMoveEvent,oldPos,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QMoveEvent,pos,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QMoveEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QMoveEvent&quot;,QMoveEvent_methods);
++    QMoveEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QObjectData_methods[] = {
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QObjectData(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QObjectData&quot;,QObjectData_methods);
++    QObjectData_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
++
++}
++static zend_function_entry QObjectUserData_methods[] = {
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QObjectUserData(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QObjectUserData&quot;,QObjectUserData_methods);
++    QObjectUserData_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
++
++}
++static zend_function_entry QPaintEvent_methods[] = {
++	ZEND_ME(QPaintEvent,rect,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPaintEvent,region,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QPaintEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QPaintEvent&quot;,QPaintEvent_methods);
++    QPaintEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QPainter_methods[] = {
++	ZEND_ME(QPainter,eraseRect,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,setClipPath,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,matrixEnabled,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,shear,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,save,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,resetMatrix,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,initFrom,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,fontInfo,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,setLayoutDirection,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,setBrushOrigin,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,pen,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,drawRects,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,drawPath,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,fillPath,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,rotate,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,drawPie,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,translate,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,setCompositionMode,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,setWindow,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,fontMetrics,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,drawPixmap,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,drawPolyline,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,deviceMatrix,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,drawLine,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,fillRect,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,boundingRect,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,setClipRect,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,drawImage,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,drawTiledPixmap,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,layoutDirection,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,background,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,drawPolygon,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,device,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,setClipRegion,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,restoreRedirected,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QPainter,setMatrixEnabled,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,drawPoints,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,drawRoundRect,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,drawConvexPolygon,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,setMatrix,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,drawPicture,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,restore,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,font,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,matrix,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,viewport,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,viewTransformEnabled,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,drawText,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,drawChord,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,clipRegion,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,end,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,brushOrigin,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,setViewTransformEnabled,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,scale,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,setPen,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,setBackgroundMode,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,window,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,paintEngine,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,setRenderHint,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,brush,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,strokePath,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,setBrush,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,drawPoint,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,setRedirected,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QPainter,compositionMode,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,setFont,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,begin,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,setViewport,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,drawEllipse,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,drawArc,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,setBackground,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,isActive,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,drawRect,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,drawLines,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,renderHints,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,backgroundMode,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,redirected,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QPainter,hasClipping,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,drawTextItem,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,setClipping,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPainter,clipPath,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QPainter(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QPainter&quot;,QPainter_methods);
++    QPainter_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
++
++}
++static zend_function_entry QResizeEvent_methods[] = {
++	ZEND_ME(QResizeEvent,oldSize,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QResizeEvent,size,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QResizeEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QResizeEvent&quot;,QResizeEvent_methods);
++    QResizeEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QShortcutEvent_methods[] = {
++	ZEND_ME(QShortcutEvent,shortcutId,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QShortcutEvent,isAmbiguous,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QShortcutEvent,key,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QShortcutEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QShortcutEvent&quot;,QShortcutEvent_methods);
++    QShortcutEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QShowEvent_methods[] = {
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QShowEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QShowEvent&quot;,QShowEvent_methods);
++    QShowEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QStatusTipEvent_methods[] = {
++	ZEND_ME(QStatusTipEvent,tip,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QStatusTipEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QStatusTipEvent&quot;,QStatusTipEvent_methods);
++    QStatusTipEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QTabletEvent_methods[] = {
++	ZEND_ME(QTabletEvent,hiResGlobalX,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTabletEvent,pressure,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTabletEvent,hiResGlobalPos,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTabletEvent,tangentialPressure,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTabletEvent,x,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTabletEvent,globalX,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTabletEvent,globalPos,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTabletEvent,y,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTabletEvent,uniqueId,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTabletEvent,hiResGlobalY,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTabletEvent,pos,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTabletEvent,xTilt,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTabletEvent,rotation,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTabletEvent,pointerType,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTabletEvent,yTilt,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTabletEvent,device,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTabletEvent,globalY,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTabletEvent,z,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QTabletEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QTabletEvent&quot;,QTabletEvent_methods);
++    QTabletEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QInputEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
+ static zend_function_entry QTime_methods[] = {
+-	ZEND_ME(QTime,isValid,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QTime,hour,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTime,isValid,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTime,elapsed,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QTime,toString,NULL,ZEND_ACC_PUBLIC)
+-	ZEND_ME(QTime,toString,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTime,msec,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QTime,secsTo,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTime,restart,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QTime,fromString,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-	ZEND_ME(QTime,fromString,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QTime,second,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QTime,addSecs,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QTime,addMSecs,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTime,currentTime,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QTime,minute,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QTime,setHMS,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTime,isNull,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QTime,msecsTo,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTime,start,NULL,ZEND_ACC_PUBLIC)
+ 
+     {NULL,NULL,NULL}
+ };
+@@ -78,3 +923,134 @@
+     QTime_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
+ 
+ }
++static zend_function_entry QTimer_methods[] = {
++	ZEND_ME(QTimer,tr,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QTimer,qt_invoke,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTimer,staticMetaObject,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QTimer,setInterval,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTimer,qObject,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTimer,timerId,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTimer,singleShot,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QTimer,qt_cast,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTimer,metaObject,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTimer,stop,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTimer,isActive,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTimer,qt_emit,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTimer,interval,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTimer,setSingleShot,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTimer,className,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTimer,trUtf8,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QTimer,qt_property,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTimer,isSingleShot,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTimer,start,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QTimer(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QTimer&quot;,QTimer_methods);
++    QTimer_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QObject_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QToolBarChangeEvent_methods[] = {
++	ZEND_ME(QToolBarChangeEvent,toggle,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QToolBarChangeEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QToolBarChangeEvent&quot;,QToolBarChangeEvent_methods);
++    QToolBarChangeEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QWhatsThisClickedEvent_methods[] = {
++	ZEND_ME(QWhatsThisClickedEvent,href,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QWhatsThisClickedEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QWhatsThisClickedEvent&quot;,QWhatsThisClickedEvent_methods);
++    QWhatsThisClickedEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QWheelEvent_methods[] = {
++	ZEND_ME(QWheelEvent,orientation,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QWheelEvent,x,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QWheelEvent,globalX,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QWheelEvent,globalPos,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QWheelEvent,y,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QWheelEvent,delta,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QWheelEvent,globalY,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QWheelEvent,pos,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QWheelEvent,buttons,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QWheelEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QWheelEvent&quot;,QWheelEvent_methods);
++    QWheelEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QInputEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QWidgetData_methods[] = {
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QWidgetData(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QWidgetData&quot;,QWidgetData_methods);
++    QWidgetData_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
++
++}
++static zend_function_entry QWidgetItem_methods[] = {
++	ZEND_ME(QWidgetItem,hasHeightForWidth,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QWidgetItem,isEmpty,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QWidgetItem,setGeometry,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QWidgetItem,minimumSize,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QWidgetItem,sizeHint,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QWidgetItem,maximumSize,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QWidgetItem,heightForWidth,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QWidgetItem,widget,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QWidgetItem,expandingDirections,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QWidgetItem,geometry,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QWidgetItem(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QWidgetItem&quot;,QWidgetItem_methods);
++    QWidgetItem_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QLayoutItem_ce_ptr,NULL TSRMLS_CC);
++
++
++}
++static zend_function_entry QWindowStateChangeEvent_methods[] = {
++	ZEND_ME(QWindowStateChangeEvent,oldState,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QWindowStateChangeEvent(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QWindowStateChangeEvent&quot;,QWindowStateChangeEvent_methods);
++    QWindowStateChangeEvent_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QEvent_ce_ptr,NULL TSRMLS_CC);
++
++
++}
+
+Modified: trunk/qt/ag_qt_minit.inc
+===================================================================
+--- trunk/qt/ag_qt_minit.inc	2006-01-12 20:45:03 UTC (rev 171)
++++ trunk/qt/ag_qt_minit.inc	2006-01-12 20:51:27 UTC (rev 172)
+@@ -1,7 +1,235 @@
+ 
++	_register_QActionEvent(TSRMLS_C);
++
++	_register_QChar(TSRMLS_C);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_SPECIALCHARACTER_NULL&quot;, QChar::Null, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_SPECIALCHARACTER_NBSP&quot;, QChar::Nbsp, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_SPECIALCHARACTER_REPLACEMENTCHARACTER&quot;, QChar::ReplacementCharacter, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_SPECIALCHARACTER_OBJECTREPLACEMENTCHARACTER&quot;, QChar::ObjectReplacementCharacter, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_SPECIALCHARACTER_BYTEORDERMARK&quot;, QChar::ByteOrderMark, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_SPECIALCHARACTER_BYTEORDERSWAPPED&quot;, QChar::ByteOrderSwapped, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_SPECIALCHARACTER_PARAGRAPHSEPARATOR&quot;, QChar::ParagraphSeparator, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_SPECIALCHARACTER_LINESEPARATOR&quot;, QChar::LineSeparator, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_NOCATEGORY&quot;, QChar::NoCategory, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_MARK_NONSPACING&quot;, QChar::Mark_NonSpacing, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_MARK_SPACINGCOMBINING&quot;, QChar::Mark_SpacingCombining, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_MARK_ENCLOSING&quot;, QChar::Mark_Enclosing, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_NUMBER_DECIMALDIGIT&quot;, QChar::Number_DecimalDigit, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_NUMBER_LETTER&quot;, QChar::Number_Letter, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_NUMBER_OTHER&quot;, QChar::Number_Other, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_SEPARATOR_SPACE&quot;, QChar::Separator_Space, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_SEPARATOR_LINE&quot;, QChar::Separator_Line, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_SEPARATOR_PARAGRAPH&quot;, QChar::Separator_Paragraph, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_OTHER_CONTROL&quot;, QChar::Other_Control, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_OTHER_FORMAT&quot;, QChar::Other_Format, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_OTHER_SURROGATE&quot;, QChar::Other_Surrogate, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_OTHER_PRIVATEUSE&quot;, QChar::Other_PrivateUse, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_OTHER_NOTASSIGNED&quot;, QChar::Other_NotAssigned, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_LETTER_UPPERCASE&quot;, QChar::Letter_Uppercase, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_LETTER_LOWERCASE&quot;, QChar::Letter_Lowercase, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_LETTER_TITLECASE&quot;, QChar::Letter_Titlecase, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_LETTER_MODIFIER&quot;, QChar::Letter_Modifier, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_LETTER_OTHER&quot;, QChar::Letter_Other, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_PUNCTUATION_CONNECTOR&quot;, QChar::Punctuation_Connector, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_PUNCTUATION_DASH&quot;, QChar::Punctuation_Dash, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_PUNCTUATION_OPEN&quot;, QChar::Punctuation_Open, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_PUNCTUATION_CLOSE&quot;, QChar::Punctuation_Close, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_PUNCTUATION_INITIALQUOTE&quot;, QChar::Punctuation_InitialQuote, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_PUNCTUATION_FINALQUOTE&quot;, QChar::Punctuation_FinalQuote, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_PUNCTUATION_OTHER&quot;, QChar::Punctuation_Other, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_SYMBOL_MATH&quot;, QChar::Symbol_Math, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_SYMBOL_CURRENCY&quot;, QChar::Symbol_Currency, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_SYMBOL_MODIFIER&quot;, QChar::Symbol_Modifier, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_SYMBOL_OTHER&quot;, QChar::Symbol_Other, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_CATEGORY_PUNCTUATION_DASK&quot;, QChar::Punctuation_Dask, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DIRECTION_DIRL&quot;, QChar::DirL, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DIRECTION_DIRR&quot;, QChar::DirR, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DIRECTION_DIREN&quot;, QChar::DirEN, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DIRECTION_DIRES&quot;, QChar::DirES, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DIRECTION_DIRET&quot;, QChar::DirET, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DIRECTION_DIRAN&quot;, QChar::DirAN, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DIRECTION_DIRCS&quot;, QChar::DirCS, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DIRECTION_DIRB&quot;, QChar::DirB, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DIRECTION_DIRS&quot;, QChar::DirS, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DIRECTION_DIRWS&quot;, QChar::DirWS, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DIRECTION_DIRON&quot;, QChar::DirON, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DIRECTION_DIRLRE&quot;, QChar::DirLRE, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DIRECTION_DIRLRO&quot;, QChar::DirLRO, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DIRECTION_DIRAL&quot;, QChar::DirAL, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DIRECTION_DIRRLE&quot;, QChar::DirRLE, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DIRECTION_DIRRLO&quot;, QChar::DirRLO, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DIRECTION_DIRPDF&quot;, QChar::DirPDF, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DIRECTION_DIRNSM&quot;, QChar::DirNSM, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DIRECTION_DIRBN&quot;, QChar::DirBN, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DECOMPOSITION_NODECOMPOSITION&quot;, QChar::NoDecomposition, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DECOMPOSITION_CANONICAL&quot;, QChar::Canonical, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DECOMPOSITION_FONT&quot;, QChar::Font, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DECOMPOSITION_NOBREAK&quot;, QChar::NoBreak, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DECOMPOSITION_INITIAL&quot;, QChar::Initial, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DECOMPOSITION_MEDIAL&quot;, QChar::Medial, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DECOMPOSITION_FINAL&quot;, QChar::Final, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DECOMPOSITION_ISOLATED&quot;, QChar::Isolated, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DECOMPOSITION_CIRCLE&quot;, QChar::Circle, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DECOMPOSITION_SUPER&quot;, QChar::Super, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DECOMPOSITION_SUB&quot;, QChar::Sub, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DECOMPOSITION_VERTICAL&quot;, QChar::Vertical, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DECOMPOSITION_WIDE&quot;, QChar::Wide, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DECOMPOSITION_NARROW&quot;, QChar::Narrow, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DECOMPOSITION_SMALL&quot;, QChar::Small, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DECOMPOSITION_SQUARE&quot;, QChar::Square, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DECOMPOSITION_COMPAT&quot;, QChar::Compat, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_DECOMPOSITION_FRACTION&quot;, QChar::Fraction, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_JOINING_OTHERJOINING&quot;, QChar::OtherJoining, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_JOINING_DUAL&quot;, QChar::Dual, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_JOINING_RIGHT&quot;, QChar::Right, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_JOINING_CENTER&quot;, QChar::Center, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_COMBININGCLASS_COMBINING_BELOWLEFTATTACHED&quot;, QChar::Combining_BelowLeftAttached, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_COMBININGCLASS_COMBINING_BELOWATTACHED&quot;, QChar::Combining_BelowAttached, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_COMBININGCLASS_COMBINING_BELOWRIGHTATTACHED&quot;, QChar::Combining_BelowRightAttached, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_COMBININGCLASS_COMBINING_LEFTATTACHED&quot;, QChar::Combining_LeftAttached, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_COMBININGCLASS_COMBINING_RIGHTATTACHED&quot;, QChar::Combining_RightAttached, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_COMBININGCLASS_COMBINING_ABOVELEFTATTACHED&quot;, QChar::Combining_AboveLeftAttached, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_COMBININGCLASS_COMBINING_ABOVEATTACHED&quot;, QChar::Combining_AboveAttached, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_COMBININGCLASS_COMBINING_ABOVERIGHTATTACHED&quot;, QChar::Combining_AboveRightAttached, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_COMBININGCLASS_COMBINING_BELOWLEFT&quot;, QChar::Combining_BelowLeft, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_COMBININGCLASS_COMBINING_BELOW&quot;, QChar::Combining_Below, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_COMBININGCLASS_COMBINING_BELOWRIGHT&quot;, QChar::Combining_BelowRight, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_COMBININGCLASS_COMBINING_LEFT&quot;, QChar::Combining_Left, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_COMBININGCLASS_COMBINING_RIGHT&quot;, QChar::Combining_Right, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_COMBININGCLASS_COMBINING_ABOVELEFT&quot;, QChar::Combining_AboveLeft, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_COMBININGCLASS_COMBINING_ABOVE&quot;, QChar::Combining_Above, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_COMBININGCLASS_COMBINING_ABOVERIGHT&quot;, QChar::Combining_AboveRight, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_COMBININGCLASS_COMBINING_DOUBLEBELOW&quot;, QChar::Combining_DoubleBelow, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_COMBININGCLASS_COMBINING_DOUBLEABOVE&quot;, QChar::Combining_DoubleAbove, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_COMBININGCLASS_COMBINING_IOTASUBSCRIPT&quot;, QChar::Combining_IotaSubscript, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_UNICODEVERSION_UNICODE_UNASSIGNED&quot;, QChar::Unicode_Unassigned, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_UNICODEVERSION_UNICODE_1_1&quot;, QChar::Unicode_1_1, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_UNICODEVERSION_UNICODE_2_0&quot;, QChar::Unicode_2_0, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_UNICODEVERSION_UNICODE_2_1_2&quot;, QChar::Unicode_2_1_2, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_UNICODEVERSION_UNICODE_3_0&quot;, QChar::Unicode_3_0, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_UNICODEVERSION_UNICODE_3_1&quot;, QChar::Unicode_3_1, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_UNICODEVERSION_UNICODE_3_2&quot;, QChar::Unicode_3_2, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QCHAR_UNICODEVERSION_UNICODE_4_0&quot;, QChar::Unicode_4_0, CONST_CS | CONST_PERSISTENT);
++
++	_register_QCharRef(TSRMLS_C);
++
++	_register_QClipboardEvent(TSRMLS_C);
++
++	_register_QCloseEvent(TSRMLS_C);
++
++	_register_QContextMenuEvent(TSRMLS_C);
++
+ 	_register_QDate(TSRMLS_C);
+ 
+ 	_register_QDateTime(TSRMLS_C);
+ 
++	_register_QDragEnterEvent(TSRMLS_C);
++
++	_register_QDragLeaveEvent(TSRMLS_C);
++
++	_register_QDragMoveEvent(TSRMLS_C);
++
++	_register_QDragResponseEvent(TSRMLS_C);
++
++	_register_QDropEvent(TSRMLS_C);
++
++	_register_QFileOpenEvent(TSRMLS_C);
++
++	_register_QFocusEvent(TSRMLS_C);
++
++	_register_QFont(TSRMLS_C);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLEHINT_HELVETICA&quot;, QFont::Helvetica, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLEHINT_SANSSERIF&quot;, QFont::SansSerif, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLEHINT_TIMES&quot;, QFont::Times, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLEHINT_SERIF&quot;, QFont::Serif, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLEHINT_COURIER&quot;, QFont::Courier, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLEHINT_TYPEWRITER&quot;, QFont::TypeWriter, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLEHINT_OLDENGLISH&quot;, QFont::OldEnglish, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLEHINT_DECORATIVE&quot;, QFont::Decorative, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLEHINT_SYSTEM&quot;, QFont::System, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLEHINT_ANYSTYLE&quot;, QFont::AnyStyle, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLESTRATEGY_PREFERDEFAULT&quot;, QFont::PreferDefault, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLESTRATEGY_PREFERBITMAP&quot;, QFont::PreferBitmap, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLESTRATEGY_PREFERDEVICE&quot;, QFont::PreferDevice, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLESTRATEGY_PREFEROUTLINE&quot;, QFont::PreferOutline, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLESTRATEGY_FORCEOUTLINE&quot;, QFont::ForceOutline, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLESTRATEGY_PREFERMATCH&quot;, QFont::PreferMatch, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLESTRATEGY_PREFERQUALITY&quot;, QFont::PreferQuality, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLESTRATEGY_PREFERANTIALIAS&quot;, QFont::PreferAntialias, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLESTRATEGY_NOANTIALIAS&quot;, QFont::NoAntialias, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLESTRATEGY_OPENGLCOMPATIBLE&quot;, QFont::OpenGLCompatible, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_WEIGHT_LIGHT&quot;, QFont::Light, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_WEIGHT_NORMAL&quot;, QFont::Normal, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_WEIGHT_DEMIBOLD&quot;, QFont::DemiBold, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_WEIGHT_BOLD&quot;, QFont::Bold, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_WEIGHT_BLACK&quot;, QFont::Black, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLE_STYLENORMAL&quot;, QFont::StyleNormal, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLE_STYLEITALIC&quot;, QFont::StyleItalic, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STYLE_STYLEOBLIQUE&quot;, QFont::StyleOblique, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STRETCH_ULTRACONDENSED&quot;, QFont::UltraCondensed, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STRETCH_EXTRACONDENSED&quot;, QFont::ExtraCondensed, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STRETCH_CONDENSED&quot;, QFont::Condensed, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STRETCH_SEMICONDENSED&quot;, QFont::SemiCondensed, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STRETCH_UNSTRETCHED&quot;, QFont::Unstretched, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STRETCH_SEMIEXPANDED&quot;, QFont::SemiExpanded, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STRETCH_EXPANDED&quot;, QFont::Expanded, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STRETCH_EXTRAEXPANDED&quot;, QFont::ExtraExpanded, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QFONT_STRETCH_ULTRAEXPANDED&quot;, QFont::UltraExpanded, CONST_CS | CONST_PERSISTENT);
++
++	_register_QGridLayout(TSRMLS_C);
++
++	_register_QHelpEvent(TSRMLS_C);
++
++	_register_QHideEvent(TSRMLS_C);
++
++	_register_QHoverEvent(TSRMLS_C);
++
++	_register_QIconDragEvent(TSRMLS_C);
++
++	_register_QInputEvent(TSRMLS_C);
++
++	_register_QInputMethodEvent(TSRMLS_C);
++
++	_register_QKeyEvent(TSRMLS_C);
++
++	_register_QLabel(TSRMLS_C);
++
++	_register_QLatin1Char(TSRMLS_C);
++
++	_register_QMouseEvent(TSRMLS_C);
++
++	_register_QMoveEvent(TSRMLS_C);
++
++	_register_QObjectData(TSRMLS_C);
++
++	_register_QObjectUserData(TSRMLS_C);
++
++	_register_QPaintEvent(TSRMLS_C);
++
++	_register_QPainter(TSRMLS_C);
++
++	_register_QResizeEvent(TSRMLS_C);
++
++	_register_QShortcutEvent(TSRMLS_C);
++
++	_register_QShowEvent(TSRMLS_C);
++
++	_register_QStatusTipEvent(TSRMLS_C);
++
++	_register_QTabletEvent(TSRMLS_C);
++
+ 	_register_QTime(TSRMLS_C);
+ 
++	_register_QTimer(TSRMLS_C);
++
++	_register_QToolBarChangeEvent(TSRMLS_C);
++
++	_register_QWhatsThisClickedEvent(TSRMLS_C);
++
++	_register_QWheelEvent(TSRMLS_C);
++
++	_register_QWidgetData(TSRMLS_C);
++
++	_register_QWidgetItem(TSRMLS_C);
++
++	_register_QWindowStateChangeEvent(TSRMLS_C);
+
+Modified: trunk/qt/ag_zend_class_entry.inc
+===================================================================
+--- trunk/qt/ag_zend_class_entry.inc	2006-01-12 20:45:03 UTC (rev 171)
++++ trunk/qt/ag_zend_class_entry.inc	2006-01-12 20:51:27 UTC (rev 172)
+@@ -1,3 +1,46 @@
++zend_class_entry *QActionEvent_ce_ptr;
++zend_class_entry *QChar_ce_ptr;
++zend_class_entry *QCharRef_ce_ptr;
++zend_class_entry *QClipboardEvent_ce_ptr;
++zend_class_entry *QCloseEvent_ce_ptr;
++zend_class_entry *QContextMenuEvent_ce_ptr;
+ zend_class_entry *QDate_ce_ptr;
+ zend_class_entry *QDateTime_ce_ptr;
++zend_class_entry *QDragEnterEvent_ce_ptr;
++zend_class_entry *QDragLeaveEvent_ce_ptr;
++zend_class_entry *QDragMoveEvent_ce_ptr;
++zend_class_entry *QDragResponseEvent_ce_ptr;
++zend_class_entry *QDropEvent_ce_ptr;
++zend_class_entry *QFileOpenEvent_ce_ptr;
++zend_class_entry *QFocusEvent_ce_ptr;
++zend_class_entry *QFont_ce_ptr;
++zend_class_entry *QGridLayout_ce_ptr;
++zend_class_entry *QHelpEvent_ce_ptr;
++zend_class_entry *QHideEvent_ce_ptr;
++zend_class_entry *QHoverEvent_ce_ptr;
++zend_class_entry *QIconDragEvent_ce_ptr;
++zend_class_entry *QInputEvent_ce_ptr;
++zend_class_entry *QInputMethodEvent_ce_ptr;
++zend_class_entry *Attribute_ce_ptr;
++zend_class_entry *QKeyEvent_ce_ptr;
++zend_class_entry *QLabel_ce_ptr;
++zend_class_entry *QLatin1Char_ce_ptr;
++zend_class_entry *QMouseEvent_ce_ptr;
++zend_class_entry *QMoveEvent_ce_ptr;
++zend_class_entry *QObjectData_ce_ptr;
++zend_class_entry *QObjectUserData_ce_ptr;
++zend_class_entry *QPaintEvent_ce_ptr;
++zend_class_entry *QPainter_ce_ptr;
++zend_class_entry *QResizeEvent_ce_ptr;
++zend_class_entry *QShortcutEvent_ce_ptr;
++zend_class_entry *QShowEvent_ce_ptr;
++zend_class_entry *QStatusTipEvent_ce_ptr;
++zend_class_entry *QTabletEvent_ce_ptr;
+ zend_class_entry *QTime_ce_ptr;
++zend_class_entry *QTimer_ce_ptr;
++zend_class_entry *QToolBarChangeEvent_ce_ptr;
++zend_class_entry *QWhatsThisClickedEvent_ce_ptr;
++zend_class_entry *QWheelEvent_ce_ptr;
++zend_class_entry *QWidgetData_ce_ptr;
++zend_class_entry *QWidgetItem_ce_ptr;
++zend_class_entry *QWindowStateChangeEvent_ce_ptr;
+
+Modified: trunk/qt/ag_zend_php_qt.inc
+===================================================================
+--- trunk/qt/ag_zend_php_qt.inc	2006-01-12 20:45:03 UTC (rev 171)
++++ trunk/qt/ag_zend_php_qt.inc	2006-01-12 20:51:27 UTC (rev 172)
+@@ -1,49 +1,482 @@
+ 
++ZEND_METHOD(QActionEvent, action);
++ZEND_METHOD(QActionEvent, before);
++ZEND_METHOD(QChar, combiningClass);
++ZEND_METHOD(QChar, isUpper);
++ZEND_METHOD(QChar, joining);
++ZEND_METHOD(QChar, row);
++ZEND_METHOD(QChar, __construct);
++ZEND_METHOD(QChar, isSymbol);
++ZEND_METHOD(QChar, category);
++ZEND_METHOD(QChar, isPrint);
++ZEND_METHOD(QChar, digitValue);
++ZEND_METHOD(QChar, mirroredChar);
++ZEND_METHOD(QChar, fromLatin1);
++ZEND_METHOD(QChar, fromAscii);
++ZEND_METHOD(QChar, isSpace);
++ZEND_METHOD(QChar, toLatin1);
++ZEND_METHOD(QChar, toUpper);
++ZEND_METHOD(QChar, decomposition);
++ZEND_METHOD(QChar, isPunct);
++ZEND_METHOD(QChar, isDigit);
++ZEND_METHOD(QChar, decompositionTag);
++ZEND_METHOD(QChar, isLower);
++ZEND_METHOD(QChar, direction);
++ZEND_METHOD(QChar, hasMirrored);
++ZEND_METHOD(QChar, toLower);
++ZEND_METHOD(QChar, unicode);
++ZEND_METHOD(QChar, isLetter);
++ZEND_METHOD(QChar, setRow);
++ZEND_METHOD(QChar, isLetterOrNumber);
++ZEND_METHOD(QChar, cell);
++ZEND_METHOD(QChar, isNumber);
++ZEND_METHOD(QChar, setCell);
++ZEND_METHOD(QChar, unicodeVersion);
++ZEND_METHOD(QChar, toAscii);
++ZEND_METHOD(QChar, isMark);
++ZEND_METHOD(QChar, isNull);
++ZEND_METHOD(QCharRef, isDigit);
++ZEND_METHOD(QCharRef, combiningClass);
++ZEND_METHOD(QCharRef, decompositionTag);
++ZEND_METHOD(QCharRef, joining);
++ZEND_METHOD(QCharRef, direction);
++ZEND_METHOD(QCharRef, hasMirrored);
++ZEND_METHOD(QCharRef, toLower);
++ZEND_METHOD(QCharRef, unicode);
++ZEND_METHOD(QCharRef, row);
++ZEND_METHOD(QCharRef, setRow);
++ZEND_METHOD(QCharRef, category);
++ZEND_METHOD(QCharRef, isLetter);
++ZEND_METHOD(QCharRef, cell);
++ZEND_METHOD(QCharRef, digitValue);
++ZEND_METHOD(QCharRef, isPrint);
++ZEND_METHOD(QCharRef, isLetterOrNumber);
++ZEND_METHOD(QCharRef, mirroredChar);
++ZEND_METHOD(QCharRef, setCell);
++ZEND_METHOD(QCharRef, isNumber);
++ZEND_METHOD(QCharRef, unicodeVersion);
++ZEND_METHOD(QCharRef, isSpace);
++ZEND_METHOD(QCharRef, toLatin1);
++ZEND_METHOD(QCharRef, toAscii);
++ZEND_METHOD(QCharRef, decomposition);
++ZEND_METHOD(QCharRef, toUpper);
++ZEND_METHOD(QCharRef, isMark);
++ZEND_METHOD(QCharRef, isPunct);
++ZEND_METHOD(QCharRef, isNull);
++ZEND_METHOD(QClipboardEvent, data);
++ZEND_METHOD(QContextMenuEvent, y);
++ZEND_METHOD(QContextMenuEvent, reason);
++ZEND_METHOD(QContextMenuEvent, globalY);
++ZEND_METHOD(QContextMenuEvent, pos);
++ZEND_METHOD(QContextMenuEvent, x);
++ZEND_METHOD(QContextMenuEvent, globalPos);
++ZEND_METHOD(QContextMenuEvent, globalX);
+ ZEND_METHOD(QDate, longDayName);
++ZEND_METHOD(QDate, dayOfWeek);
++ZEND_METHOD(QDate, daysInMonth);
++ZEND_METHOD(QDate, month);
+ ZEND_METHOD(QDate, isValid);
+ ZEND_METHOD(QDate, setYMD);
+ ZEND_METHOD(QDate, shortMonthName);
+ ZEND_METHOD(QDate, toString);
+-ZEND_METHOD(QDate, toString);
+ ZEND_METHOD(QDate, isLeapYear);
+ ZEND_METHOD(QDate, fromJulianDay);
++ZEND_METHOD(QDate, currentDate);
+ ZEND_METHOD(QDate, addDays);
++ZEND_METHOD(QDate, day);
+ ZEND_METHOD(QDate, gregorianToJulian);
+ ZEND_METHOD(QDate, longMonthName);
+ ZEND_METHOD(QDate, julianToGregorian);
+-ZEND_METHOD(QDate, QDate);
++ZEND_METHOD(QDate, __construct);
+ ZEND_METHOD(QDate, shortDayName);
+ ZEND_METHOD(QDate, fromString);
+-ZEND_METHOD(QDate, fromString);
++ZEND_METHOD(QDate, dayOfYear);
+ ZEND_METHOD(QDate, weekNumber);
+ ZEND_METHOD(QDate, addMonths);
++ZEND_METHOD(QDate, toJulianDay);
+ ZEND_METHOD(QDate, addYears);
+ ZEND_METHOD(QDate, daysTo);
++ZEND_METHOD(QDate, isNull);
++ZEND_METHOD(QDate, year);
++ZEND_METHOD(QDate, daysInYear);
++ZEND_METHOD(QDateTime, time);
++ZEND_METHOD(QDateTime, date);
++ZEND_METHOD(QDateTime, isValid);
+ ZEND_METHOD(QDateTime, toString);
+-ZEND_METHOD(QDateTime, toString);
++ZEND_METHOD(QDateTime, toTime_t);
+ ZEND_METHOD(QDateTime, setTime_t);
+ ZEND_METHOD(QDateTime, addDays);
+ ZEND_METHOD(QDateTime, secsTo);
+ ZEND_METHOD(QDateTime, toTimeSpec);
+ ZEND_METHOD(QDateTime, fromString);
+-ZEND_METHOD(QDateTime, fromString);
++ZEND_METHOD(QDateTime, timeSpec);
+ ZEND_METHOD(QDateTime, setTime);
+ ZEND_METHOD(QDateTime, addMonths);
+-ZEND_METHOD(QDateTime, QDateTime);
+-ZEND_METHOD(QDateTime, QDateTime);
++ZEND_METHOD(QDateTime, __construct);
+ ZEND_METHOD(QDateTime, addSecs);
+ ZEND_METHOD(QDateTime, setDate);
++ZEND_METHOD(QDateTime, currentDateTime);
+ ZEND_METHOD(QDateTime, daysTo);
+ ZEND_METHOD(QDateTime, addYears);
++ZEND_METHOD(QDateTime, isNull);
++ZEND_METHOD(QDateTime, toUTC);
++ZEND_METHOD(QDateTime, toLocalTime);
+ ZEND_METHOD(QDateTime, setTimeSpec);
++ZEND_METHOD(QDragMoveEvent, accept);
++ZEND_METHOD(QDragMoveEvent, answerRect);
++ZEND_METHOD(QDragMoveEvent, ignore);
++ZEND_METHOD(QDragResponseEvent, dragAccepted);
++ZEND_METHOD(QDropEvent, encodedData);
++ZEND_METHOD(QDropEvent, source);
++ZEND_METHOD(QDropEvent, keyboardModifiers);
++ZEND_METHOD(QDropEvent, setDropAction);
++ZEND_METHOD(QDropEvent, acceptProposedAction);
++ZEND_METHOD(QDropEvent, dropAction);
++ZEND_METHOD(QDropEvent, mimeData);
++ZEND_METHOD(QDropEvent, provides);
++ZEND_METHOD(QDropEvent, format);
++ZEND_METHOD(QDropEvent, mouseButtons);
++ZEND_METHOD(QDropEvent, proposedAction);
++ZEND_METHOD(QDropEvent, pos);
++ZEND_METHOD(QDropEvent, possibleActions);
++ZEND_METHOD(QFileOpenEvent, file);
++ZEND_METHOD(QFocusEvent, lostFocus);
++ZEND_METHOD(QFocusEvent, reason);
++ZEND_METHOD(QFocusEvent, gotFocus);
++ZEND_METHOD(QFont, setOverline);
++ZEND_METHOD(QFont, insertSubstitution);
++ZEND_METHOD(QFont, stretch);
++ZEND_METHOD(QFont, styleStrategy);
++ZEND_METHOD(QFont, setKerning);
++ZEND_METHOD(QFont, underline);
++ZEND_METHOD(QFont, removeSubstitution);
++ZEND_METHOD(QFont, substitute);
++ZEND_METHOD(QFont, setBold);
++ZEND_METHOD(QFont, resolve);
++ZEND_METHOD(QFont, fixedPitch);
++ZEND_METHOD(QFont, italic);
++ZEND_METHOD(QFont, pixelSize);
++ZEND_METHOD(QFont, insertSubstitutions);
++ZEND_METHOD(QFont, key);
++ZEND_METHOD(QFont, setStrikeOut);
++ZEND_METHOD(QFont, weight);
++ZEND_METHOD(QFont, pointSize);
++ZEND_METHOD(QFont, cleanup);
++ZEND_METHOD(QFont, fromString);
++ZEND_METHOD(QFont, exactMatch);
++ZEND_METHOD(QFont, setWeight);
++ZEND_METHOD(QFont, styleHint);
++ZEND_METHOD(QFont, handle);
++ZEND_METHOD(QFont, setStyle);
++ZEND_METHOD(QFont, rawName);
++ZEND_METHOD(QFont, setUnderline);
++ZEND_METHOD(QFont, family);
++ZEND_METHOD(QFont, isCopyOf);
++ZEND_METHOD(QFont, rawMode);
++ZEND_METHOD(QFont, substitutes);
++ZEND_METHOD(QFont, setStretch);
++ZEND_METHOD(QFont, initialize);
++ZEND_METHOD(QFont, toString);
++ZEND_METHOD(QFont, defaultFamily);
++ZEND_METHOD(QFont, setRawMode);
++ZEND_METHOD(QFont, kerning);
++ZEND_METHOD(QFont, setStyleHint);
++ZEND_METHOD(QFont, substitutions);
++ZEND_METHOD(QFont, setFamily);
++ZEND_METHOD(QFont, __construct);
++ZEND_METHOD(QFont, bold);
++ZEND_METHOD(QFont, style);
++ZEND_METHOD(QFont, setPointSize);
++ZEND_METHOD(QFont, setRawName);
++ZEND_METHOD(QFont, setStyleStrategy);
++ZEND_METHOD(QFont, cacheStatistics);
++ZEND_METHOD(QFont, setPixelSize);
++ZEND_METHOD(QFont, setFixedPitch);
++ZEND_METHOD(QFont, setItalic);
++ZEND_METHOD(QFont, strikeOut);
++ZEND_METHOD(QFont, lastResortFont);
++ZEND_METHOD(QFont, lastResortFamily);
++ZEND_METHOD(QFont, overline);
++ZEND_METHOD(QFont, pointSizeF);
++ZEND_METHOD(QFont, setPointSizeF);
++ZEND_METHOD(QGridLayout, tr);
++ZEND_METHOD(QGridLayout, addLayout);
++ZEND_METHOD(QGridLayout, __construct);
++ZEND_METHOD(QGridLayout, qt_invoke);
++ZEND_METHOD(QGridLayout, addItem);
++ZEND_METHOD(QGridLayout, rowMinimumHeight);
++ZEND_METHOD(QGridLayout, setOriginCorner);
++ZEND_METHOD(QGridLayout, qt_cast);
++ZEND_METHOD(QGridLayout, metaObject);
++ZEND_METHOD(QGridLayout, count);
++ZEND_METHOD(QGridLayout, originCorner);
++ZEND_METHOD(QGridLayout, invalidate);
++ZEND_METHOD(QGridLayout, setGeometry);
++ZEND_METHOD(QGridLayout, qt_emit);
++ZEND_METHOD(QGridLayout, setRowStretch);
++ZEND_METHOD(QGridLayout, getItemPosition);
++ZEND_METHOD(QGridLayout, setDefaultPositioning);
++ZEND_METHOD(QGridLayout, className);
++ZEND_METHOD(QGridLayout, columnStretch);
++ZEND_METHOD(QGridLayout, addWidget);
++ZEND_METHOD(QGridLayout, takeAt);
++ZEND_METHOD(QGridLayout, staticMetaObject);
++ZEND_METHOD(QGridLayout, itemAt);
++ZEND_METHOD(QGridLayout, qObject);
++ZEND_METHOD(QGridLayout, minimumSize);
++ZEND_METHOD(QGridLayout, sizeHint);
++ZEND_METHOD(QGridLayout, setColumnMinimumWidth);
++ZEND_METHOD(QGridLayout, heightForWidth);
++ZEND_METHOD(QGridLayout, hasHeightForWidth);
++ZEND_METHOD(QGridLayout, setColumnStretch);
++ZEND_METHOD(QGridLayout, rowCount);
++ZEND_METHOD(QGridLayout, columnMinimumWidth);
++ZEND_METHOD(QGridLayout, cellRect);
++ZEND_METHOD(QGridLayout, columnCount);
++ZEND_METHOD(QGridLayout, setRowMinimumHeight);
++ZEND_METHOD(QGridLayout, trUtf8);
++ZEND_METHOD(QGridLayout, maximumSize);
++ZEND_METHOD(QGridLayout, qt_property);
++ZEND_METHOD(QGridLayout, minimumHeightForWidth);
++ZEND_METHOD(QGridLayout, expandingDirections);
++ZEND_METHOD(QGridLayout, rowStretch);
++ZEND_METHOD(QHelpEvent, y);
++ZEND_METHOD(QHelpEvent, globalY);
++ZEND_METHOD(QHelpEvent, pos);
++ZEND_METHOD(QHelpEvent, x);
++ZEND_METHOD(QHelpEvent, globalPos);
++ZEND_METHOD(QHelpEvent, globalX);
++ZEND_METHOD(QHoverEvent, oldPos);
++ZEND_METHOD(QHoverEvent, pos);
++ZEND_METHOD(QInputEvent, modifiers);
++ZEND_METHOD(QInputMethodEvent, commitString);
++ZEND_METHOD(QInputMethodEvent, replacementStart);
++ZEND_METHOD(QInputMethodEvent, setCommitString);
++ZEND_METHOD(QInputMethodEvent, replacementLength);
++ZEND_METHOD(QInputMethodEvent, preeditString);
++ZEND_METHOD(Attribute, __construct);
++ZEND_METHOD(QKeyEvent, count);
++ZEND_METHOD(QKeyEvent, text);
++ZEND_METHOD(QKeyEvent, isAutoRepeat);
++ZEND_METHOD(QKeyEvent, modifiers);
++ZEND_METHOD(QKeyEvent, key);
++ZEND_METHOD(QLabel, tr);
++ZEND_METHOD(QLabel, setMargin);
++ZEND_METHOD(QLabel, clear);
++ZEND_METHOD(QLabel, qt_invoke);
++ZEND_METHOD(QLabel, setBuddy);
++ZEND_METHOD(QLabel, movie);
++ZEND_METHOD(QLabel, hasScaledContents);
++ZEND_METHOD(QLabel, qt_cast);
++ZEND_METHOD(QLabel, metaObject);
++ZEND_METHOD(QLabel, setScaledContents);
++ZEND_METHOD(QLabel, event);
++ZEND_METHOD(QLabel, indent);
++ZEND_METHOD(QLabel, qt_emit);
++ZEND_METHOD(QLabel, pixmap);
++ZEND_METHOD(QLabel, setAlignment);
++ZEND_METHOD(QLabel, className);
++ZEND_METHOD(QLabel, buddy);
++ZEND_METHOD(QLabel, textFormat);
++ZEND_METHOD(QLabel, setMovie);
++ZEND_METHOD(QLabel, setPicture);
++ZEND_METHOD(QLabel, setNum);
++ZEND_METHOD(QLabel, wordWrap);
++ZEND_METHOD(QLabel, staticMetaObject);
++ZEND_METHOD(QLabel, setTextFormat);
++ZEND_METHOD(QLabel, qObject);
++ZEND_METHOD(QLabel, setText);
++ZEND_METHOD(QLabel, text);
++ZEND_METHOD(QLabel, alignment);
++ZEND_METHOD(QLabel, sizeHint);
++ZEND_METHOD(QLabel, minimumSizeHint);
++ZEND_METHOD(QLabel, heightForWidth);
++ZEND_METHOD(QLabel, setPixmap);
++ZEND_METHOD(QLabel, picture);
++ZEND_METHOD(QLabel, setWordWrap);
++ZEND_METHOD(QLabel, trUtf8);
++ZEND_METHOD(QLabel, qt_property);
++ZEND_METHOD(QLabel, __construct);
++ZEND_METHOD(QLabel, setIndent);
++ZEND_METHOD(QLabel, margin);
++ZEND_METHOD(QLatin1Char, unicode);
++ZEND_METHOD(QLatin1Char, __construct);
++ZEND_METHOD(QLatin1Char, toLatin1);
++ZEND_METHOD(QMouseEvent, x);
++ZEND_METHOD(QMouseEvent, globalX);
++ZEND_METHOD(QMouseEvent, globalPos);
++ZEND_METHOD(QMouseEvent, y);
++ZEND_METHOD(QMouseEvent, globalY);
++ZEND_METHOD(QMouseEvent, pos);
++ZEND_METHOD(QMouseEvent, button);
++ZEND_METHOD(QMouseEvent, buttons);
++ZEND_METHOD(QMoveEvent, oldPos);
++ZEND_METHOD(QMoveEvent, pos);
++ZEND_METHOD(QPaintEvent, rect);
++ZEND_METHOD(QPaintEvent, region);
++ZEND_METHOD(QPainter, eraseRect);
++ZEND_METHOD(QPainter, setClipPath);
++ZEND_METHOD(QPainter, matrixEnabled);
++ZEND_METHOD(QPainter, shear);
++ZEND_METHOD(QPainter, save);
++ZEND_METHOD(QPainter, resetMatrix);
++ZEND_METHOD(QPainter, initFrom);
++ZEND_METHOD(QPainter, fontInfo);
++ZEND_METHOD(QPainter, setLayoutDirection);
++ZEND_METHOD(QPainter, setBrushOrigin);
++ZEND_METHOD(QPainter, pen);
++ZEND_METHOD(QPainter, drawRects);
++ZEND_METHOD(QPainter, drawPath);
++ZEND_METHOD(QPainter, fillPath);
++ZEND_METHOD(QPainter, rotate);
++ZEND_METHOD(QPainter, drawPie);
++ZEND_METHOD(QPainter, translate);
++ZEND_METHOD(QPainter, setCompositionMode);
++ZEND_METHOD(QPainter, setWindow);
++ZEND_METHOD(QPainter, fontMetrics);
++ZEND_METHOD(QPainter, drawPixmap);
++ZEND_METHOD(QPainter, drawPolyline);
++ZEND_METHOD(QPainter, deviceMatrix);
++ZEND_METHOD(QPainter, drawLine);
++ZEND_METHOD(QPainter, fillRect);
++ZEND_METHOD(QPainter, boundingRect);
++ZEND_METHOD(QPainter, setClipRect);
++ZEND_METHOD(QPainter, drawImage);
++ZEND_METHOD(QPainter, drawTiledPixmap);
++ZEND_METHOD(QPainter, layoutDirection);
++ZEND_METHOD(QPainter, background);
++ZEND_METHOD(QPainter, drawPolygon);
++ZEND_METHOD(QPainter, device);
++ZEND_METHOD(QPainter, setClipRegion);
++ZEND_METHOD(QPainter, restoreRedirected);
++ZEND_METHOD(QPainter, setMatrixEnabled);
++ZEND_METHOD(QPainter, drawPoints);
++ZEND_METHOD(QPainter, drawRoundRect);
++ZEND_METHOD(QPainter, drawConvexPolygon);
++ZEND_METHOD(QPainter, setMatrix);
++ZEND_METHOD(QPainter, drawPicture);
++ZEND_METHOD(QPainter, restore);
++ZEND_METHOD(QPainter, font);
++ZEND_METHOD(QPainter, matrix);
++ZEND_METHOD(QPainter, viewport);
++ZEND_METHOD(QPainter, viewTransformEnabled);
++ZEND_METHOD(QPainter, drawText);
++ZEND_METHOD(QPainter, drawChord);
++ZEND_METHOD(QPainter, clipRegion);
++ZEND_METHOD(QPainter, end);
++ZEND_METHOD(QPainter, brushOrigin);
++ZEND_METHOD(QPainter, setViewTransformEnabled);
++ZEND_METHOD(QPainter, scale);
++ZEND_METHOD(QPainter, setPen);
++ZEND_METHOD(QPainter, setBackgroundMode);
++ZEND_METHOD(QPainter, window);
++ZEND_METHOD(QPainter, paintEngine);
++ZEND_METHOD(QPainter, setRenderHint);
++ZEND_METHOD(QPainter, brush);
++ZEND_METHOD(QPainter, strokePath);
++ZEND_METHOD(QPainter, setBrush);
++ZEND_METHOD(QPainter, drawPoint);
++ZEND_METHOD(QPainter, __construct);
++ZEND_METHOD(QPainter, setRedirected);
++ZEND_METHOD(QPainter, compositionMode);
++ZEND_METHOD(QPainter, setFont);
++ZEND_METHOD(QPainter, begin);
++ZEND_METHOD(QPainter, setViewport);
++ZEND_METHOD(QPainter, drawEllipse);
++ZEND_METHOD(QPainter, drawArc);
++ZEND_METHOD(QPainter, setBackground);
++ZEND_METHOD(QPainter, isActive);
++ZEND_METHOD(QPainter, drawRect);
++ZEND_METHOD(QPainter, drawLines);
++ZEND_METHOD(QPainter, renderHints);
++ZEND_METHOD(QPainter, backgroundMode);
++ZEND_METHOD(QPainter, redirected);
++ZEND_METHOD(QPainter, hasClipping);
++ZEND_METHOD(QPainter, drawTextItem);
++ZEND_METHOD(QPainter, setClipping);
++ZEND_METHOD(QPainter, clipPath);
++ZEND_METHOD(QResizeEvent, oldSize);
++ZEND_METHOD(QResizeEvent, size);
++ZEND_METHOD(QShortcutEvent, shortcutId);
++ZEND_METHOD(QShortcutEvent, isAmbiguous);
++ZEND_METHOD(QShortcutEvent, key);
++ZEND_METHOD(QStatusTipEvent, tip);
++ZEND_METHOD(QTabletEvent, hiResGlobalX);
++ZEND_METHOD(QTabletEvent, pressure);
++ZEND_METHOD(QTabletEvent, hiResGlobalPos);
++ZEND_METHOD(QTabletEvent, tangentialPressure);
++ZEND_METHOD(QTabletEvent, x);
++ZEND_METHOD(QTabletEvent, globalX);
++ZEND_METHOD(QTabletEvent, globalPos);
++ZEND_METHOD(QTabletEvent, y);
++ZEND_METHOD(QTabletEvent, uniqueId);
++ZEND_METHOD(QTabletEvent, hiResGlobalY);
++ZEND_METHOD(QTabletEvent, pos);
++ZEND_METHOD(QTabletEvent, xTilt);
++ZEND_METHOD(QTabletEvent, rotation);
++ZEND_METHOD(QTabletEvent, pointerType);
++ZEND_METHOD(QTabletEvent, yTilt);
++ZEND_METHOD(QTabletEvent, device);
++ZEND_METHOD(QTabletEvent, globalY);
++ZEND_METHOD(QTabletEvent, z);
++ZEND_METHOD(QTime, hour);
+ ZEND_METHOD(QTime, isValid);
++ZEND_METHOD(QTime, elapsed);
+ ZEND_METHOD(QTime, toString);
+-ZEND_METHOD(QTime, toString);
++ZEND_METHOD(QTime, msec);
+ ZEND_METHOD(QTime, secsTo);
++ZEND_METHOD(QTime, restart);
+ ZEND_METHOD(QTime, fromString);
+-ZEND_METHOD(QTime, fromString);
+-ZEND_METHOD(QTime, QTime);
++ZEND_METHOD(QTime, second);
++ZEND_METHOD(QTime, __construct);
+ ZEND_METHOD(QTime, addSecs);
+ ZEND_METHOD(QTime, addMSecs);
++ZEND_METHOD(QTime, currentTime);
++ZEND_METHOD(QTime, minute);
+ ZEND_METHOD(QTime, setHMS);
+-ZEND_METHOD(QTime, msecsTo);
+\ No newline at end of file
++ZEND_METHOD(QTime, isNull);
++ZEND_METHOD(QTime, msecsTo);
++ZEND_METHOD(QTime, start);
++ZEND_METHOD(QTimer, tr);
++ZEND_METHOD(QTimer, qt_invoke);
++ZEND_METHOD(QTimer, staticMetaObject);
++ZEND_METHOD(QTimer, setInterval);
++ZEND_METHOD(QTimer, qObject);
++ZEND_METHOD(QTimer, timerId);
++ZEND_METHOD(QTimer, singleShot);
++ZEND_METHOD(QTimer, qt_cast);
++ZEND_METHOD(QTimer, metaObject);
++ZEND_METHOD(QTimer, stop);
++ZEND_METHOD(QTimer, isActive);
++ZEND_METHOD(QTimer, __construct);
++ZEND_METHOD(QTimer, qt_emit);
++ZEND_METHOD(QTimer, interval);
++ZEND_METHOD(QTimer, setSingleShot);
++ZEND_METHOD(QTimer, className);
++ZEND_METHOD(QTimer, trUtf8);
++ZEND_METHOD(QTimer, qt_property);
++ZEND_METHOD(QTimer, isSingleShot);
++ZEND_METHOD(QTimer, start);
++ZEND_METHOD(QToolBarChangeEvent, toggle);
++ZEND_METHOD(QWhatsThisClickedEvent, href);
++ZEND_METHOD(QWheelEvent, orientation);
++ZEND_METHOD(QWheelEvent, x);
++ZEND_METHOD(QWheelEvent, globalX);
++ZEND_METHOD(QWheelEvent, globalPos);
++ZEND_METHOD(QWheelEvent, y);
++ZEND_METHOD(QWheelEvent, delta);
++ZEND_METHOD(QWheelEvent, globalY);
++ZEND_METHOD(QWheelEvent, pos);
++ZEND_METHOD(QWheelEvent, buttons);
++ZEND_METHOD(QWidgetItem, hasHeightForWidth);
++ZEND_METHOD(QWidgetItem, isEmpty);
++ZEND_METHOD(QWidgetItem, setGeometry);
++ZEND_METHOD(QWidgetItem, __construct);
++ZEND_METHOD(QWidgetItem, minimumSize);
++ZEND_METHOD(QWidgetItem, sizeHint);
++ZEND_METHOD(QWidgetItem, maximumSize);
++ZEND_METHOD(QWidgetItem, heightForWidth);
++ZEND_METHOD(QWidgetItem, widget);
++ZEND_METHOD(QWidgetItem, expandingDirections);
++ZEND_METHOD(QWidgetItem, geometry);
++ZEND_METHOD(QWindowStateChangeEvent, oldState);
+
+Modified: trunk/qt/php_qt.h
+===================================================================
+--- trunk/qt/php_qt.h	2006-01-12 20:45:03 UTC (rev 171)
++++ trunk/qt/php_qt.h	2006-01-12 20:51:27 UTC (rev 172)
+@@ -382,7 +382,7 @@
+ extern zend_class_entry *QLCDNumber_ce_ptr;
+ extern zend_class_entry *QMimeSource_ce_ptr;
+ 
+-#include &quot;ag_extern_zend_class_entry.h&quot;
++#include &quot;ag_extern_zend_class_entry.inc&quot;
+ 
+ 
+ 
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000020.html">[Php-qt-svn] r171 - trunk/qt
+</A></li>
+	<LI>Next message: <A HREF="000022.html">[Php-qt-svn] r173 - trunk/qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#21">[ date ]</a>
+              <a href="thread.html#21">[ thread ]</a>
+              <a href="subject.html#21">[ subject ]</a>
+              <a href="author.html#21">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

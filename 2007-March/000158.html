@@ -1,0 +1,277 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r314 - in trunk: php_qt tests
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-March/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r314%20-%20in%20trunk%3A%20php_qt%20tests&In-Reply-To=%3C200703261133.l2QBXGka015708%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000157.html">
+   <LINK REL="Next"  HREF="000159.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r314 - in trunk: php_qt tests</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r314%20-%20in%20trunk%3A%20php_qt%20tests&In-Reply-To=%3C200703261133.l2QBXGka015708%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r314 - in trunk: php_qt tests">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Mon Mar 26 13:33:16 CEST 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000157.html">[Php-qt-svn] r313 - trunk/php_qt
+</A></li>
+        <LI>Next message: <A HREF="000159.html">[Php-qt-svn] r315 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#158">[ date ]</a>
+              <a href="thread.html#158">[ thread ]</a>
+              <a href="subject.html#158">[ subject ]</a>
+              <a href="author.html#158">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2007-03-26 13:33:16 +0200 (Mon, 26 Mar 2007)
+New Revision: 314
+
+Modified:
+   trunk/php_qt/handlers.cpp
+   trunk/php_qt/php_qt.cpp
+   trunk/php_qt/php_qt.h
+   trunk/php_qt/qstring.cpp
+   trunk/tests/unicode.php
+Log:
+* php.ini entry for text codec: UTF8 (default), EUC, SJIS, Latin1
+  usage: qt.codec = UTF8
+
+
+
+Modified: trunk/php_qt/handlers.cpp
+===================================================================
+--- trunk/php_qt/handlers.cpp	2007-03-26 09:55:56 UTC (rev 313)
++++ trunk/php_qt/handlers.cpp	2007-03-26 11:33:16 UTC (rev 314)
+@@ -183,18 +183,21 @@
+   marshall_it&lt;unsigned char *&gt;(m);
+ }
+ 
+-static const char * KCODE = &quot;NONE&quot;;
++static const char * KCODE = 0;
+ static QTextCodec *codec = 0;
+ 
+-static void 
++void 
+ init_codec() {
+-//	zval* temp = read from php.ini
+-//	KCODE = temp-&gt;value.str.val;
+ 
++	KCODE = INI_ORIG_STR(&quot;qt.codec&quot;);
++
+ 	if (qstrcmp(KCODE, &quot;EUC&quot;) == 0) {
+ 		codec = QTextCodec::codecForName(&quot;eucJP&quot;);
+ 	} else if (qstrcmp(KCODE, &quot;SJIS&quot;) == 0) {
+ 		codec = QTextCodec::codecForName(&quot;Shift-JIS&quot;);
++	} else if ((qstrcmp(KCODE, &quot;UTF8&quot;) != 0) &amp;&amp; (qstrcmp(KCODE,&quot;Latin1&quot;) != 0)) {
++	    php_error(E_WARNING, &quot;unknown text codec, set to local8Bit&quot;);
++	    KCODE=&quot;&quot;;
+ 	}
+ }
+ 
+@@ -211,7 +214,7 @@
+ 		return new QString(codec-&gt;toUnicode(zstring-&gt;value.str.val));
+ 	else if (qstrcmp(KCODE, &quot;SJIS&quot;) == 0)
+ 		return new QString(codec-&gt;toUnicode(zstring-&gt;value.str.val));
+-	else if(qstrcmp(KCODE, &quot;NONE&quot;) == 0)
++	else if(qstrcmp(KCODE, &quot;Latin1&quot;) == 0)
+ 		return new QString(QString::fromLatin1(zstring-&gt;value.str.val));
+ 
+ 	return new QString(QString::fromLocal8Bit(zstring-&gt;value.str.val, zstring-&gt;value.str.len));
+@@ -219,6 +222,7 @@
+ 
+ zval* 
+ zstringFromQString(QString * s) {
++
+ 	if (KCODE == 0) {
+ 		init_codec();
+ 	}
+@@ -230,7 +234,7 @@
+ 		ZVAL_STRING(return_value, (char*) codec-&gt;fromUnicode(*s).constData(), /* duplicate */ 1);
+ 	} else if (qstrcmp(KCODE, &quot;SJIS&quot;) == 0) {
+ 		ZVAL_STRING(return_value, (char*) codec-&gt;fromUnicode(*s).constData(), /* duplicate */ 1);
+-	} else if (qstrcmp(KCODE, &quot;NONE&quot;) == 0) {
++	} else if (qstrcmp(KCODE, &quot;Latin1&quot;) == 0) {
+ 		ZVAL_STRING(return_value, (char*) s-&gt;toLatin1().constData(), /* duplicate */ 1);
+ 	} else {
+ 		ZVAL_STRING(return_value, (char*) s-&gt;toUtf8().constData(), /* duplicate */ 1);
+
+Modified: trunk/php_qt/php_qt.cpp
+===================================================================
+--- trunk/php_qt/php_qt.cpp	2007-03-26 09:55:56 UTC (rev 313)
++++ trunk/php_qt/php_qt.cpp	2007-03-26 11:33:16 UTC (rev 314)
+@@ -48,6 +48,10 @@
+ static zend_object_handlers php_qt_handler;
+ static zend_object_handlers zend_orig_handler;
+ 
++PHP_INI_BEGIN()
++    PHP_INI_ENTRY(&quot;qt.codec&quot;, &quot;UTF8&quot;, PHP_INI_ALL, NULL)
++PHP_INI_END()
++
+ // opcode handler
+ #define PHPQT_OPHANDLER_COUNT				((25 * 151) + 1)
+ #define EX__(element) execute_data-&gt;element
+@@ -224,14 +228,7 @@
+ 
+ ZEND_METHOD(php_qt_generic_class, __toString)
+ {
+-	if(!strcmp(Z_OBJCE_P(getThis())-&gt;name,&quot;QString&quot;)){
+-		smokephp_object* o = phpqt_getSmokePHPObjectFromZval(getThis());
+-		RETVAL_STRING((char*)((QString*) o-&gt;ptr)-&gt;toAscii().constData(), 1);
+-//		RETVAL_STRING((char*)((QString*) o-&gt;ptr)-&gt;toLocal8Bit().constData(), 1);
+-	} else {
+-		RETVAL_STRING(&quot;&quot;, 1);
+-	}
+-	return;
++	RETURN_STRING(&quot;&quot;, 1);
+ }
+ 
+ ZEND_METHOD(php_qt_generic_class, __destruct)
+@@ -408,6 +405,9 @@
+ PHP_MINIT_FUNCTION(php_qt)
+ {
+ 
++	REGISTER_INI_ENTRIES();
++	init_codec();
++
+         install_handlers(Qt_handlers);
+ 
+ 	// object list
+@@ -555,9 +555,7 @@
+ 	php_info_print_table_header(2, &quot;PHP-Qt support&quot;, &quot;enabled&quot;);
+ 	php_info_print_table_end();
+ 
+-	/* Remove comments if you have entries in php.ini
+ 	DISPLAY_INI_ENTRIES();
+-	*/
+ }
+ 
+ /*!
+
+Modified: trunk/php_qt/php_qt.h
+===================================================================
+--- trunk/php_qt/php_qt.h	2007-03-26 09:55:56 UTC (rev 313)
++++ trunk/php_qt/php_qt.h	2007-03-26 11:33:16 UTC (rev 314)
+@@ -92,6 +92,9 @@
+ PHP_FUNCTION(check_qobject);
+ void check_object(zval* zobject);
+ 
++void init_codec();
++zval* zstringFromQString(QString * s);
++
+ struct smokephp_object {
+     bool allocated;
+     Smoke *smoke;
+
+Modified: trunk/php_qt/qstring.cpp
+===================================================================
+--- trunk/php_qt/qstring.cpp	2007-03-26 09:55:56 UTC (rev 313)
++++ trunk/php_qt/qstring.cpp	2007-03-26 11:33:16 UTC (rev 314)
+@@ -132,12 +132,12 @@
+ 
+   QString *QString_ptr = (QString *) PHP_QT_FETCH();
+ 
+-  int l = QString_ptr-&gt;size();
++  zval* z = zstringFromQString(QString_ptr);
++  ZVAL_ZVAL(return_value, z,1,0);
++  efree(z);
+ 
+-//  char* c = (char*) (QString_ptr-&gt;toUtf8()).constData();
+-  char* c = (char*) (QString_ptr-&gt;toAscii()).constData();
++  return;
+ 
+-  RETURN_STRING(c,l);
+ }
+ 
+ /*		public enumSectionFlag:long {
+@@ -2123,25 +2123,26 @@
+ 		zval *z_1; // define ZVAL
+ 		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
+ 			if(Z_TYPE_P(z_0) == IS_STRING &amp;&amp; Z_TYPE_P(z_1) == IS_LONG){
++  			    if(getThis() == NULL){
+ 
+-// wichtig: Speicher auf dem Heap alloziieren
+-			  QString *return_object = new QString;
+-  			  if(getThis() != NULL){
+-		        QString *obj = (QString*) PHP_QT_FETCH();
+-// hier einfach &#252;berschreiben
+-      			*return_object = (QString) obj-&gt;fromUtf8( (const char*) Z_STRVAL_P(z_0) ,(int) Z_LVAL_P(z_1));
+-// static
+-		      } else {
+-		        *return_object = (QString) QString::fromUtf8( (const char*) Z_STRVAL_P(z_0) ,(int) Z_LVAL_P(z_1));
+-
+-		      }		
+-			  zend_class_entry *ce;                                   
++//		    		QString *obj = (QString*) PHP_QT_FETCH();
++//				*return_object = (QString) obj-&gt;fromUtf8( (const char*) Z_STRVAL_P(z_0) ,(int) Z_LVAL_P(z_1));
++/*			  zend_class_entry *ce;                                   
+ 			  object_init_ex(return_value, qstring_ce);
+ 			  zend_rsrc_list_entry le;                            
+ 			  le.ptr = return_object;
+ 			  phpqt_register(return_value,le);
+-			  return;
++*/
++
++				QString obj = (QString) QString::fromUtf8( (const char*) Z_STRVAL_P(z_0) ,(int) Z_LVAL_P(z_1));
++				QString *s1 = new QString(obj);
++				object_init_ex(return_value, qstring_ce);
++				phpqt_createObject(return_value, (void*) s1, qstring_ce);
++				return;
++
++			    }
+ 			}
++
+ 		}
+ 	}
+ }
+
+Modified: trunk/tests/unicode.php
+===================================================================
+--- trunk/tests/unicode.php	2007-03-26 09:55:56 UTC (rev 313)
++++ trunk/tests/unicode.php	2007-03-26 11:33:16 UTC (rev 314)
+@@ -45,7 +45,7 @@
+ 
+ 	}
+ 
+-    $app = new QApplication(&amp;$argc,$argv);
++    $app = new QApplication($argc,$argv);
+ 	$widget = new TestButtons();
+ 	$widget-&gt;show();
+ 	$app-&gt;exec();
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000157.html">[Php-qt-svn] r313 - trunk/php_qt
+</A></li>
+	<LI>Next message: <A HREF="000159.html">[Php-qt-svn] r315 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#158">[ date ]</a>
+              <a href="thread.html#158">[ thread ]</a>
+              <a href="subject.html#158">[ subject ]</a>
+              <a href="author.html#158">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

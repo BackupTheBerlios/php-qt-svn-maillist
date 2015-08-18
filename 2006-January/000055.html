@@ -1,0 +1,111 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r206 - trunk/qt/classes
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-January/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r206%20-%20trunk/qt/classes&In-Reply-To=%3C200601222126.k0MLQBrP025483%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000053.html">
+   <LINK REL="Next"  HREF="000056.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r206 - trunk/qt/classes</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r206%20-%20trunk/qt/classes&In-Reply-To=%3C200601222126.k0MLQBrP025483%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r206 - trunk/qt/classes">tm243 at berlios.de
+       </A><BR>
+    <I>Sun Jan 22 22:26:11 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000053.html">[Php-qt-svn] r205 - trunk
+</A></li>
+        <LI>Next message: <A HREF="000056.html">[Php-qt-svn] r207 - trunk
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#55">[ date ]</a>
+              <a href="thread.html#55">[ thread ]</a>
+              <a href="subject.html#55">[ subject ]</a>
+              <a href="author.html#55">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-01-22 22:26:11 +0100 (Sun, 22 Jan 2006)
+New Revision: 206
+
+Modified:
+   trunk/qt/classes/qpushbutton.cpp
+Log:
+added support for php strings.
+
+Modified: trunk/qt/classes/qpushbutton.cpp
+===================================================================
+--- trunk/qt/classes/qpushbutton.cpp	2006-01-22 20:50:00 UTC (rev 205)
++++ trunk/qt/classes/qpushbutton.cpp	2006-01-22 21:26:11 UTC (rev 206)
+@@ -289,6 +289,10 @@
+ 				PHP_QT_REGISTER(QPushButton_ptr);
+ 				RETURN_NULL();
+ 			}
++			} else if(Z_TYPE_P(z_0) == IS_STRING) {
++				QPushButton *QPushButton_ptr = new QPushButton((const char*) Z_STRVAL_P(z_0));
++				PHP_QT_REGISTER(QPushButton_ptr);
++				RETURN_NULL();
+ 			}
+ 		}
+ 	}
+@@ -304,13 +308,21 @@
+ 			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
+ 			QObject* obj_z_1 = (QObject*) php_qt_fetch(z_1);
+ 
+-
+-			if(Z_OBJCE_P(z_0)-&gt;name == &quot;QString&quot; &amp;&amp; obj_z_1-&gt;inherits(&quot;QWidget&quot;)) {
++			if(!(strcmp(Z_OBJCE_P(z_0)-&gt;name,&quot;QString&quot;)) &amp;&amp; obj_z_1-&gt;inherits(&quot;QWidget&quot;)) {
+ 				QPushButton *QPushButton_ptr = new QPushButton((const QString&amp;) obj_z_0, (QWidget*) obj_z_1);
+ 				PHP_QT_REGISTER(QPushButton_ptr);
+ 				RETURN_NULL();
++			} 
++			} else if(Z_TYPE_P(z_0) == IS_STRING &amp;&amp; Z_TYPE_P(z_1) == IS_OBJECT){
++
++			  QObject* obj_z_1 = (QObject*) php_qt_fetch(z_1);
++
++			if(obj_z_1-&gt;inherits(&quot;QWidget&quot;)) {
++				QPushButton *QPushButton_ptr = new QPushButton((const char*) Z_STRVAL_P(z_0), (QWidget*) obj_z_1);
++				PHP_QT_REGISTER(QPushButton_ptr);
++				RETURN_NULL();
++			} 
+ 			}
+-			}
+ 		}
+ 	}
+ 		/* ooo public*/
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000053.html">[Php-qt-svn] r205 - trunk
+</A></li>
+	<LI>Next message: <A HREF="000056.html">[Php-qt-svn] r207 - trunk
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#55">[ date ]</a>
+              <a href="thread.html#55">[ thread ]</a>
+              <a href="subject.html#55">[ subject ]</a>
+              <a href="author.html#55">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

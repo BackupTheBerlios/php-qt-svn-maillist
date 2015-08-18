@@ -1,0 +1,320 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r153 - trunk/tools
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-January/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r153%20-%20trunk/tools&In-Reply-To=%3C200601042225.k04MP8wo002996%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000001.html">
+   <LINK REL="Next"  HREF="000003.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r153 - trunk/tools</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r153%20-%20trunk/tools&In-Reply-To=%3C200601042225.k04MP8wo002996%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r153 - trunk/tools">tm243 at berlios.de
+       </A><BR>
+    <I>Wed Jan  4 23:25:08 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000001.html">[Php-qt-svn] r152 - in trunk: . playground
+</A></li>
+        <LI>Next message: <A HREF="000003.html">[Php-qt-svn] r154 - trunk/tools
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#2">[ date ]</a>
+              <a href="thread.html#2">[ thread ]</a>
+              <a href="subject.html#2">[ subject ]</a>
+              <a href="author.html#2">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-01-04 23:25:08 +0100 (Wed, 04 Jan 2006)
+New Revision: 153
+
+Modified:
+   trunk/tools/kalyptusCxxToPHP.pm
+Log:
+marshal: object and data type handling finished.
+
+Modified: trunk/tools/kalyptusCxxToPHP.pm
+===================================================================
+--- trunk/tools/kalyptusCxxToPHP.pm	2006-01-04 00:17:09 UTC (rev 152)
++++ trunk/tools/kalyptusCxxToPHP.pm	2006-01-04 22:25:08 UTC (rev 153)
+@@ -41,9 +41,9 @@
+ 
+ BEGIN
+ {
+-	@clist = ();
++    @clist = ();
+ 
+-	# Page footer
++    # Page footer
+ 
+ 	$who = kdocUtil::userName();
+ 	$host = kdocUtil::hostName();
+@@ -1402,6 +1402,7 @@
+         $skip = 0;
+ # add method name
+         $tmp{ $paramstring }-&gt;AddProp(&quot;methodname&quot;,$method-&gt;{astNodeName});
++        $tmp{ $paramstring }-&gt;AddProp(&quot;ReturnType&quot;,$method-&gt;{ReturnType});
+ 
+     }
+ 
+@@ -1421,9 +1422,8 @@
+         $return .= &quot;\n\tif (ZEND_NUM_ARGS() == &quot;.$count.&quot;){\n&quot;;
+     }
+ 
+-
+     my $c = 0;                  # helping variable
+-    my $tmp_count = 0;          # helping
++    my $run = 0;
+ 
+ # node is the method
+     foreach my $key (keys %args){
+@@ -1433,6 +1433,8 @@
+ #            $return .= &quot; */\n&quot;;
+ #        }
+ 
++# handle arguments at first
++
+         # initialize vars and agruments for zend_parse_parameters
+         my $d = 0;                  # helping variable
+         my $paratype;               # for zend
+@@ -1441,10 +1443,11 @@
+         my @objects;                # object stack
+         my $method = $args{$key};   # helping
+         my $object_selection = &quot;&quot;;
++        my $tmp_count = 0;          # helping
+ 
+ # identical strings grouped
+-        $return .= &quot;\t/* &quot;.$key.&quot; */\n&quot;;
+-
++        $return .= &quot;\t\t/* &quot;.$key.&quot; */\n&quot;;
++        $run = $key.&quot;_&quot;;
+ # first parameters are static, the others coincides with this
+ # exception: objects
+         my $params = @{$method-&gt;{params}}[0];
+@@ -1460,83 +1463,99 @@
+             # the types
+ # char
+             if ( $first_param-&gt;{ArgType} =~ /char/ ) {
+-                $return .= &quot;\t\tchar* var_&quot;.$c.&quot;;   // default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
+-                $return .= &quot;\t\tint* len_&quot;.$c.&quot;;\n\n&quot;;
++                $return .= &quot;\t\tchar* var_&quot;.$run.$c.&quot;;   // default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
++                $return .= &quot;\t\tint* len_&quot;.$run.$c.&quot;;\n\n&quot;;
+ 
+                 $paratype .= &quot;, &amp;var_&quot;.$c.&quot;, &amp;len_&quot;.$c;
+                 $param_zend_function .= &quot; var_&quot;.$c;
+                 $shortstring .= &quot;s&quot;;
+ # int
+             } elsif ( $first_param-&gt;{ArgType} =~ /int/ ) {
+-                $return .= &quot;\t\tlong var_&quot;.$c.&quot;;    // default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
++                $return .= &quot;\t\tlong var_&quot;.$run.$c.&quot;;    // default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
+ 
+-                $paratype .= &quot;, &amp;var_&quot;.$c;
+-                $param_zend_function .= &quot;(&quot;.$first_param-&gt;{ArgType}.&quot;) var_&quot;.$c;
++                $paratype .= &quot;, &amp;var_&quot;.$run.$c;
++                $param_zend_function .= &quot;(&quot;.$first_param-&gt;{ArgType}.&quot;) var_&quot;.$run.$c;
+                 $shortstring .= &quot;l&quot;;
+ # bool
+             } elsif ( $first_param-&gt;{ArgType} =~ /bool/ ) {
+-                $return .= &quot;\t\tbool* var_&quot;.$c.&quot;;   // _default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
++                $return .= &quot;\t\tbool* var_&quot;.$run.$c.&quot;;   // _default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
+ 
+-                $paratype .= &quot;, &amp;var_&quot;.$c;
+-                $param_zend_function .= &quot;(&quot;.$first_param-&gt;{ArgType}.&quot;) var_&quot;.$c;
++                $paratype .= &quot;, &amp;var_&quot;.$run.$c;
++                $param_zend_function .= &quot;(&quot;.$first_param-&gt;{ArgType}.&quot;) var_&quot;.$run.$c;
+                 $shortstring .= &quot;b&quot;;
+ # objects
+             } else {
+ # while overloading, only one object will be created, query for name
+ 
+-                $return .= &quot;\t\tzval* var_&quot;.$c.&quot;;   // default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
++                $return .= &quot;\t\tzval* var_&quot;.$run.$c.&quot;;   // default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
+ 
+-                $paratype .= &quot;, &amp;var_&quot;.$c;
+-                $param_zend_function .= &quot; var_&quot;.$c;
++                $paratype .= &quot;, &amp;var_&quot;.$run.$c;
++                $param_zend_function .= &quot;() var_o_&quot;.$c; # deprecated
+                 $shortstring .= &quot;o&quot;;
+-                push @objects, &quot;var_&quot;.$c;   # ?
++                push @objects, &quot;var_o_&quot;.$c;   # ?
+                 # name query
+-                $object_selection .= &quot;\n\t\t\tQString tmp_&quot;.$tmp_count.&quot;(o-&gt;metaObject()-&gt;className());\n\n&quot;;
+-#                $object_selection .= &quot;\t\t\tif(tmp_&quot;.$tmp_count.&quot; == \&quot;&quot;.$first_param-&gt;{ArgType}.&quot;\&quot;){
+-#                RETURN_BOOL(obj-&gt;&quot;.$method-&gt;{methodname}.&quot;((&quot;.$first_param-&gt;{ArgType}.&quot;)o, stretch)) \n\t\t\t}&quot;;
++                $object_selection .= &quot;\t\t\tQString tmp_&quot;.$tmp_count++.&quot;(var_o_&quot;.$c.&quot;-&gt;metaObject()-&gt;className());\n&quot;;
+             }
+             if(exists $first_param-&gt;{DefaultValue} != &quot;&quot;){
+                 $shortstring .= &quot;|&quot;;
+             }
+-        $c++;
+-        $d++;
++            $c++;
++            $d++;
+         }
++        $return .= &quot;\n&quot;;
++# add additional objects
++        
++        foreach my $params (@{$method-&gt;{params}}){
++            
++            my $skip_first = 1;
++            $tmp_count = 0;
++            $c = 0;
+ 
+-        my $skip_first = 1;
+-        foreach my $params (@{$method-&gt;{params}}){
+ # skip first, this was already created
+-            if($skip_first == 1){
+-                $skip_first = 0;
+-                $object_selection .= &quot;\t\t\t&quot;;
+-#                next;
+-            } else {
+-                $object_selection .= &quot; else &quot;;
+-            }
+-
++            my $object_test;
++            my $object_call;
++            my $obj_first = 1;
+ # parse the rest
+             foreach my $param ( @{$params-&gt;{ParamList}} ) {
++
++                if($skip_first == 1){
++                    $object_selection .= &quot;\t\t\t&quot;;
++                    $skip_first = 0;
++                } else {
++                    $object_call .= &quot;, &quot;;
++                }
+ # skip all excepting objects
+                 if ( $param-&gt;{ArgType} =~ /char/ ) {
++                    $object_call .= &quot;(&quot;.$param-&gt;{ArgType}.&quot;) var_&quot;.$run.$c;
+                 } elsif ( $param-&gt;{ArgType} =~ /int/ ) {
++                    $object_call .= &quot;(&quot;.$param-&gt;{ArgType}.&quot;) var_&quot;.$run.$c;
+                 } elsif ( $param-&gt;{ArgType} =~ /bool/ ) {
++                    $object_call .= &quot;(&quot;.$param-&gt;{ArgType}.&quot;) var_&quot;.$run.$c;
+                 } else {
+ #print_r($method);
+-                    $object_selection .= &quot;if(tmp_&quot;.$tmp_count.&quot; == \&quot;&quot;.$param-&gt;{ArgType}.&quot;\&quot;) {
+-                    RETURN_BOOL(obj-&gt;&quot;.$method-&gt;{methodname}.&quot;((&quot;.$param-&gt;{ArgType}.&quot;)o, &quot;.$param_zend_function.&quot;)) \n\t\t\t}&quot;;
+-                    $return .= &quot;\t\n&quot;;
++                    if($obj_first == 1){
++                        $obj_first = 0;
++                    } else {
++                        $object_test .= &quot; &amp;&amp; &quot;;
++                    }
++                    $object_test .= &quot;tmp_&quot;.$tmp_count++.&quot; == \&quot;&quot;.$param-&gt;{ArgType}.&quot;\&quot;&quot;;
++                    $object_call .= &quot;(&quot;.$param-&gt;{ArgType}.&quot;) &quot;.$objects[$c++];
+                 }
+-            } # foreach
+-        }
++            } # foreach param
+ 
++            if(!$obj_first){
++                $object_selection .= &quot;\n\t\t\tif(&quot;.$object_test.&quot;) {\n&quot;;
++                $object_selection .= &quot;\t\t\t\tRETURN_BOOL(obj-&gt;&quot;.$method-&gt;{methodname}.&quot;(&quot;.$object_call.&quot;)); \n\t\t\t}&quot;;
++            }
++        } # foreach params
++
+         $shortstring .= &quot;\&quot;&quot;;
+-#        $object_selection .= &quot;\n&quot;;
+ 
+-# return value
+         my $returntype = $method-&gt;{ReturnType};
+         my $zend_return_type = cplusplusToZEND($returntype);
+ 
+ # write zend_parse_parameters method
+-        $return .= &quot;\t\tif(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;.$shortstring.&quot;, &quot;.$param_zend_function.&quot;) == SUCCESS) {\n&quot;;
++        $return .= &quot;\t\tif(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;.$shortstring.$paratype.&quot;) == SUCCESS) {\n&quot;;
+         $return .= &quot;\t\t\t&quot;.$classname.&quot; *obj = (&quot;.$classname.&quot;*) PHP_QT_FETCH();\n&quot;;
+ 
+ # objects as return type
+@@ -1545,36 +1564,40 @@
+             $return .= &quot;\t\t\tQObject* &quot;.$obj.&quot; = (QObject*) php_qt_fetch(&quot;.$obj.&quot;);\n&quot;;
+ #            $paraf =~ s/$obj/tmp_$obj/;
+         }
+-
++# add object handling
+         my $not_empty = %args;
+         if($not_empty){
+-            $return .= $object_selection;
++            $return .= &quot;\n&quot;.$object_selection;
+             undef $object_selection;
+             $return .= &quot;\n&quot;;
++# $c counts objects, if there is no object the return mechanism has to be created
++            if($c&gt;0){
++                $return .= &quot;\t\t}\n&quot;;
++                next;
++            }
+         }
+ 
+-#        $return .= &quot;\t\t$classname *o = ($classname*) PHP_QT_FETCH();\n&quot;;
+-
++# handle return value here
+ # if no return type specified
+         if ( $zend_return_type eq &quot;NULL&quot; ) {
+-            $return .=  &quot;\t\to-&gt;&quot;.$method-&gt;{methodname}.&quot;(&quot;.$param_zend_function.&quot;);\n&quot;;
+-            $return .=  &quot;\t\tRETURN_NULL();\n&quot;;
++            $return .=  &quot;\t\t\tobj-&gt;&quot;.$method-&gt;{methodname}.&quot;(&quot;.$param_zend_function.&quot;);\n&quot;;
++            $return .=  &quot;\t\t\tRETURN_NULL();\n&quot;;
+ # if return type is an object
+         } elsif ( $zend_return_type =~ /zval/ ) {
+         # TODO: consider 'const',
+         # and non-pointer types, pointer types
+-            $return .=  &quot;\t\t&quot;.$returntype.&quot; obj = (&quot;.$returntype.&quot;) o-&gt;&quot;.$method-&gt;{methodname}.&quot;(&quot;.$param_zend_function.&quot;);\n&quot;;
+-            $return .=  &quot;\t\tzend_class_entry *ce;                                   \n&quot;;
+-            $return .=  &quot;\t\t    object_init_ex(return_value, &quot;.$classname.&quot;_ce_ptr);     \n&quot;;
+-            $return .=  &quot;\t\t    zend_rsrc_list_entry le;                            \n&quot;;
+-            $return .=  &quot;\t\t    le.ptr = &obj;                                       \n&quot;;
+-            $return .=  &quot;\t\t    php_qt_register(return_value,le);                   \n&quot;;
+-            $return .=  &quot;\t\t    return;                                             \n&quot;;
++            $return .=  &quot;\t\t\t&quot;.$returntype.&quot; obj = (&quot;.$returntype.&quot;) o-&gt;&quot;.$method-&gt;{methodname}.&quot;(&quot;.$param_zend_function.&quot;);\n&quot;;
++            $return .=  &quot;\t\t\tzend_class_entry *ce;                                   \n&quot;;
++            $return .=  &quot;\t\t\tobject_init_ex(return_value, &quot;.$classname.&quot;_ce_ptr);     \n&quot;;
++            $return .=  &quot;\t\t\tzend_rsrc_list_entry le;                            \n&quot;;
++            $return .=  &quot;\t\t\tle.ptr = &obj;                                       \n&quot;;
++            $return .=  &quot;\t\t\tphp_qt_register(return_value,le);                   \n&quot;;
++            $return .=  &quot;\t\t\treturn;                                             \n&quot;;
+         } else {
+-            $return .=  &quot;\t\tRETURN_&quot;.uc($zend_return_type).&quot;(o-&gt;&quot;.$method-&gt;{methodname}.&quot;(&quot;.$param_zend_function.&quot;));\n&quot; if defined $zend_return_type;
++            $return .=  &quot;\t\t\tRETURN_&quot;.uc($zend_return_type).&quot;(o-&gt;&quot;.$method-&gt;{methodname}.&quot;(&quot;.$param_zend_function.&quot;));\n&quot; if defined $zend_return_type;
+         }
+         $return .= &quot;\t\t}\n&quot;;
+-        $tmp_count++;
++        $tmp_count=0;
+     } # foreach args
+ 
+     my $not_empty = %args;
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000001.html">[Php-qt-svn] r152 - in trunk: . playground
+</A></li>
+	<LI>Next message: <A HREF="000003.html">[Php-qt-svn] r154 - trunk/tools
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#2">[ date ]</a>
+              <a href="thread.html#2">[ thread ]</a>
+              <a href="subject.html#2">[ subject ]</a>
+              <a href="author.html#2">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

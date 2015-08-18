@@ -1,0 +1,183 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r309 - in trunk: . php_qt
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-March/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r309%20-%20in%20trunk%3A%20.%20php_qt&In-Reply-To=%3C200703231054.l2NAs6Ba025217%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000152.html">
+   <LINK REL="Next"  HREF="000154.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r309 - in trunk: . php_qt</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r309%20-%20in%20trunk%3A%20.%20php_qt&In-Reply-To=%3C200703231054.l2NAs6Ba025217%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r309 - in trunk: . php_qt">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Fri Mar 23 11:54:06 CET 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000152.html">[Php-qt-svn] r308 - in trunk: . php_qt
+</A></li>
+        <LI>Next message: <A HREF="000154.html">[Php-qt-svn] r310 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#153">[ date ]</a>
+              <a href="thread.html#153">[ thread ]</a>
+              <a href="subject.html#153">[ subject ]</a>
+              <a href="author.html#153">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2007-03-23 11:54:06 +0100 (Fri, 23 Mar 2007)
+New Revision: 309
+
+Modified:
+   trunk/ChangeLog
+   trunk/php_qt/functions.cpp
+   trunk/php_qt/marshall_types.cpp
+   trunk/php_qt/marshall_types.h
+   trunk/php_qt/smokephp.cpp
+Log:
+* call of virtual methods
+
+
+
+Modified: trunk/ChangeLog
+===================================================================
+--- trunk/ChangeLog	2007-03-23 09:46:04 UTC (rev 308)
++++ trunk/ChangeLog	2007-03-23 10:54:06 UTC (rev 309)
+@@ -1,5 +1,9 @@
+ 2007-003-22  Thomas Moenicke &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">thomas.moenicke at kdemail.net</A>&gt;
+ 
++		* call of virtual methods
++
++2007-003-22  Thomas Moenicke &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">thomas.moenicke at kdemail.net</A>&gt;
++
+ 		* call of overwritten protected methods
+ 
+ 2007-003-22  Thomas Moenicke &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">thomas.moenicke at kdemail.net</A>&gt;
+
+Modified: trunk/php_qt/functions.cpp
+===================================================================
+--- trunk/php_qt/functions.cpp	2007-03-23 09:46:04 UTC (rev 308)
++++ trunk/php_qt/functions.cpp	2007-03-23 10:54:06 UTC (rev 309)
+@@ -138,7 +138,7 @@
+  *	tr() returns QObject::tr()
+  *
+  */
+-
++extern zval* zstringFromQString(QString* s);
+ PHP_FUNCTION(tr)
+ {
+     const char* string;
+
+Modified: trunk/php_qt/marshall_types.cpp
+===================================================================
+--- trunk/php_qt/marshall_types.cpp	2007-03-23 09:46:04 UTC (rev 308)
++++ trunk/php_qt/marshall_types.cpp	2007-03-23 10:54:06 UTC (rev 309)
+@@ -359,8 +359,8 @@
+ 
+ 
+ VirtualMethodCall::VirtualMethodCall(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval* obj, zval ***sp) :
+-	MethodCallBase(smoke,meth,stack), _obj(obj)
+-{		
++	MethodCallBase(smoke,meth,stack), _obj(obj), _sp(sp)
++{
+ 	_sp = sp;
+ 	_args = _smoke-&gt;argumentList + method().args;
+ }
+@@ -378,9 +378,12 @@
+ zval*
+ VirtualMethodCall::var() 
+ { 
+-	return (zval*) _sp[_cur]; 
++    if(*_sp[_cur] == NULL) {
++	MAKE_STD_ZVAL(*_sp[_cur]);
++    }
++    return (zval*) *_sp[_cur]; 
+ }
+-	
++
+ int 
+ VirtualMethodCall::items() 
+ { 
+@@ -393,8 +396,8 @@
+ 	if (_called) return;
+ 	_called = true;
+ 
+-//	zval* _retval = callMethod(_obj, _smoke-&gt;methodNames[method().name],
+-//		method().numArgs,	_sp );
++	phpqt_callMethod(_obj, (char*) _smoke-&gt;methodNames[method().name], method().numArgs, _sp);
++
+ 	zval _retval;
+ 	VirtualMethodReturnValue r(_smoke, _method, _stack, _retval);
+ }
+
+Modified: trunk/php_qt/marshall_types.h
+===================================================================
+--- trunk/php_qt/marshall_types.h	2007-03-23 09:46:04 UTC (rev 308)
++++ trunk/php_qt/marshall_types.h	2007-03-23 10:54:06 UTC (rev 309)
+@@ -114,6 +114,7 @@
+  
+ private:
+ 	zval* _obj;
++	zval ***_sp;
+ };
+ 
+ 
+
+Modified: trunk/php_qt/smokephp.cpp
+===================================================================
+--- trunk/php_qt/smokephp.cpp	2007-03-23 09:46:04 UTC (rev 308)
++++ trunk/php_qt/smokephp.cpp	2007-03-23 10:54:06 UTC (rev 309)
+@@ -69,14 +69,11 @@
+ 		}
+ 
+ 		if(phpqt_methodExists(o-&gt;ce_ptr, (char*) methodName)){
+-		    zval*** sp = (zval***) malloc(sizeof(zval)*2);
+-		    zval* obj;
++		    Smoke::Method &amp; meth = smoke-&gt;methods[method];
++		    zval*** sp = (zval ***) safe_emalloc((int) meth.numArgs, sizeof(zval **), 0);
+ 
+-		    phpqt_callMethod(o-&gt;zval_ptr, (char*) methodName, 0, sp);
+-/*
+-		    VirtualMethodCall c(smoke, method, args, obj, sp);
++		    VirtualMethodCall c(smoke, method, args, o-&gt;zval_ptr, sp);
+ 		    c.next();
+-*/
+ 		}
+ 		
+ 		return false;
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000152.html">[Php-qt-svn] r308 - in trunk: . php_qt
+</A></li>
+	<LI>Next message: <A HREF="000154.html">[Php-qt-svn] r310 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#153">[ date ]</a>
+              <a href="thread.html#153">[ thread ]</a>
+              <a href="subject.html#153">[ subject ]</a>
+              <a href="author.html#153">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

@@ -1,0 +1,261 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r312 - trunk/php_qt
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-March/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r312%20-%20trunk/php_qt&In-Reply-To=%3C200703260944.l2Q9iE45028405%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000155.html">
+   <LINK REL="Next"  HREF="000157.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r312 - trunk/php_qt</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r312%20-%20trunk/php_qt&In-Reply-To=%3C200703260944.l2Q9iE45028405%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r312 - trunk/php_qt">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Mon Mar 26 11:44:14 CEST 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000155.html">[Php-qt-svn] r311 - trunk/php_qt
+</A></li>
+        <LI>Next message: <A HREF="000157.html">[Php-qt-svn] r313 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#156">[ date ]</a>
+              <a href="thread.html#156">[ thread ]</a>
+              <a href="subject.html#156">[ subject ]</a>
+              <a href="author.html#156">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2007-03-26 11:44:13 +0200 (Mon, 26 Mar 2007)
+New Revision: 312
+
+Modified:
+   trunk/php_qt/marshall_types.cpp
+   trunk/php_qt/php_qt.cpp
+   trunk/php_qt/php_qt.h
+   trunk/php_qt/smokephp.cpp
+Log:
+* code cleaned up
+
+
+
+Modified: trunk/php_qt/marshall_types.cpp
+===================================================================
+--- trunk/php_qt/marshall_types.cpp	2007-03-26 09:30:46 UTC (rev 311)
++++ trunk/php_qt/marshall_types.cpp	2007-03-26 09:44:13 UTC (rev 312)
+@@ -397,7 +397,7 @@
+ 	if (_called) return;
+ 	_called = true;
+ 
+-	phpqt_callMethod(_obj, (char*) _smoke-&gt;methodNames[method().name], method().numArgs, _sp);
++	phpqt_callPHPMethod(_obj, (char*) _smoke-&gt;methodNames[method().name], method().numArgs, _sp);
+ 
+ 	zval _retval;
+ 	VirtualMethodReturnValue r(_smoke, _method, _stack, _retval);
+
+Modified: trunk/php_qt/php_qt.cpp
+===================================================================
+--- trunk/php_qt/php_qt.cpp	2007-03-26 09:30:46 UTC (rev 311)
++++ trunk/php_qt/php_qt.cpp	2007-03-26 09:44:13 UTC (rev 312)
+@@ -427,11 +427,8 @@
+ 
+ 	smokephp_init();
+ 
+-// TODO		QObject Nummer suchen, nachher vergleichen
+-	smokephp_findConnect();
++	Smoke::Index qobject = PQ::smoke()-&gt;idClass(&quot;QObject&quot;);
+ 
+-	Smoke::Index qobject = smokephp_getClassId(&quot;QObject&quot;);
+-
+ 	php_qt_static_methods = (zend_function_entry***) safe_emalloc((PQ::smoke()-&gt;numClasses), sizeof(zend_function_entry **), 0);
+ 
+ 	int method_count;
+@@ -665,7 +662,7 @@
+     cout &lt;&lt; &quot;\tcall PHP method &quot; &lt;&lt; so-&gt;ce_ptr-&gt;name &lt;&lt; &quot;::&quot; &lt;&lt; method_name &lt;&lt; endl;
+ #endif
+ 
+-        phpqt_callMethod(so-&gt;zval_ptr, method_name, j, args);
++        phpqt_callPHPMethod(so-&gt;zval_ptr, method_name, j, args);
+ 
+     // is a signal
+     } else {
+@@ -730,7 +727,7 @@
+ }
+ 
+ zval* 
+-phpqt_callMethod(zval* this_ptr, char* methodName, zend_uint param_count, zval** args[])
++phpqt_callPHPMethod(zval* this_ptr, char* methodName, zend_uint param_count, zval** args[])
+ {
+ 
+ 	if(this_ptr == NULL){
+
+Modified: trunk/php_qt/php_qt.h
+===================================================================
+--- trunk/php_qt/php_qt.h	2007-03-26 09:30:46 UTC (rev 311)
++++ trunk/php_qt/php_qt.h	2007-03-26 09:44:13 UTC (rev 312)
+@@ -101,6 +101,7 @@
+ PHP_FUNCTION(qobject_cast);
+ PHP_FUNCTION(tr);
+ PHP_FUNCTION(check_qobject);
++void check_object(zval* zobject);
+ 
+ struct smokephp_object {
+     bool allocated;
+@@ -113,12 +114,11 @@
+     QMetaObject* meta;
+ };
+ 
+-//zend_class_entry* php_qt_generic_class;
+-void check_object(zval* zobject);
+-static void 		phpqt_destroyHashtable(zend_rsrc_list_entry *rsrc);
+ 
++static void 			phpqt_destroyHashtable(zend_rsrc_list_entry *rsrc);
++
+ void 				phpqt_register(zval* this_ptr, zend_rsrc_list_entry le);
+-zval* 				phpqt_callMethod(zval* zend_ptr, char* methodname, zend_uint param_count, zval** params[]);
++zval* 				phpqt_callPHPMethod(zval* zend_ptr, char* methodname, zend_uint param_count, zval** params[]);
+ bool 				phpqt_methodExists(zend_class_entry* ce_ptr, char* methodname);
+ bool 				phpqt_getMocData(zval* this_ptr, char* classname, const QMetaObject* superdata, QMetaObject* metachar, QString* meta_stringdata, uint* signature);
+ int				phpqt_metacall(smokephp_object* this_ptr, Smoke::StackItem* args, QMetaObject::Call _c, int _id, void **_a);
+@@ -147,17 +147,13 @@
+ extern int le_php_qt_hashtype;
+ extern HashTable php_qt_objptr_hash;
+ 
+-void 				smokephp_convertArgsCxxToZend(zval*** args, int argc, Smoke::StackItem* qargs);
+ bool 				smokephp_isQObject(Smoke::Index classId);
+-Smoke::Index 			smokephp_getClassId(const char* classname);
+ void				smokephp_prepareMethodName(zval*** args, int argc, QStack&lt;QByteArray*&gt; &amp;methodNameStack);
+ QByteArray* 			smokephp_getSignature(int argc, zval ***argv, MocArgument* mocStack);
+ Smoke::Index			smokephp_getMethod(const char* c, const char* m, int argc, zval*** args);
+ void				smokephp_prepareConnect(zval*** args, int argc, Smoke::StackItem* qargs, const Smoke::Index method);
+ void				smokephp_callMethod(void *obj, Smoke::Index method, Smoke::Stack qargs);
+ void				smokephp_init();
+-Smoke::Index			smokephp_findConnect();
+-bool				smokephp_isConnect(Smoke::Index method);
+ 
+ void* 				transformArray(zval* args);
+ 
+
+Modified: trunk/php_qt/smokephp.cpp
+===================================================================
+--- trunk/php_qt/smokephp.cpp	2007-03-26 09:30:46 UTC (rev 311)
++++ trunk/php_qt/smokephp.cpp	2007-03-26 09:44:13 UTC (rev 312)
+@@ -102,10 +102,10 @@
+ void 
+ smokephp_init() {
+ 
+-/*    if (qt_Smoke != 0L) {
++    if (qt_Smoke != 0L) {
+ 	php_error(E_ERROR,&quot;could not initialize smoke&quot;);
+     }
+-*/
++
+     init_qt_Smoke();
+ 
+     if(PQ::smoke()-&gt;numClasses &lt;= 0){
+@@ -417,53 +417,6 @@
+ 
+ }
+ 
+-Smoke::Index
+-smokephp_findConnect(){
+-
+-	for(int i=0;i&lt;10000;i++){
+-		if(PQ::smoke()-&gt;methodMaps[i].name == PQ::smoke()-&gt;idMethodName(&quot;connect#$#$&quot;)){
+-			connect1 = PQ::smoke()-&gt;methodMaps[i].method;
+-		}
+-		if(PQ::smoke()-&gt;methodMaps[i].name == PQ::smoke()-&gt;idMethodName(&quot;connect#$#$$&quot;)){
+-			connect2 = PQ::smoke()-&gt;methodMaps[i].method;
+-		}
+-		if(PQ::smoke()-&gt;methodMaps[i].name == PQ::smoke()-&gt;idMethodName(&quot;connect&quot;)){
+-			connect3 = PQ::smoke()-&gt;methodMaps[i].method;
+-		}
+-		// these are ambiguous methods
+-		if(PQ::smoke()-&gt;methodMaps[i].name == PQ::smoke()-&gt;idMethodName(&quot;connect#$$&quot;)){
+-			connect4 = PQ::smoke()-&gt;methodMaps[i].method;
+-		}
+-		if(PQ::smoke()-&gt;methodMaps[i].name == PQ::smoke()-&gt;idMethodName(&quot;connect#$$$&quot;)){
+-			connect5 = PQ::smoke()-&gt;methodMaps[i].method;
+-		}
+-	}
+-}
+-
+-/**
+- *	returns the related classId
+- *	@todo	caching, SmokeType
+- *	@param	char*	classname
+- *	@return Smoke::Index
+- */
+-
+-Smoke::Index 
+-smokephp_getClassId(const char* classname){
+-
+-	Smoke::Index classId = 0;
+-	Smoke::Class *p = PQ::smoke()-&gt;classes;
+-	while(p++ != PQ::smoke()-&gt;classes+PQ::smoke()-&gt;numClasses){
+-		classId++;
+-		if(!strcmp(p-&gt;className,classname)){
+-			return classId;
+-		}
+-	}
+-	// should never happen
+-	php_error(E_ERROR,&quot;fatal: QObject not found\n&quot;);
+-	return 0;
+-
+-}
+-
+ bool 
+ smokephp_isQObject(Smoke::Index classId) {
+ 	if(strcmp(PQ::smoke()-&gt;classes[classId].className, &quot;QObject&quot;) == 0)
+@@ -475,16 +428,3 @@
+     }
+     return false;
+ }
+-
+-bool
+-smokephp_isConnect(Smoke::Index method){
+-
+-	if(
+-		method == connect1
+-		|| method == connect2
+-		|| method == connect3
+-		|| method == connect4
+-		|| method == connect5
+-	) return true; else return false;
+-
+-}
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000155.html">[Php-qt-svn] r311 - trunk/php_qt
+</A></li>
+	<LI>Next message: <A HREF="000157.html">[Php-qt-svn] r313 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#156">[ date ]</a>
+              <a href="thread.html#156">[ thread ]</a>
+              <a href="subject.html#156">[ subject ]</a>
+              <a href="author.html#156">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

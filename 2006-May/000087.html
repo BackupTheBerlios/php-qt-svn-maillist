@@ -1,0 +1,526 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r243 - in trunk/tutorials: . calculator
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-May/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r243%20-%20in%20trunk/tutorials%3A%20.%20calculator&In-Reply-To=%3C200605190820.k4J8KS1h002199%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000086.html">
+   <LINK REL="Next"  HREF="000088.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r243 - in trunk/tutorials: . calculator</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r243%20-%20in%20trunk/tutorials%3A%20.%20calculator&In-Reply-To=%3C200605190820.k4J8KS1h002199%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r243 - in trunk/tutorials: . calculator">tm243 at berlios.de
+       </A><BR>
+    <I>Fri May 19 10:20:28 CEST 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000086.html">[Php-qt-svn] r242 - trunk/qt/classes
+</A></li>
+        <LI>Next message: <A HREF="000088.html">[Php-qt-svn] r244 - trunk/tutorials/t7
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#87">[ date ]</a>
+              <a href="thread.html#87">[ thread ]</a>
+              <a href="subject.html#87">[ subject ]</a>
+              <a href="author.html#87">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-05-19 10:20:28 +0200 (Fri, 19 May 2006)
+New Revision: 243
+
+Added:
+   trunk/tutorials/calculator/
+   trunk/tutorials/calculator/button.php
+   trunk/tutorials/calculator/calculator.php
+   trunk/tutorials/calculator/main.php
+Log:
+example 'calculator' added.
+
+Added: trunk/tutorials/calculator/button.php
+===================================================================
+--- trunk/tutorials/calculator/button.php	2006-05-19 08:17:17 UTC (rev 242)
++++ trunk/tutorials/calculator/button.php	2006-05-19 08:20:28 UTC (rev 243)
+@@ -0,0 +1,21 @@
++&lt;?php
++    /****************************************************************
++    **
++    ** Qt Calculator
++    **
++    ** <A HREF="http://doc.trolltech.com/4.0/widgets-calculator.html">http://doc.trolltech.com/4.0/widgets-calculator.html</A>
++    **
++    ****************************************************************/
++
++    class Button extends QToolButton {
++    
++        function __construct($text){
++
++            parent::__construct();
++//            $this-&gt;setSizePolicy(&quot;QSizePolicy::Expanding&quot;, &quot;QSizePolicy::Preferred&quot;);
++            $this-&gt;setText(new QString($text));
++        }
++
++    }
++
++?&gt;
+\ No newline at end of file
+
+Added: trunk/tutorials/calculator/calculator.php
+===================================================================
+--- trunk/tutorials/calculator/calculator.php	2006-05-19 08:17:17 UTC (rev 242)
++++ trunk/tutorials/calculator/calculator.php	2006-05-19 08:20:28 UTC (rev 243)
+@@ -0,0 +1,389 @@
++&lt;?php
++    /****************************************************************
++    **
++    ** Qt Calculator
++    **
++    ** <A HREF="http://doc.trolltech.com/4.0/widgets-calculator.html">http://doc.trolltech.com/4.0/widgets-calculator.html</A>
++    **
++    ****************************************************************/
++
++    require_once(&quot;button.php&quot;);
++
++    class Calculator extends QDialog {
++    
++        var $sumInMemory = 0.0;
++        var $sumSoFar = 0.0;
++        var $factorSoFar = 0.0;
++        var $pendingAdditiveOperator;
++        var $pendingMultiplicativeOperator;
++        var $waitingForOperand = true;
++
++        var $display;           /// QLineEdit
++
++        var $NumDigitButtons = 10;
++        var $digitButtons;      /// Array of buttons
++
++        /// Buttons
++        var $pointButton;
++        var $changeSignButton;
++        var $backspaceButton;
++        var $clearButton;
++        var $clearAllButton;
++        var $clearMemoryButton;
++        var $readMemoryButton;
++        var $setMemoryButton;
++        var $addToMemoryButton;
++
++        var $divisionButton;
++        var $timesButton;
++        var $minusButton;
++        var $plusButton;
++        var $squareRootButton;
++        var $powerButton;
++        var $reciprocalButton;
++        var $equalButton;
++
++        var $slots = array(
++            &quot;digitClicked()&quot;,
++            &quot;unaryOperatorClicked()&quot;,
++            &quot;additiveOperatorClicked()&quot;,
++            &quot;multiplicativeOperatorClicked()&quot;,
++            &quot;equalClicked()&quot;,
++            &quot;pointClicked()&quot;,
++            &quot;changeSignClicked()&quot;,
++            &quot;backspaceClicked()&quot;,
++            &quot;clear()&quot;,
++            &quot;clearAll()&quot;,
++            &quot;clearMemory()&quot;,
++            &quot;read_Memory()&quot;,
++            &quot;setMemory()&quot;,
++            &quot;addToMemory()&quot;
++        );
++        var $signals = array(&quot;&quot;);
++
++        function __construct() {
++
++            parent::__construct();
++
++            $this-&gt;pendingAdditiveOperator = new QString();
++            $this-&gt;pendingMultiplicativeOperator = new QString();
++
++            $this-&gt;display = new QLineEdit(&quot;0&quot;);
++            $this-&gt;display-&gt;setReadOnly(true);
++            $this-&gt;display-&gt;setAlignment(QT_ALIGNMENT_ALIGNRIGHT);
++            $this-&gt;display-&gt;setMaxLength(15);
++//            $this-&gt;display-&gt;installEventFilter($this);
++
++            for ($i = 0; $i &lt; $this-&gt;NumDigitButtons; ++$i) {
++                    $this-&gt;digitButtons[$i] = $this-&gt;createButton($i.&quot;&quot;, SLOT(&quot;digitClicked()&quot;));
++            }
++
++            $this-&gt;pointButton = $this-&gt;createButton(&quot;.&quot;, SLOT(&quot;pointClicked()&quot;));
++            $this-&gt;changeSignButton = $this-&gt;createButton(&quot;\261&quot;, SLOT(&quot;changeSignClicked()&quot;));
++
++            $this-&gt;backspaceButton = $this-&gt;createButton(&quot;Backspace&quot;, SLOT(&quot;backspaceClicked()&quot;));
++            $this-&gt;clearButton = $this-&gt;createButton(&quot;Clear&quot;, SLOT(&quot;clear()&quot;));
++            $this-&gt;clearAllButton = $this-&gt;createButton(&quot;Clear All&quot;, SLOT(&quot;clearAll()&quot;));
++
++            $this-&gt;clearMemoryButton = $this-&gt;createButton(&quot;MC&quot;, SLOT(&quot;clearMemory()&quot;));
++            $this-&gt;readMemoryButton = $this-&gt;createButton(&quot;MR&quot;, SLOT(&quot;read_Memory()&quot;));
++            $this-&gt;setMemoryButton = $this-&gt;createButton(&quot;MS&quot;, SLOT(&quot;setMemory()&quot;));
++            $this-&gt;addToMemoryButton = $this-&gt;createButton(&quot;M+&quot;, SLOT(&quot;addToMemory()&quot;));
++
++            $this-&gt;divisionButton = $this-&gt;createButton(&quot;\367&quot;, SLOT(&quot;multiplicativeOperatorClicked()&quot;));
++
++            $this-&gt;timesButton = $this-&gt;createButton(&quot;\327&quot;, SLOT(&quot;multiplicativeOperatorClicked()&quot;));
++            $this-&gt;minusButton = $this-&gt;createButton(&quot;-&quot;, SLOT(&quot;additiveOperatorClicked()&quot;));
++            $this-&gt;plusButton = $this-&gt;createButton(&quot;+&quot;, SLOT(&quot;additiveOperatorClicked()&quot;));
++
++            $this-&gt;squareRootButton = $this-&gt;createButton(&quot;Sqrt&quot;, SLOT(&quot;unaryOperatorClicked()&quot;));
++            $this-&gt;powerButton = $this-&gt;createButton(&quot;x\262&quot;, SLOT(&quot;unaryOperatorClicked()&quot;));
++            $this-&gt;reciprocalButton = $this-&gt;createButton(&quot;1/x&quot;, SLOT(&quot;unaryOperatorClicked()&quot;));
++            $this-&gt;equalButton = $this-&gt;createButton(&quot;=&quot;, SLOT(&quot;equalClicked()&quot;));
++
++            $this-&gt;mainLayout = new QGridLayout($this);
++//            $this-&gt;mainLayout-&gt;setSizeConstraint(&quot;QLayout::SetFixedSize&quot;);
++
++            $this-&gt;mainLayout-&gt;addWidget($this-&gt;display, 0, 0, 1, 6);
++            $this-&gt;mainLayout-&gt;addWidget($this-&gt;backspaceButton, 1, 0, 1, 2);
++            $this-&gt;mainLayout-&gt;addWidget($this-&gt;clearButton, 1, 2, 1, 2);
++            $this-&gt;mainLayout-&gt;addWidget($this-&gt;clearAllButton, 1, 4, 1, 2);
++
++            $this-&gt;mainLayout-&gt;addWidget($this-&gt;clearMemoryButton, 2, 0);
++            $this-&gt;mainLayout-&gt;addWidget($this-&gt;readMemoryButton, 3, 0);
++            $this-&gt;mainLayout-&gt;addWidget($this-&gt;setMemoryButton, 4, 0);
++            $this-&gt;mainLayout-&gt;addWidget($this-&gt;addToMemoryButton, 5, 0);
++
++            for ($i = 1; $i &lt; $this-&gt;NumDigitButtons; ++$i) {
++
++                    $row = ceil(((8 - ($i+1))) / 3) + 2;
++                    $column = ceil((($i-1) % 3)) + 1;
++
++                    $this-&gt;mainLayout-&gt;addWidget($this-&gt;digitButtons[$i], (int) $row, (int) $column);
++
++            }
++
++            $this-&gt;mainLayout-&gt;addWidget($this-&gt;digitButtons[0], 5, 1);
++            $this-&gt;mainLayout-&gt;addWidget($this-&gt;pointButton, 5, 2);
++            $this-&gt;mainLayout-&gt;addWidget($this-&gt;changeSignButton, 5, 3);
++
++            $this-&gt;mainLayout-&gt;addWidget($this-&gt;divisionButton, 2, 4);
++            $this-&gt;mainLayout-&gt;addWidget($this-&gt;timesButton, 3, 4);
++            $this-&gt;mainLayout-&gt;addWidget($this-&gt;minusButton, 4, 4);
++            $this-&gt;mainLayout-&gt;addWidget($this-&gt;plusButton, 5, 4);
++                                
++            $this-&gt;mainLayout-&gt;addWidget($this-&gt;squareRootButton, 2, 5);
++            $this-&gt;mainLayout-&gt;addWidget($this-&gt;powerButton, 3, 5);
++            $this-&gt;mainLayout-&gt;addWidget($this-&gt;reciprocalButton, 4, 5);
++            $this-&gt;mainLayout-&gt;addWidget($this-&gt;equalButton, 5, 5);
++
++            $this-&gt;setLayout($this-&gt;mainLayout);
++            $this-&gt;setWindowTitle(new QString(&quot;Calculator&quot;));
++
++        }
++
++        function createButton($text, $member)
++        {
++            $button = new Button($text);
++            $this-&gt;connect($button, SIGNAL(&quot;clicked()&quot;), $this, $member);
++            return $button;
++        }
++
++        function digitClicked()
++        {
++
++            $clickedButton = qobject_cast($this-&gt;sender(),new QToolButton());
++            $digitValue = $clickedButton-&gt;text()-&gt;toInt();
++            if ($this-&gt;display-&gt;text() == &quot;0&quot; &amp;&amp; $digitValue == 0.0)
++                return;
++
++            if ($this-&gt;waitingForOperand) {
++                $this-&gt;display-&gt;clear();
++                $this-&gt;waitingForOperand = false;
++            }
++
++            $new_value = new QString();
++            $display_text = $this-&gt;display-&gt;text();
++            $number = QString::number($digitValue);
++
++            $new_value-&gt;append($display_text);
++            $new_value-&gt;append($number);
++
++            $this-&gt;display-&gt;setText($new_value);
++        }
++
++        function unaryOperatorClicked()
++        {
++            $clickedButton = qobject_cast($this-&gt;sender(), new Button(&quot;&quot;));
++            $clickedOperator = $clickedButton-&gt;text();
++            $operand = $this-&gt;display-&gt;text()-&gt;toDouble();
++            $result;
++
++            if ($clickedOperator-&gt;toAscii() == $this-&gt;tr(&quot;Sqrt&quot;)-&gt;toAscii()) {
++                if ($operand &lt; 0.0) {
++                    $this-&gt;abortOperation();
++                    return;
++                }
++                $result = sqrt($operand);
++            } else if ($clickedOperator-&gt;toAscii() == $this-&gt;tr(&quot;x\262&quot;)-&gt;toAscii()) {
++                $result = pow($operand, 2.0);
++            } else if ($clickedOperator-&gt;toAscii() == $this-&gt;tr(&quot;1/x&quot;)-&gt;toAscii()) {
++                if ($operand == 0.0) {
++                    $this-&gt;abortOperation();
++                    return;
++                }
++                $result = 1.0 / $operand;
++            }
++
++            $this-&gt;display-&gt;setText(QString::number($result));
++            $this-&gt;waitingForOperand = true;
++        }
++
++        function additiveOperatorClicked()
++        {
++            $clickedButton = qobject_cast($this-&gt;sender(), new Button(&quot;&quot;));
++            $clickedOperator = $clickedButton-&gt;text();
++
++            $operand = $this-&gt;display-&gt;text()-&gt;toDouble();
++
++            if (!$this-&gt;pendingMultiplicativeOperator-&gt;isEmpty()) {
++                if (!calculate($operand, $this-&gt;pendingMultiplicativeOperator)) {
++                    $this-&gt;abortOperation();
++                    return;
++                }
++                $this-&gt;display-&gt;setText(QString::number($this-&gt;factorSoFar));
++                $operand = $this-&gt;factorSoFar;
++                $this-&gt;factorSoFar = 0.0;
++                $this-&gt;pendingMultiplicativeOperator-&gt;clear();
++            }
++
++            if (!$this-&gt;pendingAdditiveOperator-&gt;isEmpty()) {
++                if (!calculate(operand, $this-&gt;pendingAdditiveOperator)) {
++                    $this-&gt;abortOperation();
++                    return;
++                }
++                $this-&gt;display-&gt;setText(QString::number($this-&gt;sumSoFar));
++            } else {
++                $this-&gt;sumSoFar = $operand;
++            }
++
++            $this-&gt;pendingAdditiveOperator = $clickedOperator;
++            $this-&gt;waitingForOperand = true;
++
++        }
++
++        function multiplicativeOperatorClicked()
++        {
++            $clickedButton = qobject_cast($this-&gt;sender(), new Button(&quot;&quot;));
++            $clickedOperator = $clickedButton-&gt;text();
++
++            $operand = $this-&gt;display-&gt;text()-&gt;toDouble();
++                                
++            if (!$this-&gt;pendingMultiplicativeOperator-&gt;isEmpty()) {
++                if (!$this-&gt;calculate($operand, $this-&gt;pendingMultiplicativeOperator)) {
++                    $this-&gt;abortOperation();
++                    return;
++                }
++                $this-&gt;display-&gt;setText(QString::number($this-&gt;factorSoFar));
++            } else {
++                $this-&gt;factorSoFar = $operand;
++            }
++            $this-&gt;pendingMultiplicativeOperator = $clickedOperator;
++            $this-&gt;waitingForOperand = true;
++        }
++
++        function equalClicked()
++        {
++            $operand = $this-&gt;display-&gt;text()-&gt;toDouble();
++
++            if (!$this-&gt;pendingMultiplicativeOperator-&gt;isEmpty()) {
++                if (!$this-&gt;calculate($operand, $this-&gt;pendingMultiplicativeOperator)) {
++                    $this-&gt;abortOperation();
++                    return;
++                }
++                $operand = $this-&gt;factorSoFar;
++                $this-&gt;factorSoFar = 0.0;
++                $this-&gt;pendingMultiplicativeOperator-&gt;clear();
++            }
++            if (!$this-&gt;pendingAdditiveOperator-&gt;isEmpty()) {
++                if (!$this-&gt;calculate($operand, $this-&gt;pendingAdditiveOperator)) {
++                    $this-&gt;abortOperation();
++                    return;
++                }
++                $this-&gt;pendingAdditiveOperator-&gt;clear();
++            } else {
++                $this-&gt;sumSoFar = $operand;
++            }
++
++            $this-&gt;display-&gt;setText(QString::number($this-&gt;sumSoFar));
++            $this-&gt;sumSoFar = 0.0;
++            $this-&gt;waitingForOperand = true;                                                                          
++        }
++
++        function pointClicked()
++        {
++            if ($this-&gt;waitingForOperand)
++                $this-&gt;display-&gt;setText(&quot;0&quot;);
++            if (!$this-&gt;display-&gt;text()-&gt;contains(&quot;.&quot;)){
++
++                $new_value = $this-&gt;display-&gt;text();
++                $new_value-&gt;append(&quot;.&quot;);
++                $this-&gt;display-&gt;setText($new_value);
++                
++            }
++            $this-&gt;waitingForOperand = false;
++        }
++
++        function changeSignClicked()
++        {
++            $text = $this-&gt;display-&gt;text();
++            $value = $text-&gt;toDouble();
++
++            if ($value &gt; 0.0) {
++                $text-&gt;prepend(&quot;-&quot;);
++            } else if ($value &lt; 0.0) {
++                $text-&gt;remove(0, 1);
++            }
++            $this-&gt;display-&gt;setText($text);
++        }
++
++        function backspaceClicked()
++        {
++            if ($this-&gt;waitingForOperand)
++                return;
++
++            $text = $this-&gt;display-&gt;text();
++            $text-&gt;chop(1);
++            if ($text-&gt;isEmpty()) {
++                $text = &quot;0&quot;;
++                $this-&gt;waitingForOperand = true;
++            }
++            $this-&gt;display-&gt;setText($text);
++        }
++
++        function clear()
++        {
++            if ($this-&gt;waitingForOperand)
++                return;
++
++            $this-&gt;display-&gt;setText(&quot;0&quot;);
++            $this-&gt;waitingForOperand = true;
++        }
++
++        function clearAll()
++        {
++            $this-&gt;sumSoFar = 0.0;
++            $this-&gt;factorSoFar = 0.0;
++            $this-&gt;pendingAdditiveOperator-&gt;clear();
++            $this-&gt;pendingMultiplicativeOperator-&gt;clear();
++            $this-&gt;display-&gt;setText(&quot;0&quot;);
++            $this-&gt;waitingForOperand = true;
++        }
++
++        function clearMemory()
++        {
++            $this-&gt;sumInMemory = 0.0;
++        }
++                    
++        function read_Memory()
++        {
++            $this-&gt;display-&gt;setText(QString::number($this-&gt;sumInMemory));
++            $this-&gt;waitingForOperand = true;
++        }
++
++        function setMemory()
++        {
++            $this-&gt;equalClicked();
++            $this-&gt;sumInMemory = $this-&gt;display-&gt;text()-&gt;toDouble();
++        }
++                            
++        function addToMemory()
++        {
++            $this-&gt;equalClicked();
++            $this-&gt;sumInMemory += $this-&gt;display-&gt;text()-&gt;toDouble();
++        }
++
++        function abortOperation()
++        {
++            $this-&gt;clearAll();
++            $this-&gt;display-&gt;setText($this-&gt;tr(&quot;####&quot;));
++        }
++
++        function calculate($rightOperand, $pendingOperator)
++        {
++            if ($pendingOperator-&gt;toAscii() == &quot;+&quot;) {
++                $this-&gt;sumSoFar += $rightOperand;
++            } else if ($pendingOperator-&gt;toAscii() == &quot;-&quot;) {
++                $this-&gt;sumSoFar -= $rightOperand;
++            } else if ($pendingOperator-&gt;toAscii() == &quot;\327&quot;) {
++                $this-&gt;factorSoFar *= $rightOperand;
++            } else if ($pendingOperator-&gt;toAscii() == &quot;\367&quot;) {
++                if ($rightOperand == 0.0)
++                    return false;
++                $this-&gt;factorSoFar /= $rightOperand;
++            }
++            return true;
++        }
++    }
++
++?&gt;
+\ No newline at end of file
+
+Added: trunk/tutorials/calculator/main.php
+===================================================================
+--- trunk/tutorials/calculator/main.php	2006-05-19 08:17:17 UTC (rev 242)
++++ trunk/tutorials/calculator/main.php	2006-05-19 08:20:28 UTC (rev 243)
+@@ -0,0 +1,22 @@
++&lt;?php
++    /****************************************************************
++    **
++    ** Qt Calculator
++    **
++    ** <A HREF="http://doc.trolltech.com/4.0/widgets-calculator.html">http://doc.trolltech.com/4.0/widgets-calculator.html</A>
++    **
++    ****************************************************************/
++
++    if(!extension_loaded('php_qt')) {
++        dl('php_qt.' . PHP_SHLIB_SUFFIX);
++    }
++
++    require_once('calculator.php');
++
++    $app = new QApplication($argc,0);
++
++    $calc = new Calculator();
++    $calc-&gt;show();
++    $app-&gt;exec();
++
++?&gt;
+\ No newline at end of file
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000086.html">[Php-qt-svn] r242 - trunk/qt/classes
+</A></li>
+	<LI>Next message: <A HREF="000088.html">[Php-qt-svn] r244 - trunk/tutorials/t7
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#87">[ date ]</a>
+              <a href="thread.html#87">[ thread ]</a>
+              <a href="subject.html#87">[ subject ]</a>
+              <a href="author.html#87">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

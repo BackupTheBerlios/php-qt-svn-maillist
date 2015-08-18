@@ -1,0 +1,672 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r151 - trunk/tools
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-January/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r151%20-%20trunk/tools&In-Reply-To=%3C200601032132.k03LWxuN001370%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   
+   <LINK REL="Next"  HREF="000001.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r151 - trunk/tools</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r151%20-%20trunk/tools&In-Reply-To=%3C200601032132.k03LWxuN001370%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r151 - trunk/tools">tm243 at berlios.de
+       </A><BR>
+    <I>Tue Jan  3 22:32:59 CET 2006</I>
+    <P><UL>
+        
+        <LI>Next message: <A HREF="000001.html">[Php-qt-svn] r152 - in trunk: . playground
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#0">[ date ]</a>
+              <a href="thread.html#0">[ thread ]</a>
+              <a href="subject.html#0">[ subject ]</a>
+              <a href="author.html#0">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-01-03 22:32:58 +0100 (Tue, 03 Jan 2006)
+New Revision: 151
+
+Modified:
+   trunk/tools/kalyptusCxxToPHP.pm
+Log:
+marshal method to handle arguments automatically.
+
+Modified: trunk/tools/kalyptusCxxToPHP.pm
+===================================================================
+--- trunk/tools/kalyptusCxxToPHP.pm	2005-12-21 21:45:56 UTC (rev 150)
++++ trunk/tools/kalyptusCxxToPHP.pm	2006-01-03 21:32:58 UTC (rev 151)
+@@ -14,7 +14,7 @@
+ # *                                                                         *
+ #***************************************************************************/
+ 
+-# TODO 
++# TODO
+ #   - support for all types in method calls
+ #   - fit cplusplusToZEND, cplusplusToInvoke, cplusplusToMacro
+ #   - setter methods support only one php property (adequate, I believe)
+@@ -37,7 +37,7 @@
+ 
+ use vars qw/ @clist $host $who $now $gentext %functionId $docTop
+ 	$lib $rootnode $outputdir $opt $debug $typeprefix $eventHandlerCount
+-	$pastaccess $pastname $pastreturn $pastparams $nullctor $ctorCount @properties @functions @constructors *CLASS *ZEND_PHP_QT *HEADER *QTCTYPES *KDETYPES /;
++	$pastaccess $pastname $pastreturn $pastparams $nullctor $ctorCount @properties @functions @constructors %methods *CLASS *ZEND_PHP_QT *HEADER *QTCTYPES *KDETYPES /;
+ 
+ BEGIN
+ {
+@@ -393,7 +393,7 @@
+ sub cplusplusToMacro
+ {
+ 	my ( $class, $cnode )  = @_;
+-    
++
+     my $functionname = $cnode-&gt;{astNodeName};
+     my $classname = $class-&gt;{astNodeName};
+ 
+@@ -419,13 +419,13 @@
+ 
+ # print doc in phpDocumentor style
+     if(!$mark){
+-    
++
+         my $c = @functions;
+         if($c&gt;0){
+             print CLASS &quot;\t}\n&quot;;
+             print CLASS &quot;}\n&quot;;
+         }
+-    
++
+         push @functions, $functionname;
+         print CLASS &quot;
+ 
+@@ -434,15 +434,15 @@
+  *    function  &quot;,$functionname,&quot;
+  *    flags:    &quot;,$function-&gt;{Flags},&quot;
+  *\n&quot;;
+- 
++
+         my $count = 0;
+         foreach $b ( @{$cnode-&gt;{ParamList}} ) {
+             print CLASS &quot; *    \@param   &quot;,$b-&gt;{ArgType},&quot;\n&quot;;
+-        } 
++        }
+         if (!$count) {
+             print CLASS &quot; *    \@param   -\n&quot;;
+         }
+- 
++
+         print CLASS &quot;
+  *    \@access   &quot;,$access,&quot;
+  *    \@return   &quot;,$returntype,&quot;
+@@ -460,7 +460,7 @@
+         print CLASS &quot;}\n&quot;;
+         return;
+     }
+-    
++
+     if(!$mark){
+         print CLASS &quot;ZEND_METHOD(&quot;,$classname,&quot;, &quot;,$functionname,&quot;){\n&quot;;
+     }
+@@ -480,6 +480,7 @@
+         if($count &gt; 0){
+             $paraf .= &quot;, &quot;;
+         }
++        print CLASS &quot;\t// &quot;,$b-&gt;{DefaultValue},&quot;\n&quot;;
+ # todo: long, double
+         if ( $b-&gt;{ArgType} =~ /char/ ) {
+             print CLASS &quot;\t\tchar* var_&quot;,$count,&quot;;\n&quot;;
+@@ -497,7 +498,7 @@
+             $paratype .= &quot;, &amp;var_&quot;.$count;
+             $paraf .= &quot;(&quot;.$b-&gt;{ArgType}.&quot;) var_&quot;.$count;
+             $short .= &quot;b&quot;;
+-        } 
++        }
+         else {
+             print CLASS &quot;\t\tzval* var_&quot;,$count,&quot;;\n\n&quot;;
+             $paratype .= &quot;, &amp;var_&quot;.$count;
+@@ -522,17 +523,17 @@
+     # we have a nxn relation
+     my $prop;
+     my $obj_tmp;
+-    
++
+     foreach $prop ( @properties ) {
+-     
++
+        if ( $prop-&gt;{WRITE} =~ /$functionname/ ) {
+         foreach $obj_tmp ( @properties ) {
+             # mostly these methods are setmethods with only one argument
+             # maybe source of error
+-# todo: test with QLCDNumber            
++# todo: test with QLCDNumber
+             my $postfix = cplusplusToZEND($prop-&gt;{type});
+             $postfix =~ s/zval\*//;
+-            if ( $postfix ) {    
++            if ( $postfix ) {
+                 $postfix = &quot;_&quot;.cplusplusToZEND($prop-&gt;{type});
+             }
+ 
+@@ -622,8 +623,8 @@
+   +----------------------------------------------------------------------+
+ */
+ /*
+- * Copyright (C) 2005 
+- * Thomas Moenicke &lt;tm\@ippfp.org&gt;, 
++ * Copyright (C) 2005
++ * Thomas Moenicke &lt;tm\@ippfp.org&gt;,
+  * Jean-Luc Gyger &lt;jean_luc.gyger\@freesurf.ch&gt;
+  *
+ */
+@@ -671,9 +672,9 @@
+ 	# Document all compound nodes
+ 	Iter::LocalCompounds( $rootnode, sub { writeClassDoc( shift ); } );
+ 
+-    print ZEND_PHP_QT &quot;\n/* 
++    print ZEND_PHP_QT &quot;\n/*
+   	Declare any global variables you may need between the BEGIN
+-	and END macros here:     
++	and END macros here:
+ 
+ ZEND_BEGIN_MODULE_GLOBALS(php_qt)
+ 	long  global_value;
+@@ -681,12 +682,12 @@
+ ZEND_END_MODULE_GLOBALS(php_qt)
+ */
+ 
+-/* In every utility function you add that needs to use variables 
+-   in php_php_qt_globals, call TSRMLS_FETCH(); after declaring other 
++/* In every utility function you add that needs to use variables
++   in php_php_qt_globals, call TSRMLS_FETCH(); after declaring other
+    variables used by that function, or better yet, pass in TSRMLS_CC
+    after the last function argument and declare your utility function
+    with TSRMLS_DC after the last declared argument.  Always refer to
+-   the globals in your function as PHP_QT_G(variable).  You are 
++   the globals in your function as PHP_QT_G(variable).  You are
+    encouraged to rename these macros something shorter, see
+    examples in any other php module directory.
+ */
+@@ -763,20 +764,20 @@
+ print CLASS &quot;/*
+  * PHP-Qt - The PHP language bindings for Qt
+  *
+- * Copyright (C) 2005 
+- * Thomas Moenicke &lt;tm\@ippfp.org&gt;, 
++ * Copyright (C) 2005
++ * Thomas Moenicke &lt;tm\@ippfp.org&gt;,
+  * Jean-Luc Gyger &lt;jean_luc.gyger\@freesurf.ch&gt;
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Lesser General Public
+  * License as published by the Free Software Foundation; either
+  * version 2.1 of the License, or (at your option) any later version.
+- * 
++ *
+  * This library is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * Lesser General Public License for more details.
+- * 
++ *
+  * You should have received a copy of the GNU Lesser General Public
+  * License along with this library; if not, write to the Free Software
+  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+@@ -819,20 +820,20 @@
+ /*
+  * PHP-Qt - The PHP language bindings for Qt
+  *
+- * Copyright (C) 2005 
+- * Thomas Moenicke &lt;tm\@ippfp.org&gt;, 
++ * Copyright (C) 2005
++ * Thomas Moenicke &lt;tm\@ippfp.org&gt;,
+  * Jean-Luc Gyger &lt;jean_luc.gyger\@freesurf.ch&gt;
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Lesser General Public
+  * License as published by the Free Software Foundation; either
+  * version 2.1 of the License, or (at your option) any later version.
+- * 
++ *
+  * This library is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * Lesser General Public License for more details.
+- * 
++ *
+  * You should have received a copy of the GNU Lesser General Public
+  * License along with this library; if not, write to the Free Software
+  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+@@ -883,6 +884,77 @@
+ 		sub { print CLASS &quot;&quot;; print CLASS &quot;&quot;; }
+ 	);
+ 
++    # traverse
++    foreach my $key (keys %methods){
++        my $node_ = $methods{ $key };
++        my @methods_ = $node_-&gt;{&quot;method&quot;};
++# group
++        my @one;
++        my @two;
++        my @three;
++        my @four;
++        my @five;
++
++        print CLASS &quot;
++/*********************************
++ *    class     &quot;,$node-&gt;{astNodeName},&quot; */\n&quot;;
++
++        my $first = 1;
++
++        foreach my $m_ (@methods_){
++            foreach my $n_ (@{$m_}){
++
++            if($first == 1){
++                $first = 0;
++                print CLASS &quot;/*
++ *    function  &quot;,$n_-&gt;{astNodeName},&quot;
++ *    flags:    &quot;,$n_-&gt;{Flags},&quot;
++ */\n&quot;;
++                print CLASS &quot;ZEND_METHOD(&quot;,$node-&gt;{astNodeName},&quot;, &quot;,$n_-&gt;{astNodeName},&quot;){\n&quot;;
++            }
++
++
++                my $count = 0;
++                foreach $b ( @{$n_-&gt;{ParamList}} ) {
++                    $count++;
++                }
++# copy
++                if($count == 0){
++                } elsif($count == 1){
++                    push @one, $n_;
++                } elsif($count == 2){
++                    push @two, $n_;
++                } elsif($count == 3){
++                    push @three, $n_;
++                } elsif($count == 4){
++                    push @four, $n_;
++                } elsif($count == 5){
++                    push @five, $n_;
++                } else {
++                    print &quot;error, too much args: &quot;,$count,&quot; &quot;,$node-&gt;{astNodeName},&quot; &quot;,$n_-&gt;{astNodeName},&quot;\n&quot;;
++                }
++            }
++
++            my %one_ = mergeEquals($node-&gt;{astNodeName}<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">,1, at one</A>);
++            print CLASS marshal($node-&gt;{astNodeName},1,%one_);
++
++            my %two_ = mergeEquals($node-&gt;{astNodeName}<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">,2, at two</A>);
++            print CLASS marshal($node-&gt;{astNodeName},2,%two_);
++
++            my %three_ = mergeEquals($node-&gt;{astNodeName}<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">,3, at three</A>);
++            print CLASS marshal($node-&gt;{astNodeName},3,%three_);
++
++            my %four_ = mergeEquals($node-&gt;{astNodeName}<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">,4, at four</A>);
++            print CLASS marshal($node-&gt;{astNodeName},4,%four_);
++
++            my %five_ = mergeEquals($node-&gt;{astNodeName}<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">,5, at five</A>);
++            print CLASS marshal($node-&gt;{astNodeName},5,%five_);
++
++            print CLASS &quot;}\n&quot;; # ZEND_METHOD
++
++        }
++    }
++
+     print CLASS &quot;\n&quot;;
+ 
+ # creating the constructor
+@@ -915,7 +987,7 @@
+                 } #if defined @{$info};
+ 
+                 print CLASS &quot;\t\tif(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,\&quot;&quot;,$PHPzend_parse_parameters_s,&quot;\&quot;&quot;,$PHPzend_parse_parameters_vars,&quot;) == FAILURE) {\n&quot;;
+-                print CLASS &quot;\t\t\treturn;\n&quot;,&quot;\t\t}\n&quot;; 
++                print CLASS &quot;\t\t\treturn;\n&quot;,&quot;\t\t}\n&quot;;
+ 
+                 $typeCount = 0;
+                 foreach my $info ( @ctor_params ) {
+@@ -929,11 +1001,11 @@
+                 }
+                 print CLASS &quot;\t}\n&quot;;
+     } if defined @ctor_params;
+-    
++
+ }
+     print CLASS &quot;\n\tPHP_QT_REGISTER(&quot;,$function,&quot;_ptr);\n&quot;;
+     print CLASS &quot;\tRETURN_NULL();\n&quot;;
+-	print CLASS &quot;}\n&quot;;        
++	print CLASS &quot;}\n&quot;;
+ # destructor
+     print CLASS &quot;\nPHP_QT_DESTRUCT(&quot;,$function,&quot;);\n\n&quot;;
+ 
+@@ -985,10 +1057,11 @@
+ 	if ( kalyptusDataDict::interfacemap($node-&gt;{astNodeName}) ne () ) {
+ 		close INTERFACE;
+     }
+-    
++
+     undef @properties;
+     undef @functions;
+     undef @constructors;
++    undef %methods;
+ }
+ 
+ # for every node
+@@ -1185,6 +1258,9 @@
+ 			    if ( $name =~ /.*Event$/ ) {
+ 				    return;
+ 			    }
++# prepare arguments
++                mergeNumbers($class,$m);
++# deprecated
+                 cplusplusToMacro($class,$m);
+    		    }
+ 	    }
+@@ -1236,8 +1312,8 @@
+ 
+ 				}
+ #                $enum =~ s/=//g;
+-                my @constant = split(/=/,$enum_);                
+-                print PHP_QT_MINIT &quot;\t	REGISTER_LONG_CONSTANT(\&quot;&quot;,uc($class-&gt;{astNodeName}),&quot;_&quot;,uc($enum),&quot;_&quot;,uc($constant[0]),&quot;\&quot;, &quot;,$class-&gt;{astNodeName},&quot;::&quot;,$constant[0],&quot;, CONST_CS | CONST_PERSISTENT);\n&quot;;                
++                my @constant = split(/=/,$enum_);
++                print PHP_QT_MINIT &quot;\t	REGISTER_LONG_CONSTANT(\&quot;&quot;,uc($class-&gt;{astNodeName}),&quot;_&quot;,uc($enum),&quot;_&quot;,uc($constant[0]),&quot;\&quot;, &quot;,$class-&gt;{astNodeName},&quot;::&quot;,$constant[0],&quot;, CONST_CS | CONST_PERSISTENT);\n&quot;;
+ 				$enumCount++;
+ 
+ 			}
+@@ -1253,13 +1329,263 @@
+ 
+     my @n = Ast::GetProps($cnode);
+     foreach $a ( @n ) {
+-        print PHP_QT_CPP &quot;&gt;&quot;,$a,&quot;: &quot;,$cnode-&gt;{$a},&quot;\n&quot;;
++        print CLASS &quot;&gt;&quot;,$a,&quot;: &quot;,$cnode-&gt;{$a},&quot;\n&quot;;
++    }
++}
+ 
++# diese Methode gruppiert alle Argumente nach Anzahl
++
++sub mergeNumbers
++{
++	my ( $class, $cnode )  = @_;
++
++    my $functionname = $cnode-&gt;{astNodeName};
++    my $classname = $class-&gt;{astNodeName};
++
++    foreach my $key ( keys %methods ) {
++		if ( $key eq $functionname ) {
++            #add to existing
++			$methods{ $key }-&gt;AddPropList(&quot;method&quot;, $cnode);
++			return;
++		}
+     }
+ 
++    # add new
++    $methods{ $functionname } = Ast::New( $functionname );
++    $methods{ $functionname }-&gt;AddPropList(&quot;method&quot;,$cnode);
+ 
+ 
+ }
+ 
++# finds equal strings and groups them
++
++sub mergeEquals {
++
++    my ($classname, $count, @args) = @_;
++    # find all equal strings
++
++    my @param_check;
++    my %tmp;
++    my $skip = 0;       # helping
++# create all strings
++    foreach my $method (@args){
++        my $paramstring = &quot;&quot;;
++        foreach my $param ( @{$method-&gt;{ParamList}} ) {
++            if ( $param-&gt;{ArgType} =~ /char/ ) {
++                $paramstring .= &quot;s&quot;;
++            } elsif ( $param-&gt;{ArgType} =~ /int/ ) {
++                $paramstring .= &quot;l&quot;;
++            } elsif ( $param-&gt;{ArgType} =~ /bool/ ) {
++                $paramstring .= &quot;b&quot;;
++            } else {
++                $paramstring .= &quot;o&quot;;
++            }
++        }
++
++        push @param_check, $paramstring;
++
++# check if already available
++        foreach my $key ( keys %tmp ) {
++# yes: add
++            if ( $key eq $paramstring ) {
++                #add to existing
++                $tmp{ $key }-&gt;AddPropList(&quot;params&quot;, $method);
++                $skip = 1;
++                last;
++            }
++        }
++# no: create new
++        if($skip == 0){
++            $tmp{ $paramstring } = Ast::New( $paramstring );
++            $tmp{ $paramstring }-&gt;AddPropList(&quot;params&quot;,$method);
++        }
++        $skip = 0;
++# add method name
++        $tmp{ $paramstring }-&gt;AddProp(&quot;methodname&quot;,$method-&gt;{astNodeName});
++
++    }
++
++    return %tmp;
++
++}
++
++# group by count and strings
++
++sub marshal {
++
++    my ($classname, $count, %args) = @_;
++    my $return;
++
++    my $not_empty = %args;
++    if($not_empty){
++        $return .= &quot;\n\tif (ZEND_NUM_ARGS() == &quot;.$count.&quot;){\n&quot;;
++    }
++
++
++    my $c = 0;                  # helping variable
++    my $tmp_count = 0;          # helping
++
++# node is the method
++    foreach my $key (keys %args){
++        # docu
++#        foreach $b ( @{$method-&gt;{ParamList}} ) {
++#            $return .= &quot; *    \@param   &quot;.$b-&gt;{ArgType}.&quot;\n&quot;;
++#            $return .= &quot; */\n&quot;;
++#        }
++
++        # initialize vars and agruments for zend_parse_parameters
++        my $d = 0;                  # helping variable
++        my $paratype;               # for zend
++        my $shortstring = &quot;\&quot;&quot;;    # short string for zend function
++        my $param_zend_function;    # parameter for zend function
++        my @objects;                # object stack
++        my $method = $args{$key};   # helping
++        my $object_selection = &quot;&quot;;
++
++# identical strings grouped
++        $return .= &quot;\t/* &quot;.$key.&quot; */\n&quot;;
++
++# first parameters are static, the others coincides with this
++# exception: objects
++        my $params = @{$method-&gt;{params}}[0];
++
++# parse the first parameters
++        foreach my $first_param (@{$params-&gt;{ParamList}})  {
++
++            # comma for param_zend_function params
++            if($d &gt; 0){
++                $param_zend_function .= &quot; ,&quot;;
++            }
++
++            # the types
++# char
++            if ( $first_param-&gt;{ArgType} =~ /char/ ) {
++                $return .= &quot;\t\tchar* var_&quot;.$c.&quot;;   // default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
++                $return .= &quot;\t\tint* len_&quot;.$c.&quot;;\n\n&quot;;
++
++                $paratype .= &quot;, &amp;var_&quot;.$c.&quot;, &amp;len_&quot;.$c;
++                $param_zend_function .= &quot; var_&quot;.$c;
++                $shortstring .= &quot;s&quot;;
++# int
++            } elsif ( $first_param-&gt;{ArgType} =~ /int/ ) {
++                $return .= &quot;\t\tlong var_&quot;.$c.&quot;;    // default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
++
++                $paratype .= &quot;, &amp;var_&quot;.$c;
++                $param_zend_function .= &quot;(&quot;.$first_param-&gt;{ArgType}.&quot;) var_&quot;.$c;
++                $shortstring .= &quot;l&quot;;
++# bool
++            } elsif ( $first_param-&gt;{ArgType} =~ /bool/ ) {
++                $return .= &quot;\t\tbool* var_&quot;.$c.&quot;;   // _default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
++
++                $paratype .= &quot;, &amp;var_&quot;.$c;
++                $param_zend_function .= &quot;(&quot;.$first_param-&gt;{ArgType}.&quot;) var_&quot;.$c;
++                $shortstring .= &quot;b&quot;;
++# objects
++            } else {
++# while overloading, only one object will be created, query for name
++
++                $return .= &quot;\t\tzval* var_&quot;.$c.&quot;;   // default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
++
++                $paratype .= &quot;, &amp;var_&quot;.$c;
++                $param_zend_function .= &quot; var_&quot;.$c;
++                $shortstring .= &quot;o&quot;;
++                push @objects, &quot;var_&quot;.$c;   # ?
++                # name query
++                $object_selection .= &quot;\n\t\t\tQString tmp_&quot;.$tmp_count.&quot;(o-&gt;metaObject()-&gt;className());\n\n&quot;;
++#                $object_selection .= &quot;\t\t\tif(tmp_&quot;.$tmp_count.&quot; == \&quot;&quot;.$first_param-&gt;{ArgType}.&quot;\&quot;){
++#                RETURN_BOOL(obj-&gt;&quot;.$method-&gt;{methodname}.&quot;((&quot;.$first_param-&gt;{ArgType}.&quot;)o, stretch)) \n\t\t\t}&quot;;
++            }
++            if(exists $first_param-&gt;{DefaultValue} != &quot;&quot;){
++                $shortstring .= &quot;|&quot;;
++            }
++        $c++;
++        $d++;
++        }
++
++        my $skip_first = 1;
++        foreach my $params (@{$method-&gt;{params}}){
++# skip first, this was already created
++            if($skip_first == 1){
++                $skip_first = 0;
++                $object_selection .= &quot;\t\t\t&quot;;
++#                next;
++            } else {
++                $object_selection .= &quot; else &quot;;
++            }
++
++# parse the rest
++            foreach my $param ( @{$params-&gt;{ParamList}} ) {
++# skip all excepting objects
++                if ( $param-&gt;{ArgType} =~ /char/ ) {
++                } elsif ( $param-&gt;{ArgType} =~ /int/ ) {
++                } elsif ( $param-&gt;{ArgType} =~ /bool/ ) {
++                } else {
++#print_r($method);
++                    $object_selection .= &quot;if(tmp_&quot;.$tmp_count.&quot; == \&quot;&quot;.$param-&gt;{ArgType}.&quot;\&quot;) {
++                    RETURN_BOOL(obj-&gt;&quot;.$method-&gt;{methodname}.&quot;((&quot;.$param-&gt;{ArgType}.&quot;)o, &quot;.$param_zend_function.&quot;)) \n\t\t\t}&quot;;
++                    $return .= &quot;\t\n&quot;;
++                }
++            } # foreach
++        }
++
++        $shortstring .= &quot;\&quot;&quot;;
++#        $object_selection .= &quot;\n&quot;;
++
++# return value
++        my $returntype = $method-&gt;{ReturnType};
++        my $zend_return_type = cplusplusToZEND($returntype);
++
++# write zend_parse_parameters method
++        $return .= &quot;\t\tif(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;.$shortstring.&quot;, &quot;.$param_zend_function.&quot;) == SUCCESS) {\n&quot;;
++        $return .= &quot;\t\t\t&quot;.$classname.&quot; *obj = (&quot;.$classname.&quot;*) PHP_QT_FETCH();\n&quot;;
++
++# objects as return type
++        my $obj;
++        foreach $obj ( @objects ) {
++            $return .= &quot;\t\t\tQObject* &quot;.$obj.&quot; = (QObject*) php_qt_fetch(&quot;.$obj.&quot;);\n&quot;;
++#            $paraf =~ s/$obj/tmp_$obj/;
++        }
++
++        my $not_empty = %args;
++        if($not_empty){
++            $return .= $object_selection;
++            undef $object_selection;
++            $return .= &quot;\n&quot;;
++        }
++
++#        $return .= &quot;\t\t$classname *o = ($classname*) PHP_QT_FETCH();\n&quot;;
++
++# if no return type specified
++        if ( $zend_return_type eq &quot;NULL&quot; ) {
++            $return .=  &quot;\t\to-&gt;&quot;.$method-&gt;{methodname}.&quot;(&quot;.$param_zend_function.&quot;);\n&quot;;
++            $return .=  &quot;\t\tRETURN_NULL();\n&quot;;
++# if return type is an object
++        } elsif ( $zend_return_type =~ /zval/ ) {
++        # TODO: consider 'const',
++        # and non-pointer types, pointer types
++            $return .=  &quot;\t\t&quot;.$returntype.&quot; obj = (&quot;.$returntype.&quot;) o-&gt;&quot;.$method-&gt;{methodname}.&quot;(&quot;.$param_zend_function.&quot;);\n&quot;;
++            $return .=  &quot;\t\tzend_class_entry *ce;                                   \n&quot;;
++            $return .=  &quot;\t\t    object_init_ex(return_value, &quot;.$classname.&quot;_ce_ptr);     \n&quot;;
++            $return .=  &quot;\t\t    zend_rsrc_list_entry le;                            \n&quot;;
++            $return .=  &quot;\t\t    le.ptr = &obj;                                       \n&quot;;
++            $return .=  &quot;\t\t    php_qt_register(return_value,le);                   \n&quot;;
++            $return .=  &quot;\t\t    return;                                             \n&quot;;
++        } else {
++            $return .=  &quot;\t\tRETURN_&quot;.uc($zend_return_type).&quot;(o-&gt;&quot;.$method-&gt;{methodname}.&quot;(&quot;.$param_zend_function.&quot;));\n&quot; if defined $zend_return_type;
++        }
++        $return .= &quot;\t\t}\n&quot;;
++        $tmp_count++;
++    } # foreach args
++
++    my $not_empty = %args;
++    if($not_empty){
++        $return .= &quot;\t}\n&quot;;
++    }
++
++
++    return $return;
++
++}
++
+ 1;
+ 
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	
+	<LI>Next message: <A HREF="000001.html">[Php-qt-svn] r152 - in trunk: . playground
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#0">[ date ]</a>
+              <a href="thread.html#0">[ thread ]</a>
+              <a href="subject.html#0">[ subject ]</a>
+              <a href="author.html#0">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

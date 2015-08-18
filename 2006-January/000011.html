@@ -1,0 +1,236 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r162 - trunk/tools
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-January/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r162%20-%20trunk/tools&In-Reply-To=%3C200601081403.k08E3aCi014494%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000010.html">
+   <LINK REL="Next"  HREF="000012.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r162 - trunk/tools</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r162%20-%20trunk/tools&In-Reply-To=%3C200601081403.k08E3aCi014494%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r162 - trunk/tools">tm243 at berlios.de
+       </A><BR>
+    <I>Sun Jan  8 15:03:36 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000010.html">[Php-qt-svn] r161 - in trunk/playground: . classes
+</A></li>
+        <LI>Next message: <A HREF="000012.html">[Php-qt-svn] r163 - trunk/tools
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#11">[ date ]</a>
+              <a href="thread.html#11">[ thread ]</a>
+              <a href="subject.html#11">[ subject ]</a>
+              <a href="author.html#11">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-01-08 15:03:35 +0100 (Sun, 08 Jan 2006)
+New Revision: 162
+
+Modified:
+   trunk/tools/kalyptusCxxToPHP.pm
+Log:
+handling of enum types as method arguments fixed.
+
+Modified: trunk/tools/kalyptusCxxToPHP.pm
+===================================================================
+--- trunk/tools/kalyptusCxxToPHP.pm	2006-01-08 11:05:29 UTC (rev 161)
++++ trunk/tools/kalyptusCxxToPHP.pm	2006-01-08 14:03:35 UTC (rev 162)
+@@ -24,6 +24,8 @@
+ #   - setter methods support only one php property (adequate, I believe)
+ #   - marshalling in constructor, destructor
+ 
++#   - enum types support goes wrong
++
+ package kalyptusCxxToPHP;
+ 
+ use File::Path;
+@@ -689,9 +691,9 @@
+ PHP_FUNCTION(SLOT);
+     \n\n&quot;;
+ 
+-	my $file_php_qt_minit = &quot;$outputdir/php_qt.snippets2.cpp&quot;;
+-	open( PHP_QT_MINIT, &quot;&gt;$file_php_qt_minit&quot; ) || die &quot;Couldn't create $file_php_qt_minit\n&quot;;
+-	$file_php_qt_minit =~ s/\.h/.h/;
++#	my $file_php_qt_minit = &quot;$outputdir/php_qt.snippets2.cpp&quot;;
++#	open( PHP_QT_MINIT, &quot;&gt;$file_php_qt_minit&quot; ) || die &quot;Couldn't create $file_php_qt_minit\n&quot;;
++#	$file_php_qt_minit =~ s/\.h/.h/;
+ 
+     print PHP_QT_MINIT &quot;\n&quot;;
+ 
+@@ -1289,7 +1291,7 @@
+ # make the cpp file
+ # constructor
+ 		    if ( $name eq $class-&gt;{astNodeName} ) {
+-                @constructors[$ctorCount++] = [@ctor_params];
++#                @constructors[$ctorCount++] = [@ctor_params];
+ # ?
+ 			    if ($PHPparams eq () ) {
+ 				    $nullctor = 1;
+@@ -1396,7 +1398,6 @@
+     $methods{ $functionname } = Ast::New( $functionname );
+     $methods{ $functionname }-&gt;AddPropList(&quot;method&quot;,$cnode);
+ 
+-
+ }
+ 
+ # finds equal strings and groups them
+@@ -1517,9 +1518,9 @@
+ # char
+             if ( $first_param-&gt;{ArgType} =~ /char/ ) {
+                 $return .= &quot;\t\tchar* var_&quot;.$run.$c__.&quot;;   // default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
+-                $return .= &quot;\t\tint* len_&quot;.$run.$c__.&quot;;\n\n&quot;;
++                $return .= &quot;\t\tint len_&quot;.$run.$c__.&quot;;\n\n&quot;;
+ 
+-                $paratype .= &quot;, &amp;var_&quot;.$run.$c__.&quot;, &amp;len_&quot;.$run.$c__;
++                $paratype .= &quot;, &amp;var_&quot;.$run.$c__.&quot;, len_&quot;.$run.$c__;
+                 $param_zend_function .= &quot; (&quot;.$first_param-&gt;{ArgType}.&quot;) var_&quot;.$run.$c__;
+                 $shortstring .= &quot;s&quot;;
+ # int
+@@ -1527,11 +1528,16 @@
+                 $return .= &quot;\t\tlong var_&quot;.$run.$c__.&quot;;    // default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
+ 
+                 $paratype .= &quot;, &amp;var_&quot;.$run.$c__;
+-                $param_zend_function .= &quot;(&quot;.$first_param-&gt;{ArgType}.&quot;) var_&quot;.$run.$c__;
++# cast if param is an enum
++                if(defined $first_param-&gt;{cast}){
++                    $param_zend_function .= &quot;(&quot;.$first_param-&gt;{cast}.&quot;) var_&quot;.$run.$c__;
++                } else {
++                    $param_zend_function .= &quot;(&quot;.$first_param-&gt;{ArgType}.&quot;) var_&quot;.$run.$c__;
++                }
+                 $shortstring .= &quot;l&quot;;
+ # bool
+             } elsif ( $first_param-&gt;{ArgType} =~ /bool/ ) {
+-                $return .= &quot;\t\tbool* var_&quot;.$run.$c__.&quot;;   // _default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
++                $return .= &quot;\t\tlong* var_&quot;.$run.$c__.&quot;;   // _default: &quot;.$first_param-&gt;{DefaultValue}.&quot;\n&quot;;
+ 
+                 $paratype .= &quot;, &amp;var_&quot;.$run.$c__;
+                 $param_zend_function .= &quot;(&quot;.$first_param-&gt;{ArgType}.&quot;) var_&quot;.$run.$c__;
+@@ -1584,21 +1590,22 @@
+                 if ( $param-&gt;{ArgType} =~ /char/ ) {
+                     $object_call .= &quot;(&quot;.$param-&gt;{ArgType}.&quot;) var_&quot;.$run.$c;
+                 } elsif ( $param-&gt;{ArgType} =~ /int/ ) {
+-                    $object_call .= &quot;(&quot;.$param-&gt;{ArgType}.&quot;) var_&quot;.$run.$c;
++
++                    if(defined $param-&gt;{cast}){
++                        $object_call .= &quot;(&quot;.$param-&gt;{cast}.&quot;) var_&quot;.$run.$c;
++                    } else {
++                        $object_call .= &quot;(&quot;.$param-&gt;{ArgType}.&quot;) var_&quot;.$run.$c;
++                    }
++
+                 } elsif ( $param-&gt;{ArgType} =~ /bool/ ) {
+                     $object_call .= &quot;(&quot;.$param-&gt;{ArgType}.&quot;) var_&quot;.$run.$c;
+                 } else {
+-#print_r($method);
+                     if($obj_first == 1){
+                         $obj_first = 0;
+                     } else {
+                         $object_test .= &quot; &amp;&amp; &quot;;
+                     }
+                     $object_test .= &quot;tmp_&quot;.$run.$tmp_count++.&quot; == \&quot;&quot;.$param-&gt;{ArgType}.&quot;\&quot;&quot;;
+-# here: check Qt::anymember
+-#                     if($param-&gt;{ArgType} =~ /Qt::/){
+-#                         $param-&gt;{ArgType} = kalyptusDataDict::ctypemap($param-&gt;{ArgType});
+-#                     }
+ 
+                     $object_call .= &quot;(&quot;.$param-&gt;{ArgType}.&quot;) &quot;.$objects[$c_++];
+ 
+@@ -1621,8 +1628,10 @@
+ 
+ # objects as return type
+         my $obj;
++        my $objc = 0;
+         foreach $obj ( @objects ) {
+             $return .= &quot;\t\t\tQObject* &quot;.$obj.&quot; = (QObject*) php_qt_fetch(z_&quot;.$obj.&quot;);\n&quot;;
++            $objc++;
+         }
+ 
+ # add object handling
+@@ -1632,7 +1641,10 @@
+             undef $object_selection;
+             $return .= &quot;\n&quot;;
+ # $c counts objects, if there is no object the return mechanism has to be created
+-            if($c&gt;0){
++            if($objc == 0){
++                $return .= createReturn($classname, $method, $param_zend_function);
++            }
++            if($c &gt; 0){
+                 $return .= &quot;\t\t}\n&quot;;
+ # break run if there are objects
+                 next;
+@@ -1640,7 +1652,7 @@
+         }
+ 
+ # return handling
+-        $return .= createReturn($classname, $method, $param_zend_function);
++#        $return .= createReturn($classname, $method, $param_zend_function);
+ 
+         $return .= &quot;\t\t}\n&quot;;
+         $tmp_count=0;
+@@ -1699,12 +1711,12 @@
+         # TODO: consider 'const',
+         # and non-pointer types, pointer types
+             $return .=  &quot;\t\t\t&quot;.$returntype.&quot; return_object = (&quot;.$returntype.&quot;) obj-&gt;&quot;.$methodname.&quot;(&quot;.$param_zend_function.&quot;);\n&quot;;
+-            $return .=  &quot;\t\t\tzend_class_entry *ce;                                   \n&quot;;
+-            $return .=  &quot;\t\t\tobject_init_ex(return_value, &quot;.$classname.&quot;_ce_ptr);     \n&quot;;
+-            $return .=  &quot;\t\t\tzend_rsrc_list_entry le;                            \n&quot;;
+-            $return .=  &quot;\t\t\tle.ptr = &amp;return_object;                                       \n&quot;;
+-            $return .=  &quot;\t\t\tphp_qt_register(return_value,le);                   \n&quot;;
+-            $return .=  &quot;\t\t\treturn;                                             \n&quot;;
++            $return .=  &quot;\t\t\t\tzend_class_entry *ce;                                   \n&quot;;
++            $return .=  &quot;\t\t\t\tobject_init_ex(return_value, &quot;.$classname.&quot;_ce_ptr);     \n&quot;;
++            $return .=  &quot;\t\t\t\tzend_rsrc_list_entry le;                            \n&quot;;
++            $return .=  &quot;\t\t\t\tle.ptr = &amp;return_object;                                       \n&quot;;
++            $return .=  &quot;\t\t\t\tphp_qt_register(return_value,le);                   \n&quot;;
++            $return .=  &quot;\t\t\t\treturn;                                             \n&quot;;
+ # simple types
+         } else {
+             $return .=  &quot;\t\t\tRETURN_&quot;.uc($zend_return_type).&quot;(obj-&gt;&quot;.$methodname.&quot;(&quot;.$param_zend_function.&quot;));\n&quot; if defined $zend_return_type;
+@@ -1725,7 +1737,10 @@
+             $ArgType = &quot;int&quot;;
+         }
+ 
++# copy the arg type for typecast
++        $param-&gt;AddProp(&quot;cast&quot;,$param-&gt;{ArgType});
+         $param-&gt;{ArgType} = $ArgType;
++
+     }
+ 
+     return $param;
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000010.html">[Php-qt-svn] r161 - in trunk/playground: . classes
+</A></li>
+	<LI>Next message: <A HREF="000012.html">[Php-qt-svn] r163 - trunk/tools
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#11">[ date ]</a>
+              <a href="thread.html#11">[ thread ]</a>
+              <a href="subject.html#11">[ subject ]</a>
+              <a href="author.html#11">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

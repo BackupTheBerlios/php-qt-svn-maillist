@@ -1,0 +1,222 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r279 - trunk/qt
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-November/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r279%20-%20trunk/qt&In-Reply-To=%3C200611071547.kA7FlROn022264%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000122.html">
+   <LINK REL="Next"  HREF="000124.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r279 - trunk/qt</H1>
+    <B>tm243 at mail.berlios.de</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r279%20-%20trunk/qt&In-Reply-To=%3C200611071547.kA7FlROn022264%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r279 - trunk/qt">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Tue Nov  7 16:47:27 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000122.html">[Php-qt-svn] r278 - in trunk: . qt
+</A></li>
+        <LI>Next message: <A HREF="000124.html">[Php-qt-svn] r280 - trunk/kalyptus
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#123">[ date ]</a>
+              <a href="thread.html#123">[ thread ]</a>
+              <a href="subject.html#123">[ subject ]</a>
+              <a href="author.html#123">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-11-07 16:47:26 +0100 (Tue, 07 Nov 2006)
+New Revision: 279
+
+Added:
+   trunk/qt/functions.cpp
+Log:
+new function tr(), function implementation moved to functions.cpp
+
+Added: trunk/qt/functions.cpp
+===================================================================
+--- trunk/qt/functions.cpp	2006-11-07 15:47:13 UTC (rev 278)
++++ trunk/qt/functions.cpp	2006-11-07 15:47:26 UTC (rev 279)
+@@ -0,0 +1,146 @@
++/*!
++ * PHP-Qt - The PHP language bindings for Qt
++ *
++ * Copyright (C) 2006 
++ * Thomas Moenicke &lt;thomas.moenicke at kdemail.net&gt;
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
++ *
++ */
++
++#include &quot;php_qt.h&quot;
++
++extern Smoke *qt_Smoke;
++extern Smoke::Index qstring;
++extern zend_class_entry* qstring_ce;
++extern Smoke::Index qobject;
++extern zend_class_entry* qobject_ce;
++
++/* Every user-visible function in PHP should document itself in the source */
++/* proto string confirm_php_qt_compiled(string arg)
++   Return a string to confirm that the module is compiled in */
++PHP_FUNCTION(confirm_php_qt_compiled)
++{
++	char *arg = NULL;
++	int arg_len, len;
++	char string[256];
++
++	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, &quot;s&quot;, &amp;arg, &amp;arg_len) == FAILURE) {
++		return;
++	}
++
++  	len = sprintf(string, &quot;Congratulations! Module PHP-Qt is now compiled into PHP.&quot;, arg);
++	RETURN_STRINGL(string, len, 1);
++
++}
++
++/*!
++ *	PHP userspace functions
++ */
++
++/*!
++ *  emulates the Qt SIGNAL() macro
++ */
++
++PHP_FUNCTION(SIGNAL)
++{
++    const char* string;
++    int string_len;
++    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s&quot;,&amp;string,&amp;string_len)) {
++        return;
++    }
++
++    char* tmp = (char*) emalloc((int) string_len + 2);
++    strcpy(tmp,&quot;2&quot;);
++
++    strncat(tmp, string, (int) string_len);
++
++    ZVAL_STRING(return_value,tmp,1);
++
++    efree(tmp);
++
++    return;
++}
++
++/*!
++ *  emulates the Qt SLOT() macro
++ */
++
++PHP_FUNCTION(SLOT)
++{
++    const char* string;
++    int string_len;
++    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s&quot;,&amp;string,&amp;string_len)) {
++        return;
++    }
++
++    char* tmp = (char*) emalloc((int) string_len + 2);
++    strcpy(tmp,&quot;1&quot;);
++
++    strncat(tmp, string, (int) string_len);
++
++    ZVAL_STRING(return_value,tmp,1);
++
++    efree(tmp);
++
++    return;
++}
++
++/**
++ *	simply returns the first parameter because objects are casted automatically in smokephp_convertReturn(...)
++ *
++ */
++
++PHP_FUNCTION(qobject_cast){
++
++    zval *obj;
++    zval *cast_type;
++
++    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zz|&quot;, &amp;obj, &amp;cast_type) == FAILURE) {
++        php_error(E_WARNING,&quot;error while casting object, wrong parameters&quot;);
++        return; 
++    }
++
++	ZVAL_ZVAL(return_value, obj, 0, 0);
++    return;
++
++}
++
++/*!
++ *	tr() returns QObject::tr()
++ *
++ */
++
++PHP_FUNCTION(tr)
++{
++    const char* string;
++    int string_len;
++    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s&quot;,&amp;string,&amp;string_len)) {
++        return;
++    }
++
++	smokephp_object* o = (smokephp_object*) emalloc(sizeof(smokephp_object));
++	o-&gt;ptr = new QString(QObject::tr(string));
++	o-&gt;smoke = qt_Smoke;
++	o-&gt;classId = qstring;
++	o-&gt;ce_ptr = qstring_ce;
++
++	object_init_ex(return_value, qstring_ce);
++	zend_rsrc_list_entry le;
++	le.ptr = o;
++	phpqt_register(return_value, le);
++    return;
++}
++
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000122.html">[Php-qt-svn] r278 - in trunk: . qt
+</A></li>
+	<LI>Next message: <A HREF="000124.html">[Php-qt-svn] r280 - trunk/kalyptus
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#123">[ date ]</a>
+              <a href="thread.html#123">[ thread ]</a>
+              <a href="subject.html#123">[ subject ]</a>
+              <a href="author.html#123">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

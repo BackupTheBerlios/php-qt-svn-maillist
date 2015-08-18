@@ -1,0 +1,179 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r343 - in trunk/tutorials: t1 t2 t3 t4 t6 t7
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-June/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r343%20-%20in%20trunk/tutorials%3A%20t1%20t2%20t3%20t4%20t6%20t7&In-Reply-To=%3C200706072325.l57NPxDL031213%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000186.html">
+   <LINK REL="Next"  HREF="000188.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r343 - in trunk/tutorials: t1 t2 t3 t4 t6 t7</H1>
+    <B>Katrina.Niolet at mail.berlios.de</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r343%20-%20in%20trunk/tutorials%3A%20t1%20t2%20t3%20t4%20t6%20t7&In-Reply-To=%3C200706072325.l57NPxDL031213%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r343 - in trunk/tutorials: t1 t2 t3 t4 t6 t7">Katrina.Niolet at mail.berlios.de
+       </A><BR>
+    <I>Fri Jun  8 01:25:59 CEST 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000186.html">[Php-qt-svn] r342 - trunk/php_qt
+</A></li>
+        <LI>Next message: <A HREF="000188.html">[Php-qt-svn] r344 - trunk
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#187">[ date ]</a>
+              <a href="thread.html#187">[ thread ]</a>
+              <a href="subject.html#187">[ subject ]</a>
+              <a href="author.html#187">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: Katrina Niolet
+Date: 2007-06-08 01:25:58 +0200 (Fri, 08 Jun 2007)
+New Revision: 343
+
+Modified:
+   trunk/tutorials/t1/main.php
+   trunk/tutorials/t2/main.php
+   trunk/tutorials/t3/main.php
+   trunk/tutorials/t4/main.php
+   trunk/tutorials/t6/main.php
+   trunk/tutorials/t7/main.php
+Log:
+Removed call time pass by references from tutorials
+
+Modified: trunk/tutorials/t1/main.php
+===================================================================
+--- trunk/tutorials/t1/main.php	2007-06-07 22:40:50 UTC (rev 342)
++++ trunk/tutorials/t1/main.php	2007-06-07 23:25:58 UTC (rev 343)
+@@ -13,7 +13,7 @@
+ 		dl('php_qt.' . PHP_SHLIB_SUFFIX);
+ 	}
+ 
+-	$app = new QApplication(&amp;$argc,$argv);
++	$app = new QApplication($argc,$argv);
+ 	
+ 	$hello = new QPushButton(&quot;Hello world!&quot;);
+ 	$hello-&gt;resize(100, 30);
+
+Modified: trunk/tutorials/t2/main.php
+===================================================================
+--- trunk/tutorials/t2/main.php	2007-06-07 22:40:50 UTC (rev 342)
++++ trunk/tutorials/t2/main.php	2007-06-07 23:25:58 UTC (rev 343)
+@@ -13,7 +13,7 @@
+ 		dl('php_qt.' . PHP_SHLIB_SUFFIX);
+ 	}
+ 
+-    $app = new QApplication(&amp;$argc,$argv);
++    $app = new QApplication($argc,$argv);
+ 
+     $quit = new QPushButton(&quot;Quit&quot;);
+     $quit-&gt;resize(75,30);
+
+Modified: trunk/tutorials/t3/main.php
+===================================================================
+--- trunk/tutorials/t3/main.php	2007-06-07 22:40:50 UTC (rev 342)
++++ trunk/tutorials/t3/main.php	2007-06-07 23:25:58 UTC (rev 343)
+@@ -13,16 +13,16 @@
+ 		dl('php_qt.' . PHP_SHLIB_SUFFIX);
+ 	}
+ 
+-    $app = new QApplication(&amp;$argc,$argv);
++    $app = new QApplication($argc,$argv);
+ 
+     $window = new QWidget();
+     $window-&gt;resize(200,120);
+ 
+-    $quit = new QPushButton(&quot;Quit&quot;, &amp;$window);
++    $quit = new QPushButton(&quot;Quit&quot;, $window);
+     $quit-&gt;setFont(new QFont(&quot;Times&quot;, 18, QFont::Bold));
+     $quit-&gt;setGeometry(10, 40, 180, 40);
+ 
+-    QObject::connect(&amp;$quit,SIGNAL('clicked()'), &amp;$app, SLOT('quit()'));
++    QObject::connect($quit,SIGNAL('clicked()'), $app, SLOT('quit()'));
+ 
+     $window-&gt;show();
+     $app-&gt;exec();
+
+Modified: trunk/tutorials/t4/main.php
+===================================================================
+--- trunk/tutorials/t4/main.php	2007-06-07 22:40:50 UTC (rev 342)
++++ trunk/tutorials/t4/main.php	2007-06-07 23:25:58 UTC (rev 343)
+@@ -34,7 +34,7 @@
+ 
+     }
+ 
+-    $app = new QApplication(&amp;$argc,$argv);
++    $app = new QApplication($argc,$argv);
+     $widget = new MyWidget();
+     $widget-&gt;show();
+     $app-&gt;exec();
+
+Modified: trunk/tutorials/t6/main.php
+===================================================================
+--- trunk/tutorials/t6/main.php	2007-06-07 22:40:50 UTC (rev 342)
++++ trunk/tutorials/t6/main.php	2007-06-07 23:25:58 UTC (rev 343)
+@@ -67,9 +67,9 @@
+         }
+     }
+ 
+-    $app = new QApplication(&amp;$argc,$argv);
++    $app = new QApplication($argc,$argv);
+     $widget = new MyWidget();
+     $widget-&gt;show();
+     $app-&gt;exec();
+ 
+-?&gt;
+\ No newline at end of file
++?&gt;
+
+Modified: trunk/tutorials/t7/main.php
+===================================================================
+--- trunk/tutorials/t7/main.php	2007-06-07 22:40:50 UTC (rev 342)
++++ trunk/tutorials/t7/main.php	2007-06-07 23:25:58 UTC (rev 343)
+@@ -86,10 +86,10 @@
+         }
+     }
+ 
+-    $app = new QApplication(&amp;$argc,$argv);
++    $app = new QApplication($argc,$argv);
+ 
+     $widget = new MyWidget();
+     $widget-&gt;show();
+     $app-&gt;exec();
+ 
+-?&gt;
+\ No newline at end of file
++?&gt;
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000186.html">[Php-qt-svn] r342 - trunk/php_qt
+</A></li>
+	<LI>Next message: <A HREF="000188.html">[Php-qt-svn] r344 - trunk
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#187">[ date ]</a>
+              <a href="thread.html#187">[ thread ]</a>
+              <a href="subject.html#187">[ subject ]</a>
+              <a href="author.html#187">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

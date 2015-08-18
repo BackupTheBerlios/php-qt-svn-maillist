@@ -1,0 +1,2213 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r203 - in trunk/qt: . classes text_related
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-January/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r203%20-%20in%20trunk/qt%3A%20.%20classes%20text_related&In-Reply-To=%3C200601222029.k0MKTkR5016169%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000051.html">
+   <LINK REL="Next"  HREF="000054.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r203 - in trunk/qt: . classes text_related</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r203%20-%20in%20trunk/qt%3A%20.%20classes%20text_related&In-Reply-To=%3C200601222029.k0MKTkR5016169%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r203 - in trunk/qt: . classes text_related">tm243 at berlios.de
+       </A><BR>
+    <I>Sun Jan 22 21:29:46 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000051.html">[Php-qt-svn] r202 - trunk
+</A></li>
+        <LI>Next message: <A HREF="000054.html">[Php-qt-svn] r204 - trunk/qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#52">[ date ]</a>
+              <a href="thread.html#52">[ thread ]</a>
+              <a href="subject.html#52">[ subject ]</a>
+              <a href="author.html#52">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-01-22 21:29:43 +0100 (Sun, 22 Jan 2006)
+New Revision: 203
+
+Modified:
+   trunk/qt/ag_extern_zend_class_entry.inc
+   trunk/qt/ag_php_qt_cpp.inc
+   trunk/qt/ag_qt_minit.inc
+   trunk/qt/ag_zend_class_entry.inc
+   trunk/qt/ag_zend_php_qt.inc
+   trunk/qt/classes/qdate.cpp
+   trunk/qt/classes/qdatetime.cpp
+   trunk/qt/classes/qtime.cpp
+   trunk/qt/php_qt.cpp
+   trunk/qt/php_qt.h
+   trunk/qt/text_related/qstring.cpp
+   trunk/qt/zend_php_qt.h
+Log:
+better handling of overloaded constructors if they have to accept several objects.
+
+Modified: trunk/qt/ag_extern_zend_class_entry.inc
+===================================================================
+--- trunk/qt/ag_extern_zend_class_entry.inc	2006-01-22 19:25:26 UTC (rev 202)
++++ trunk/qt/ag_extern_zend_class_entry.inc	2006-01-22 20:29:43 UTC (rev 203)
+@@ -1,3 +1,5 @@
++extern zend_class_entry *QAbstractButton_ce_ptr;
++void 	_register_QAbstractButton();
+ extern zend_class_entry *QActionEvent_ce_ptr;
+ void 	_register_QActionEvent();
+ extern zend_class_entry *QChar_ce_ptr;
+@@ -46,10 +48,14 @@
+ void 	_register_QInputMethodEvent();
+ extern zend_class_entry *QKeyEvent_ce_ptr;
+ void 	_register_QKeyEvent();
++extern zend_class_entry *QLCDNumber_ce_ptr;
++void 	_register_QLCDNumber();
+ extern zend_class_entry *QLabel_ce_ptr;
+ void 	_register_QLabel();
+ extern zend_class_entry *QLatin1Char_ce_ptr;
+ void 	_register_QLatin1Char();
++extern zend_class_entry *QLatin1String_ce_ptr;
++void 	_register_QLatin1String();
+ extern zend_class_entry *QMouseEvent_ce_ptr;
+ void 	_register_QMouseEvent();
+ extern zend_class_entry *QMoveEvent_ce_ptr;
+@@ -62,6 +68,8 @@
+ void 	_register_QPaintEvent();
+ extern zend_class_entry *QPainter_ce_ptr;
+ void 	_register_QPainter();
++extern zend_class_entry *QPushButton_ce_ptr;
++void 	_register_QPushButton();
+ extern zend_class_entry *QResizeEvent_ce_ptr;
+ void 	_register_QResizeEvent();
+ extern zend_class_entry *QShortcutEvent_ce_ptr;
+@@ -70,6 +78,8 @@
+ void 	_register_QShowEvent();
+ extern zend_class_entry *QStatusTipEvent_ce_ptr;
+ void 	_register_QStatusTipEvent();
++extern zend_class_entry *QString_ce_ptr;
++void 	_register_QString();
+ extern zend_class_entry *QTabletEvent_ce_ptr;
+ void 	_register_QTabletEvent();
+ extern zend_class_entry *QTime_ce_ptr;
+
+Modified: trunk/qt/ag_php_qt_cpp.inc
+===================================================================
+--- trunk/qt/ag_php_qt_cpp.inc	2006-01-22 19:25:26 UTC (rev 202)
++++ trunk/qt/ag_php_qt_cpp.inc	2006-01-22 20:29:43 UTC (rev 203)
+@@ -1,3 +1,48 @@
++static zend_function_entry QAbstractButton_methods[] = {
++	ZEND_ME(QAbstractButton,tr,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QAbstractButton,setAutoRepeat,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,isDown,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,qt_invoke,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,setAutoExclusive,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,setIconSize,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,qt_cast,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,metaObject,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,setIcon,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,qt_emit,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,autoExclusive,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,className,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,toggle,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,setCheckable,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,setDown,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,shortcut,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,icon,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,setChecked,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,setShortcut,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,animateClick,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,staticMetaObject,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QAbstractButton,autoRepeat,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,qObject,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,group,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,setText,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,text,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,isChecked,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,iconSize,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,isCheckable,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,click,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,qt_property,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QAbstractButton,trUtf8,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QAbstractButton(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QAbstractButton&quot;,QAbstractButton_methods);
++    QAbstractButton_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QWidget_ce_ptr,NULL TSRMLS_CC);
++
++
++}
+ static zend_function_entry QActionEvent_methods[] = {
+ 	ZEND_ME(QActionEvent,action,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QActionEvent,before,NULL,ZEND_ACC_PUBLIC)
+@@ -14,7 +59,6 @@
+ 
+ }
+ static zend_function_entry QChar_methods[] = {
+-	ZEND_ME(QChar, __toString,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QChar,combiningClass,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QChar,isUpper,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QChar,joining,NULL,ZEND_ACC_PUBLIC)
+@@ -567,6 +611,47 @@
+ 
+ 
+ }
++static zend_function_entry QLCDNumber_methods[] = {
++	ZEND_ME(QLCDNumber,tr,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QLCDNumber,segmentStyle,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,mode,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,checkOverflow,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,qt_invoke,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,staticMetaObject,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QLCDNumber,setOctMode,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,display,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,setSegmentStyle,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,setHexMode,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,qObject,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,setSmallDecimalPoint,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,sizeHint,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,qt_cast,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,metaObject,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,value,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,setDecMode,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,qt_emit,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,className,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,intValue,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber, __construct,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,setNumDigits,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,numDigits,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,setMode,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,trUtf8,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QLCDNumber,qt_property,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,smallDecimalPoint,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLCDNumber,setBinMode,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QLCDNumber(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QLCDNumber&quot;,QLCDNumber_methods);
++    QLCDNumber_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QFrame_ce_ptr,NULL TSRMLS_CC);
++
++
++}
+ static zend_function_entry QLabel_methods[] = {
+ 	ZEND_ME(QLabel,tr,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+ 	ZEND_ME(QLabel,setMargin,NULL,ZEND_ACC_PUBLIC)
+@@ -634,6 +719,20 @@
+     QLatin1Char_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
+ 
+ }
++static zend_function_entry QLatin1String_methods[] = {
++	ZEND_ME(QLatin1String, __construct,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QLatin1String,latin1,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QLatin1String(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QLatin1String&quot;,QLatin1String_methods);
++    QLatin1String_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
++
++}
+ static zend_function_entry QMouseEvent_methods[] = {
+ 	ZEND_ME(QMouseEvent,x,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QMouseEvent,globalX,NULL,ZEND_ACC_PUBLIC)
+@@ -802,6 +901,40 @@
+     QPainter_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
+ 
+ }
++static zend_function_entry QPushButton_methods[] = {
++	ZEND_ME(QPushButton,tr,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QPushButton,showMenu,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPushButton,setFlat,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPushButton,qt_invoke,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPushButton,staticMetaObject,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QPushButton,qObject,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPushButton,isDefault,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPushButton,setAutoDefault,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPushButton,sizeHint,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPushButton,qt_cast,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPushButton,metaObject,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPushButton,menu,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPushButton,setDefault,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPushButton,qt_emit,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPushButton, __construct,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPushButton,className,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPushButton,autoDefault,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPushButton,trUtf8,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QPushButton,isFlat,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPushButton,qt_property,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QPushButton,setMenu,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QPushButton(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QPushButton&quot;,QPushButton_methods);
++    QPushButton_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QAbstractButton_ce_ptr,NULL TSRMLS_CC);
++
++
++}
+ static zend_function_entry QResizeEvent_methods[] = {
+ 	ZEND_ME(QResizeEvent,oldSize,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QResizeEvent,size,NULL,ZEND_ACC_PUBLIC)
+@@ -860,6 +993,97 @@
+ 
+ 
+ }
++static zend_function_entry QString_methods[] = {
++	ZEND_ME(QString,compare,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,utf16,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,constData,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,insert,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,clear,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,setUtf16,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,prepend,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,trimmed,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,chop,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,leftJustified,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,squeeze,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,count,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,fromAscii,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QString,toLongLong,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,toUpper,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString, __construct,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,normalized,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,fromUtf16,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QString,isRightToLeft,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,setNum,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,endsWith,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,number,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QString,localeAwareCompare,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,section,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,isSimpleText,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,size,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,simplified,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,toUInt,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,toUShort,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,truncate,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,toAscii,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,length,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,right,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,push_front,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,toUtf8,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,toULongLong,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,indexOf,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,fromRawData,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QString,constEnd,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,left,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,fromLocal8Bit,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QString,startsWith,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,remove,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,isEmpty,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,arg,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,vsprintf,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,toFloat,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,isDetached,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,reserve,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,toULong,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,toShort,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,split,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,setUnicode,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,fromLatin1,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QString,data,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,toLatin1,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,end,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,contains,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,resize,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,replace,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,fromUtf8,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QString,toLong,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,detach,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,append,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,mid,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,toDouble,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,fill,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,rightJustified,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,toLower,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,lastIndexOf,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,unicode,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,at,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,begin,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,push_back,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,capacity,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,constBegin,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,toLocal8Bit,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,toInt,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QString,isNull,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QString(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QString&quot;,QString_methods);
++    QString_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
++
++}
+ static zend_function_entry QTabletEvent_methods[] = {
+ 	ZEND_ME(QTabletEvent,hiResGlobalX,NULL,ZEND_ACC_PUBLIC)
+ 	ZEND_ME(QTabletEvent,pressure,NULL,ZEND_ACC_PUBLIC)
+
+Modified: trunk/qt/ag_qt_minit.inc
+===================================================================
+--- trunk/qt/ag_qt_minit.inc	2006-01-22 19:25:26 UTC (rev 202)
++++ trunk/qt/ag_qt_minit.inc	2006-01-22 20:29:43 UTC (rev 203)
+@@ -1,4 +1,6 @@
+ 
++	_register_QAbstractButton(TSRMLS_C);
++
+ 	_register_QActionEvent(TSRMLS_C);
+ 
+ 	_register_QChar(TSRMLS_C);
+@@ -192,10 +194,21 @@
+ 
+ 	_register_QKeyEvent(TSRMLS_C);
+ 
++	_register_QLCDNumber(TSRMLS_C);
++	  REGISTER_LONG_CONSTANT(&quot;QLCDNUMBER_MODE_HEX&quot;, QLCDNumber::Hex, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QLCDNUMBER_MODE_DEC&quot;, QLCDNumber::Dec, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QLCDNUMBER_MODE_OCT&quot;, QLCDNumber::Oct, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QLCDNUMBER_MODE_BIN&quot;, QLCDNumber::Bin, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QLCDNUMBER_SEGMENTSTYLE_OUTLINE&quot;, QLCDNumber::Outline, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QLCDNUMBER_SEGMENTSTYLE_FILLED&quot;, QLCDNumber::Filled, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QLCDNUMBER_SEGMENTSTYLE_FLAT&quot;, QLCDNumber::Flat, CONST_CS | CONST_PERSISTENT);
++
+ 	_register_QLabel(TSRMLS_C);
+ 
+ 	_register_QLatin1Char(TSRMLS_C);
+ 
++	_register_QLatin1String(TSRMLS_C);
++
+ 	_register_QMouseEvent(TSRMLS_C);
+ 
+ 	_register_QMoveEvent(TSRMLS_C);
+@@ -208,6 +221,8 @@
+ 
+ 	_register_QPainter(TSRMLS_C);
+ 
++	_register_QPushButton(TSRMLS_C);
++
+ 	_register_QResizeEvent(TSRMLS_C);
+ 
+ 	_register_QShortcutEvent(TSRMLS_C);
+@@ -216,6 +231,19 @@
+ 
+ 	_register_QStatusTipEvent(TSRMLS_C);
+ 
++	_register_QString(TSRMLS_C);
++	  REGISTER_LONG_CONSTANT(&quot;QSTRING_SECTIONFLAG_SECTIONDEFAULT&quot;, QString::SectionDefault, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QSTRING_SECTIONFLAG_SECTIONSKIPEMPTY&quot;, QString::SectionSkipEmpty, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QSTRING_SECTIONFLAG_SECTIONINCLUDELEADINGSEP&quot;, QString::SectionIncludeLeadingSep, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QSTRING_SECTIONFLAG_SECTIONINCLUDETRAILINGSEP&quot;, QString::SectionIncludeTrailingSep, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QSTRING_SECTIONFLAG_SECTIONCASEINSENSITIVESEPS&quot;, QString::SectionCaseInsensitiveSeps, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QSTRING_SPLITBEHAVIOR_KEEPEMPTYPARTS&quot;, QString::KeepEmptyParts, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QSTRING_SPLITBEHAVIOR_SKIPEMPTYPARTS&quot;, QString::SkipEmptyParts, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QSTRING_NORMALIZATIONFORM_NORMALIZATIONFORM_D&quot;, QString::NormalizationForm_D, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QSTRING_NORMALIZATIONFORM_NORMALIZATIONFORM_C&quot;, QString::NormalizationForm_C, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QSTRING_NORMALIZATIONFORM_NORMALIZATIONFORM_KD&quot;, QString::NormalizationForm_KD, CONST_CS | CONST_PERSISTENT);
++	  REGISTER_LONG_CONSTANT(&quot;QSTRING_NORMALIZATIONFORM_NORMALIZATIONFORM_KC&quot;, QString::NormalizationForm_KC, CONST_CS | CONST_PERSISTENT);
++
+ 	_register_QTabletEvent(TSRMLS_C);
+ 
+ 	_register_QTime(TSRMLS_C);
+
+Modified: trunk/qt/ag_zend_class_entry.inc
+===================================================================
+--- trunk/qt/ag_zend_class_entry.inc	2006-01-22 19:25:26 UTC (rev 202)
++++ trunk/qt/ag_zend_class_entry.inc	2006-01-22 20:29:43 UTC (rev 203)
+@@ -1,3 +1,4 @@
++zend_class_entry *QAbstractButton_ce_ptr;
+ zend_class_entry *QActionEvent_ce_ptr;
+ zend_class_entry *QChar_ce_ptr;
+ zend_class_entry *QCharRef_ce_ptr;
+@@ -22,18 +23,22 @@
+ zend_class_entry *QInputEvent_ce_ptr;
+ zend_class_entry *QInputMethodEvent_ce_ptr;
+ zend_class_entry *QKeyEvent_ce_ptr;
++zend_class_entry *QLCDNumber_ce_ptr;
+ zend_class_entry *QLabel_ce_ptr;
+ zend_class_entry *QLatin1Char_ce_ptr;
++zend_class_entry *QLatin1String_ce_ptr;
+ zend_class_entry *QMouseEvent_ce_ptr;
+ zend_class_entry *QMoveEvent_ce_ptr;
+ zend_class_entry *QObjectData_ce_ptr;
+ zend_class_entry *QObjectUserData_ce_ptr;
+ zend_class_entry *QPaintEvent_ce_ptr;
+ zend_class_entry *QPainter_ce_ptr;
++zend_class_entry *QPushButton_ce_ptr;
+ zend_class_entry *QResizeEvent_ce_ptr;
+ zend_class_entry *QShortcutEvent_ce_ptr;
+ zend_class_entry *QShowEvent_ce_ptr;
+ zend_class_entry *QStatusTipEvent_ce_ptr;
++zend_class_entry *QString_ce_ptr;
+ zend_class_entry *QTabletEvent_ce_ptr;
+ zend_class_entry *QTime_ce_ptr;
+ zend_class_entry *QTimer_ce_ptr;
+
+Modified: trunk/qt/ag_zend_php_qt.inc
+===================================================================
+--- trunk/qt/ag_zend_php_qt.inc	2006-01-22 19:25:26 UTC (rev 202)
++++ trunk/qt/ag_zend_php_qt.inc	2006-01-22 20:29:43 UTC (rev 203)
+@@ -1,7 +1,38 @@
+ 
++ZEND_METHOD(QAbstractButton, tr);
++ZEND_METHOD(QAbstractButton, setAutoRepeat);
++ZEND_METHOD(QAbstractButton, isDown);
++ZEND_METHOD(QAbstractButton, qt_invoke);
++ZEND_METHOD(QAbstractButton, setAutoExclusive);
++ZEND_METHOD(QAbstractButton, setIconSize);
++ZEND_METHOD(QAbstractButton, qt_cast);
++ZEND_METHOD(QAbstractButton, metaObject);
++ZEND_METHOD(QAbstractButton, setIcon);
++ZEND_METHOD(QAbstractButton, qt_emit);
++ZEND_METHOD(QAbstractButton, autoExclusive);
++ZEND_METHOD(QAbstractButton, className);
++ZEND_METHOD(QAbstractButton, toggle);
++ZEND_METHOD(QAbstractButton, setCheckable);
++ZEND_METHOD(QAbstractButton, setDown);
++ZEND_METHOD(QAbstractButton, shortcut);
++ZEND_METHOD(QAbstractButton, icon);
++ZEND_METHOD(QAbstractButton, setChecked);
++ZEND_METHOD(QAbstractButton, setShortcut);
++ZEND_METHOD(QAbstractButton, animateClick);
++ZEND_METHOD(QAbstractButton, staticMetaObject);
++ZEND_METHOD(QAbstractButton, autoRepeat);
++ZEND_METHOD(QAbstractButton, qObject);
++ZEND_METHOD(QAbstractButton, group);
++ZEND_METHOD(QAbstractButton, setText);
++ZEND_METHOD(QAbstractButton, text);
++ZEND_METHOD(QAbstractButton, isChecked);
++ZEND_METHOD(QAbstractButton, iconSize);
++ZEND_METHOD(QAbstractButton, isCheckable);
++ZEND_METHOD(QAbstractButton, click);
++ZEND_METHOD(QAbstractButton, qt_property);
++ZEND_METHOD(QAbstractButton, trUtf8);
+ ZEND_METHOD(QActionEvent, action);
+ ZEND_METHOD(QActionEvent, before);
+-ZEND_METHOD(QChar, __toString);
+ ZEND_METHOD(QChar, combiningClass);
+ ZEND_METHOD(QChar, isUpper);
+ ZEND_METHOD(QChar, joining);
+@@ -260,6 +291,34 @@
+ ZEND_METHOD(QKeyEvent, isAutoRepeat);
+ ZEND_METHOD(QKeyEvent, modifiers);
+ ZEND_METHOD(QKeyEvent, key);
++ZEND_METHOD(QLCDNumber, tr);
++ZEND_METHOD(QLCDNumber, segmentStyle);
++ZEND_METHOD(QLCDNumber, mode);
++ZEND_METHOD(QLCDNumber, checkOverflow);
++ZEND_METHOD(QLCDNumber, qt_invoke);
++ZEND_METHOD(QLCDNumber, staticMetaObject);
++ZEND_METHOD(QLCDNumber, setOctMode);
++ZEND_METHOD(QLCDNumber, display);
++ZEND_METHOD(QLCDNumber, setSegmentStyle);
++ZEND_METHOD(QLCDNumber, setHexMode);
++ZEND_METHOD(QLCDNumber, qObject);
++ZEND_METHOD(QLCDNumber, setSmallDecimalPoint);
++ZEND_METHOD(QLCDNumber, sizeHint);
++ZEND_METHOD(QLCDNumber, qt_cast);
++ZEND_METHOD(QLCDNumber, metaObject);
++ZEND_METHOD(QLCDNumber, value);
++ZEND_METHOD(QLCDNumber, setDecMode);
++ZEND_METHOD(QLCDNumber, qt_emit);
++ZEND_METHOD(QLCDNumber, className);
++ZEND_METHOD(QLCDNumber, intValue);
++ZEND_METHOD(QLCDNumber, __construct);
++ZEND_METHOD(QLCDNumber, setNumDigits);
++ZEND_METHOD(QLCDNumber, numDigits);
++ZEND_METHOD(QLCDNumber, setMode);
++ZEND_METHOD(QLCDNumber, trUtf8);
++ZEND_METHOD(QLCDNumber, qt_property);
++ZEND_METHOD(QLCDNumber, smallDecimalPoint);
++ZEND_METHOD(QLCDNumber, setBinMode);
+ ZEND_METHOD(QLabel, tr);
+ ZEND_METHOD(QLabel, setMargin);
+ ZEND_METHOD(QLabel, clear);
+@@ -302,6 +361,8 @@
+ ZEND_METHOD(QLatin1Char, unicode);
+ ZEND_METHOD(QLatin1Char, __construct);
+ ZEND_METHOD(QLatin1Char, toLatin1);
++ZEND_METHOD(QLatin1String, __construct);
++ZEND_METHOD(QLatin1String, latin1);
+ ZEND_METHOD(QMouseEvent, x);
+ ZEND_METHOD(QMouseEvent, globalX);
+ ZEND_METHOD(QMouseEvent, globalPos);
+@@ -395,12 +456,112 @@
+ ZEND_METHOD(QPainter, drawTextItem);
+ ZEND_METHOD(QPainter, setClipping);
+ ZEND_METHOD(QPainter, clipPath);
++ZEND_METHOD(QPushButton, tr);
++ZEND_METHOD(QPushButton, showMenu);
++ZEND_METHOD(QPushButton, setFlat);
++ZEND_METHOD(QPushButton, qt_invoke);
++ZEND_METHOD(QPushButton, staticMetaObject);
++ZEND_METHOD(QPushButton, qObject);
++ZEND_METHOD(QPushButton, isDefault);
++ZEND_METHOD(QPushButton, setAutoDefault);
++ZEND_METHOD(QPushButton, sizeHint);
++ZEND_METHOD(QPushButton, qt_cast);
++ZEND_METHOD(QPushButton, metaObject);
++ZEND_METHOD(QPushButton, menu);
++ZEND_METHOD(QPushButton, setDefault);
++ZEND_METHOD(QPushButton, qt_emit);
++ZEND_METHOD(QPushButton, __construct);
++ZEND_METHOD(QPushButton, className);
++ZEND_METHOD(QPushButton, autoDefault);
++ZEND_METHOD(QPushButton, trUtf8);
++ZEND_METHOD(QPushButton, isFlat);
++ZEND_METHOD(QPushButton, qt_property);
++ZEND_METHOD(QPushButton, setMenu);
+ ZEND_METHOD(QResizeEvent, oldSize);
+ ZEND_METHOD(QResizeEvent, size);
+ ZEND_METHOD(QShortcutEvent, shortcutId);
+ ZEND_METHOD(QShortcutEvent, isAmbiguous);
+ ZEND_METHOD(QShortcutEvent, key);
+ ZEND_METHOD(QStatusTipEvent, tip);
++ZEND_METHOD(QString, compare);
++ZEND_METHOD(QString, utf16);
++ZEND_METHOD(QString, constData);
++ZEND_METHOD(QString, insert);
++ZEND_METHOD(QString, clear);
++ZEND_METHOD(QString, setUtf16);
++ZEND_METHOD(QString, prepend);
++ZEND_METHOD(QString, trimmed);
++ZEND_METHOD(QString, chop);
++ZEND_METHOD(QString, leftJustified);
++ZEND_METHOD(QString, squeeze);
++ZEND_METHOD(QString, count);
++ZEND_METHOD(QString, fromAscii);
++ZEND_METHOD(QString, toLongLong);
++ZEND_METHOD(QString, toUpper);
++ZEND_METHOD(QString, __construct);
++ZEND_METHOD(QString, normalized);
++ZEND_METHOD(QString, fromUtf16);
++ZEND_METHOD(QString, isRightToLeft);
++ZEND_METHOD(QString, setNum);
++ZEND_METHOD(QString, endsWith);
++ZEND_METHOD(QString, number);
++ZEND_METHOD(QString, localeAwareCompare);
++ZEND_METHOD(QString, section);
++ZEND_METHOD(QString, isSimpleText);
++ZEND_METHOD(QString, size);
++ZEND_METHOD(QString, simplified);
++ZEND_METHOD(QString, toUInt);
++ZEND_METHOD(QString, toUShort);
++ZEND_METHOD(QString, truncate);
++ZEND_METHOD(QString, toAscii);
++ZEND_METHOD(QString, length);
++ZEND_METHOD(QString, right);
++ZEND_METHOD(QString, push_front);
++ZEND_METHOD(QString, toUtf8);
++ZEND_METHOD(QString, toULongLong);
++ZEND_METHOD(QString, indexOf);
++ZEND_METHOD(QString, fromRawData);
++ZEND_METHOD(QString, constEnd);
++ZEND_METHOD(QString, left);
++ZEND_METHOD(QString, fromLocal8Bit);
++ZEND_METHOD(QString, startsWith);
++ZEND_METHOD(QString, remove);
++ZEND_METHOD(QString, isEmpty);
++ZEND_METHOD(QString, arg);
++ZEND_METHOD(QString, vsprintf);
++ZEND_METHOD(QString, toFloat);
++ZEND_METHOD(QString, isDetached);
++ZEND_METHOD(QString, reserve);
++ZEND_METHOD(QString, toULong);
++ZEND_METHOD(QString, toShort);
++ZEND_METHOD(QString, split);
++ZEND_METHOD(QString, setUnicode);
++ZEND_METHOD(QString, fromLatin1);
++ZEND_METHOD(QString, data);
++ZEND_METHOD(QString, toLatin1);
++ZEND_METHOD(QString, end);
++ZEND_METHOD(QString, contains);
++ZEND_METHOD(QString, resize);
++ZEND_METHOD(QString, replace);
++ZEND_METHOD(QString, fromUtf8);
++ZEND_METHOD(QString, toLong);
++ZEND_METHOD(QString, detach);
++ZEND_METHOD(QString, append);
++ZEND_METHOD(QString, mid);
++ZEND_METHOD(QString, toDouble);
++ZEND_METHOD(QString, fill);
++ZEND_METHOD(QString, rightJustified);
++ZEND_METHOD(QString, toLower);
++ZEND_METHOD(QString, lastIndexOf);
++ZEND_METHOD(QString, unicode);
++ZEND_METHOD(QString, at);
++ZEND_METHOD(QString, begin);
++ZEND_METHOD(QString, push_back);
++ZEND_METHOD(QString, capacity);
++ZEND_METHOD(QString, constBegin);
++ZEND_METHOD(QString, toLocal8Bit);
++ZEND_METHOD(QString, toInt);
++ZEND_METHOD(QString, isNull);
+ ZEND_METHOD(QTabletEvent, hiResGlobalX);
+ ZEND_METHOD(QTabletEvent, pressure);
+ ZEND_METHOD(QTabletEvent, hiResGlobalPos);
+
+Modified: trunk/qt/classes/qdate.cpp
+===================================================================
+--- trunk/qt/classes/qdate.cpp	2006-01-22 19:25:26 UTC (rev 202)
++++ trunk/qt/classes/qdate.cpp	2006-01-22 20:29:43 UTC (rev 203)
+@@ -20,7 +20,7 @@
+  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  *
+  * QDate.cpp - QDate PHP implementation.
+- * begin           : Sun Jan 15 17:39:22 2006
++ * begin           : Sun Jan 22 19:46:39 2006
+  * generated by    : moni using kalyptus 0.9.
+  */
+ 
+@@ -38,23 +38,25 @@
+  *    flags:    s
+  */
+ ZEND_METHOD(QDate, longDayName){
+-
+-	if (ZEND_NUM_ARGS() == 1){
+ 		/* l public*/
+-		long var_l_0;    // default: 
+ 
+ 		/* int weekday,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++
++	if (ZEND_NUM_ARGS() == 1){
++		zval *z_0; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG){
+ 			QDate *obj = (QDate*) PHP_QT_FETCH();
+ 
+-			
+-			QString return_object = (QString) obj-&gt;longDayName((int) var_l_0);
++
++				QString return_object = (QString) obj-&gt;longDayName((int) Z_LVAL_P(z_0));
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QDate_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+ 				le.ptr = (void*) &amp;return_object;                                       
+ 				php_qt_register(return_value,le);                   
+ 				return;                                             
++			}
+ 		}
+ 	}
+ }
+@@ -109,19 +111,21 @@
+ 			QDate *obj = (QDate*) PHP_QT_FETCH();
+ 			RETURN_BOOL(obj-&gt;isValid());
+ 	}
+-
+-	if (ZEND_NUM_ARGS() == 3){
+ 		/* lll public*/
+-		long var_lll_0;    // default: 
+-		long var_lll_1;    // default: 
+-		long var_lll_2;    // default: 
+ 
+ 		/* int y, int m, int d,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;lll&quot;, &amp;var_lll_0, &amp;var_lll_1, &amp;var_lll_2) == SUCCESS) {
++
++	if (ZEND_NUM_ARGS() == 3){
++		zval *z_0; // define ZVAL
++		zval *z_1; // define ZVAL
++		zval *z_2; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zzz&quot;, &amp;z_0, &amp;z_1, &amp;z_2) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG &amp;&amp; Z_TYPE_P(z_2) == IS_LONG){
+ 			QDate *obj = (QDate*) PHP_QT_FETCH();
+ 
+-			
+-			RETURN_BOOL(obj-&gt;isValid((int) var_lll_0 ,(int) var_lll_1 ,(int) var_lll_2));
++
++			RETURN_BOOL(obj-&gt;isValid((int) Z_LVAL_P(z_0) ,(int) Z_LVAL_P(z_1) ,(int) Z_LVAL_P(z_2)));
++			}
+ 		}
+ 	}
+ }
+@@ -133,19 +137,21 @@
+  *    flags:    
+  */
+ ZEND_METHOD(QDate, setYMD){
+-
+-	if (ZEND_NUM_ARGS() == 3){
+ 		/* lll public*/
+-		long var_lll_0;    // default: 
+-		long var_lll_1;    // default: 
+-		long var_lll_2;    // default: 
+ 
+ 		/* int y, int m, int d,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;lll&quot;, &amp;var_lll_0, &amp;var_lll_1, &amp;var_lll_2) == SUCCESS) {
++
++	if (ZEND_NUM_ARGS() == 3){
++		zval *z_0; // define ZVAL
++		zval *z_1; // define ZVAL
++		zval *z_2; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zzz&quot;, &amp;z_0, &amp;z_1, &amp;z_2) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG &amp;&amp; Z_TYPE_P(z_2) == IS_LONG){
+ 			QDate *obj = (QDate*) PHP_QT_FETCH();
+ 
+-			
+-			RETURN_BOOL(obj-&gt;setYMD((int) var_lll_0 ,(int) var_lll_1 ,(int) var_lll_2));
++
++			RETURN_BOOL(obj-&gt;setYMD((int) Z_LVAL_P(z_0) ,(int) Z_LVAL_P(z_1) ,(int) Z_LVAL_P(z_2)));
++			}
+ 		}
+ 	}
+ }
+@@ -157,23 +163,25 @@
+  *    flags:    s
+  */
+ ZEND_METHOD(QDate, shortMonthName){
+-
+-	if (ZEND_NUM_ARGS() == 1){
+ 		/* l public*/
+-		long var_l_0;    // default: 
+ 
+ 		/* int month,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++
++	if (ZEND_NUM_ARGS() == 1){
++		zval *z_0; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG){
+ 			QDate *obj = (QDate*) PHP_QT_FETCH();
+ 
+-			
+-			QString return_object = (QString) obj-&gt;shortMonthName((int) var_l_0);
++
++				QString return_object = (QString) obj-&gt;shortMonthName((int) Z_LVAL_P(z_0));
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QDate_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+ 				le.ptr = (void*) &amp;return_object;                                       
+ 				php_qt_register(return_value,le);                   
+ 				return;                                             
++			}
+ 		}
+ 	}
+ }
+@@ -185,36 +193,35 @@
+  *    flags:    c
+  */
+ ZEND_METHOD(QDate, toString){
+-
+-	if (ZEND_NUM_ARGS() == 1){
+ 		/* l public*/
+-		long var_l_0;    // default: Qt::TextDate
+ 
+ 		/* int f,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l|&quot;, &amp;var_l_0) == SUCCESS) {
++		/* o public*/
++
++		/* const QString&amp; format,  */
++
++	if (ZEND_NUM_ARGS() == 1){
++		zval *z_0; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG){
+ 			QDate *obj = (QDate*) PHP_QT_FETCH();
+ 
+-			
+-			QString return_object = (QString) obj-&gt;toString((Qt::DateFormat) var_l_0);
++
++				QString return_object = (QString) obj-&gt;toString((Qt::DateFormat) Z_LVAL_P(z_0));
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QDate_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+ 				le.ptr = (void*) &amp;return_object;                                       
+ 				php_qt_register(return_value,le);                   
+ 				return;                                             
+-		}
+-		/* o public*/
+-		zval* z_var_o_0;   // default: 
+-
+-		/* const QString&amp; format,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++			}
++			if(Z_TYPE_P(z_0) == IS_OBJECT){
+ 			QDate *obj = (QDate*) PHP_QT_FETCH();
+-			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
++			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
+ 
+-			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
+-			
+-			if(tmp_o_0 == &quot;const QString&quot;) {
+-				QString return_object = (QString) obj-&gt;toString((const QString&amp;) var_o_0);
++
++			if(Z_OBJCE_P(z_0)-&gt;name == &quot;QString&quot;) {
++					QString return_object = (QString) obj-&gt;toString((const QString&amp;) obj_z_0);
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QDate_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+@@ -222,6 +229,7 @@
+ 				php_qt_register(return_value,le);                   
+ 				return;                                             
+ 			}
++			}
+ 		}
+ 	}
+ }
+@@ -233,17 +241,19 @@
+  *    flags:    s
+  */
+ ZEND_METHOD(QDate, isLeapYear){
+-
+-	if (ZEND_NUM_ARGS() == 1){
+ 		/* l public*/
+-		long var_l_0;    // default: 
+ 
+ 		/* int year,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++
++	if (ZEND_NUM_ARGS() == 1){
++		zval *z_0; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG){
+ 			QDate *obj = (QDate*) PHP_QT_FETCH();
+ 
+-			
+-			RETURN_BOOL(obj-&gt;isLeapYear((int) var_l_0));
++
++			RETURN_BOOL(obj-&gt;isLeapYear((int) Z_LVAL_P(z_0)));
++			}
+ 		}
+ 	}
+ }
+@@ -255,23 +265,25 @@
+  *    flags:    s
+  */
+ ZEND_METHOD(QDate, fromJulianDay){
+-
+-	if (ZEND_NUM_ARGS() == 1){
+ 		/* l public*/
+-		long var_l_0;    // default: 
+ 
+ 		/* int jd,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++
++	if (ZEND_NUM_ARGS() == 1){
++		zval *z_0; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG){
+ 			QDate *obj = (QDate*) PHP_QT_FETCH();
+ 
+-			
+-			QDate return_object = (QDate) obj-&gt;fromJulianDay((int) var_l_0);
++
++				QDate return_object = (QDate) obj-&gt;fromJulianDay((int) Z_LVAL_P(z_0));
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QDate_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+ 				le.ptr = (void*) &amp;return_object;                                       
+ 				php_qt_register(return_value,le);                   
+ 				return;                                             
++			}
+ 		}
+ 	}
+ }
+@@ -285,7 +297,7 @@
+ ZEND_METHOD(QDate, currentDate){
+ 	if (ZEND_NUM_ARGS() == 0){
+ 			QDate *obj = (QDate*) PHP_QT_FETCH();
+-			QDate return_object = (QDate) obj-&gt;currentDate();
++				QDate return_object = (QDate) obj-&gt;currentDate();
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QDate_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+@@ -302,23 +314,25 @@
+  *    flags:    c
+  */
+ ZEND_METHOD(QDate, addDays){
+-
+-	if (ZEND_NUM_ARGS() == 1){
+ 		/* l public*/
+-		long var_l_0;    // default: 
+ 
+ 		/* int days,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++
++	if (ZEND_NUM_ARGS() == 1){
++		zval *z_0; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG){
+ 			QDate *obj = (QDate*) PHP_QT_FETCH();
+ 
+-			
+-			QDate return_object = (QDate) obj-&gt;addDays((int) var_l_0);
++
++				QDate return_object = (QDate) obj-&gt;addDays((int) Z_LVAL_P(z_0));
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QDate_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+ 				le.ptr = (void*) &amp;return_object;                                       
+ 				php_qt_register(return_value,le);                   
+ 				return;                                             
++			}
+ 		}
+ 	}
+ }
+@@ -343,19 +357,21 @@
+  *    flags:    s
+  */
+ ZEND_METHOD(QDate, gregorianToJulian){
+-
+-	if (ZEND_NUM_ARGS() == 3){
+ 		/* lll public*/
+-		long var_lll_0;    // default: 
+-		long var_lll_1;    // default: 
+-		long var_lll_2;    // default: 
+ 
+ 		/* int y, int m, int d,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;lll&quot;, &amp;var_lll_0, &amp;var_lll_1, &amp;var_lll_2) == SUCCESS) {
++
++	if (ZEND_NUM_ARGS() == 3){
++		zval *z_0; // define ZVAL
++		zval *z_1; // define ZVAL
++		zval *z_2; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zzz&quot;, &amp;z_0, &amp;z_1, &amp;z_2) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG &amp;&amp; Z_TYPE_P(z_2) == IS_LONG){
+ 			QDate *obj = (QDate*) PHP_QT_FETCH();
+ 
+-			
+-			RETURN_LONG(obj-&gt;gregorianToJulian((int) var_lll_0 ,(int) var_lll_1 ,(int) var_lll_2));
++
++			RETURN_LONG(obj-&gt;gregorianToJulian((int) Z_LVAL_P(z_0) ,(int) Z_LVAL_P(z_1) ,(int) Z_LVAL_P(z_2)));
++			}
+ 		}
+ 	}
+ }
+@@ -367,23 +383,25 @@
+  *    flags:    s
+  */
+ ZEND_METHOD(QDate, longMonthName){
+-
+-	if (ZEND_NUM_ARGS() == 1){
+ 		/* l public*/
+-		long var_l_0;    // default: 
+ 
+ 		/* int month,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++
++	if (ZEND_NUM_ARGS() == 1){
++		zval *z_0; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG){
+ 			QDate *obj = (QDate*) PHP_QT_FETCH();
+ 
+-			
+-			QString return_object = (QString) obj-&gt;longMonthName((int) var_l_0);
++
++				QString return_object = (QString) obj-&gt;longMonthName((int) Z_LVAL_P(z_0));
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QDate_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+ 				le.ptr = (void*) &amp;return_object;                                       
+ 				php_qt_register(return_value,le);                   
+ 				return;                                             
++			}
+ 		}
+ 	}
+ }
+@@ -395,21 +413,23 @@
+  *    flags:    s
+  */
+ ZEND_METHOD(QDate, julianToGregorian){
+-
+-	if (ZEND_NUM_ARGS() == 4){
+ 		/* llll public*/
+-		long var_llll_0;    // default: 
+-		long var_llll_1;    // default: 
+-		long var_llll_2;    // default: 
+-		long var_llll_3;    // default: 
+ 
+ 		/* unsigned int jd, int y, int m, int d,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;llll&quot;, &amp;var_llll_0, &amp;var_llll_1, &amp;var_llll_2, &amp;var_llll_3) == SUCCESS) {
++
++	if (ZEND_NUM_ARGS() == 4){
++		zval *z_0; // define ZVAL
++		zval *z_1; // define ZVAL
++		zval *z_2; // define ZVAL
++		zval *z_3; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zzzz&quot;, &amp;z_0, &amp;z_1, &amp;z_2, &amp;z_3) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG &amp;&amp; Z_TYPE_P(z_2) == IS_LONG &amp;&amp; Z_TYPE_P(z_3) == IS_LONG){
+ 			QDate *obj = (QDate*) PHP_QT_FETCH();
+ 
+-			
+-			obj-&gt;julianToGregorian((uint) var_llll_0 ,(int&amp;) var_llll_1 ,(int&amp;) var_llll_2 ,(int&amp;) var_llll_3);
++
++			obj-&gt;julianToGregorian((uint) Z_LVAL_P(z_0) ,(int&amp;) Z_LVAL_P(z_1) ,(int&amp;) Z_LVAL_P(z_2) ,(int&amp;) Z_LVAL_P(z_3));
+ 			RETURN_NULL();
++			}
+ 		}
+ 	}
+ }
+@@ -423,23 +443,25 @@
+ ZEND_METHOD(QDate, __construct){
+ 	if (ZEND_NUM_ARGS() == 0){
+ 			QDate *QDate_ptr = new QDate();
+-			PHP_QT_REGISTER(QDate_ptr);
+-			RETURN_NULL();
++				PHP_QT_REGISTER(QDate_ptr);
++				RETURN_NULL();
+ 	}
+-
+-	if (ZEND_NUM_ARGS() == 3){
+ 		/* lll public*/
+-		long var_lll_0;    // default: 
+-		long var_lll_1;    // default: 
+-		long var_lll_2;    // default: 
+ 
+ 		/* int y, int m, int d,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;lll&quot;, &amp;var_lll_0, &amp;var_lll_1, &amp;var_lll_2) == SUCCESS) {
+ 
+-			
+-			QDate *QDate_ptr = new QDate((int) var_lll_0 ,(int) var_lll_1 ,(int) var_lll_2);
+-			PHP_QT_REGISTER(QDate_ptr);
+-			RETURN_NULL();
++	if (ZEND_NUM_ARGS() == 3){
++		zval *z_0; // define ZVAL
++		zval *z_1; // define ZVAL
++		zval *z_2; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zzz&quot;, &amp;z_0, &amp;z_1, &amp;z_2) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG &amp;&amp; Z_TYPE_P(z_2) == IS_LONG){
++
++
++			QDate *QDate_ptr = new QDate((int) Z_LVAL_P(z_0) ,(int) Z_LVAL_P(z_1) ,(int) Z_LVAL_P(z_2));
++				PHP_QT_REGISTER(QDate_ptr);
++				RETURN_NULL();
++			}
+ 		}
+ 	}
+ }
+@@ -451,23 +473,25 @@
+  *    flags:    s
+  */
+ ZEND_METHOD(QDate, shortDayName){
+-
+-	if (ZEND_NUM_ARGS() == 1){
+ 		/* l public*/
+-		long var_l_0;    // default: 
+ 
+ 		/* int weekday,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++
++	if (ZEND_NUM_ARGS() == 1){
++		zval *z_0; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG){
+ 			QDate *obj = (QDate*) PHP_QT_FETCH();
+ 
+-			
+-			QString return_object = (QString) obj-&gt;shortDayName((int) var_l_0);
++
++				QString return_object = (QString) obj-&gt;shortDayName((int) Z_LVAL_P(z_0));
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QDate_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+ 				le.ptr = (void*) &amp;return_object;                                       
+ 				php_qt_register(return_value,le);                   
+ 				return;                                             
++			}
+ 		}
+ 	}
+ }
+@@ -479,21 +503,24 @@
+  *    flags:    s
+  */
+ ZEND_METHOD(QDate, fromString){
+-
+-	if (ZEND_NUM_ARGS() == 2){
+ 		/* ol public*/
+-		zval* z_var_ol_0;   // default: 
+-		long var_ol_1;    // default: Qt::TextDate
+ 
+ 		/* const QString&amp; s, int f,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ol|&quot;, &amp;z_var_ol_0, &amp;var_ol_1) == SUCCESS) {
++		/* oo public*/
++
++		/* const QString&amp; s, const QString&amp; format,  */
++
++	if (ZEND_NUM_ARGS() == 2){
++		zval *z_0; // define ZVAL
++		zval *z_1; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_OBJECT &amp;&amp; Z_TYPE_P(z_1) == IS_LONG){
+ 			QDate *obj = (QDate*) PHP_QT_FETCH();
+-			QObject* var_ol_0 = (QObject*) php_qt_fetch(z_var_ol_0);
++			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
+ 
+-			QString tmp_ol_0(var_ol_0-&gt;metaObject()-&gt;className());
+-			
+-			if(tmp_ol_0 == &quot;const QString&quot;) {
+-				QDate return_object = (QDate) obj-&gt;fromString((const QString&amp;) var_ol_0, (Qt::DateFormat) var_ol_1);
++
++			if(Z_OBJCE_P(z_0)-&gt;name == &quot;QString&quot;) {
++					QDate return_object = (QDate) obj-&gt;fromString((const QString&amp;) obj_z_0, (Qt::DateFormat) Z_LVAL_P(z_1));
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QDate_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+@@ -501,22 +528,15 @@
+ 				php_qt_register(return_value,le);                   
+ 				return;                                             
+ 			}
+-		}
+-		/* oo public*/
+-		zval* z_var_oo_0;   // default: 
+-		zval* z_var_oo_1;   // default: 
+-
+-		/* const QString&amp; s, const QString&amp; format,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;oo&quot;, &amp;z_var_oo_0, &amp;z_var_oo_1) == SUCCESS) {
++			}
++			if(Z_TYPE_P(z_0) == IS_OBJECT &amp;&amp; Z_TYPE_P(z_1) == IS_OBJECT){
+ 			QDate *obj = (QDate*) PHP_QT_FETCH();
+-			QObject* var_oo_0 = (QObject*) php_qt_fetch(z_var_oo_0);
+-			QObject* var_oo_1 = (QObject*) php_qt_fetch(z_var_oo_1);
++			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
++			QObject* obj_z_1 = (QObject*) php_qt_fetch(z_1);
+ 
+-			QString tmp_oo_0(var_oo_0-&gt;metaObject()-&gt;className());
+-			QString tmp_oo_1(var_oo_1-&gt;metaObject()-&gt;className());
+-			
+-			if(tmp_oo_0 == &quot;const QString&quot; &amp;&amp; tmp_oo_1 == &quot;const QString&quot;) {
+-				QDate return_object = (QDate) obj-&gt;fromString((const QString&amp;) var_oo_0, (const QString&amp;) var_oo_1);
++
++			if(Z_OBJCE_P(z_0)-&gt;name == &quot;QString&quot; &amp;&amp; Z_OBJCE_P(z_1)-&gt;name == &quot;QString&quot;) {
++					QDate return_object = (QDate) obj-&gt;fromString((const QString&amp;) obj_z_0, (const QString&amp;) obj_z_1);
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QDate_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+@@ -524,6 +544,7 @@
+ 				php_qt_register(return_value,le);                   
+ 				return;                                             
+ 			}
++			}
+ 		}
+ 	}
+ }
+@@ -548,17 +569,19 @@
+  *    flags:    c
+  */
+ ZEND_METHOD(QDate, weekNumber){
+-
+-	if (ZEND_NUM_ARGS() == 1){
+ 		/* l public*/
+-		long var_l_0;    // default: 0
+ 
+ 		/* int* yearNum,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l|&quot;, &amp;var_l_0) == SUCCESS) {
++
++	if (ZEND_NUM_ARGS() == 1){
++		zval *z_0; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG){
+ 			QDate *obj = (QDate*) PHP_QT_FETCH();
+ 
+-			
+-			RETURN_LONG(obj-&gt;weekNumber((int*) var_l_0));
++
++			RETURN_LONG(obj-&gt;weekNumber((int*) Z_LVAL_P(z_0)));
++			}
+ 		}
+ 	}
+ }
+@@ -570,23 +593,25 @@
+  *    flags:    c
+  */
+ ZEND_METHOD(QDate, addMonths){
+-
+-	if (ZEND_NUM_ARGS() == 1){
+ 		/* l public*/
+-		long var_l_0;    // default: 
+ 
+ 		/* int months,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++
++	if (ZEND_NUM_ARGS() == 1){
++		zval *z_0; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG){
+ 			QDate *obj = (QDate*) PHP_QT_FETCH();
+ 
+-			
+-			QDate return_object = (QDate) obj-&gt;addMonths((int) var_l_0);
++
++				QDate return_object = (QDate) obj-&gt;addMonths((int) Z_LVAL_P(z_0));
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QDate_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+ 				le.ptr = (void*) &amp;return_object;                                       
+ 				php_qt_register(return_value,le);                   
+ 				return;                                             
++			}
+ 		}
+ 	}
+ }
+@@ -611,23 +636,25 @@
+  *    flags:    c
+  */
+ ZEND_METHOD(QDate, addYears){
+-
+-	if (ZEND_NUM_ARGS() == 1){
+ 		/* l public*/
+-		long var_l_0;    // default: 
+ 
+ 		/* int years,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++
++	if (ZEND_NUM_ARGS() == 1){
++		zval *z_0; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG){
+ 			QDate *obj = (QDate*) PHP_QT_FETCH();
+ 
+-			
+-			QDate return_object = (QDate) obj-&gt;addYears((int) var_l_0);
++
++				QDate return_object = (QDate) obj-&gt;addYears((int) Z_LVAL_P(z_0));
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QDate_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+ 				le.ptr = (void*) &amp;return_object;                                       
+ 				php_qt_register(return_value,le);                   
+ 				return;                                             
++			}
+ 		}
+ 	}
+ }
+@@ -639,21 +666,22 @@
+  *    flags:    c
+  */
+ ZEND_METHOD(QDate, daysTo){
+-
+-	if (ZEND_NUM_ARGS() == 1){
+ 		/* o public*/
+-		zval* z_var_o_0;   // default: 
+ 
+ 		/* const QDate&amp; ,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++
++	if (ZEND_NUM_ARGS() == 1){
++		zval *z_0; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_OBJECT){
+ 			QDate *obj = (QDate*) PHP_QT_FETCH();
+-			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
++			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
+ 
+-			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
+-			
+-			if(tmp_o_0 == &quot;const QDate&quot;) {
+-				RETURN_LONG(obj-&gt;daysTo((const QDate&amp;) var_o_0));
++
++			if(Z_OBJCE_P(z_0)-&gt;name == &quot;QDate&quot;) {
++				RETURN_LONG(obj-&gt;daysTo((const QDate&amp;) obj_z_0));
+ 			}
++			}
+ 		}
+ 	}
+ }
+
+Modified: trunk/qt/classes/qdatetime.cpp
+===================================================================
+--- trunk/qt/classes/qdatetime.cpp	2006-01-22 19:25:26 UTC (rev 202)
++++ trunk/qt/classes/qdatetime.cpp	2006-01-22 20:29:43 UTC (rev 203)
+@@ -20,7 +20,7 @@
+  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  *
+  * QDateTime.cpp - QDateTime PHP implementation.
+- * begin           : Thu Jan 19 02:44:10 2006
++ * begin           : Sun Jan 22 19:46:39 2006
+  * generated by    : moni using kalyptus 0.9.
+  */
+ 
+@@ -116,7 +116,7 @@
+ 			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
+ 
+ 
+-			if(1 == 1) {
++			if(Z_OBJCE_P(z_0)-&gt;name == &quot;QString&quot;) {
+ 					QString return_object = (QString) obj-&gt;toString((const QString&amp;) obj_z_0);
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QDateTime_ce_ptr);     
+@@ -278,7 +278,7 @@
+ 			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
+ 
+ 
+-			if(1 == 1) {
++			if(Z_OBJCE_P(z_0)-&gt;name == &quot;QString&quot;) {
+ 					QDateTime return_object = (QDateTime) obj-&gt;fromString((const QString&amp;) obj_z_0, (Qt::DateFormat) Z_LVAL_P(z_1));
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QDateTime_ce_ptr);     
+@@ -294,7 +294,7 @@
+ 			QObject* obj_z_1 = (QObject*) php_qt_fetch(z_1);
+ 
+ 
+-			if(1 == 1 &amp;&amp; 1 == 1) {
++			if(Z_OBJCE_P(z_0)-&gt;name == &quot;QString&quot; &amp;&amp; Z_OBJCE_P(z_1)-&gt;name == &quot;QString&quot;) {
+ 					QDateTime return_object = (QDateTime) obj-&gt;fromString((const QString&amp;) obj_z_0, (const QString&amp;) obj_z_1);
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QDateTime_ce_ptr);     
+
+Modified: trunk/qt/classes/qtime.cpp
+===================================================================
+--- trunk/qt/classes/qtime.cpp	2006-01-22 19:25:26 UTC (rev 202)
++++ trunk/qt/classes/qtime.cpp	2006-01-22 20:29:43 UTC (rev 203)
+@@ -20,7 +20,7 @@
+  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  *
+  * QTime.cpp - QTime PHP implementation.
+- * begin           : Sun Jan 15 17:39:22 2006
++ * begin           : Sun Jan 22 19:46:39 2006
+  * generated by    : moni using kalyptus 0.9.
+  */
+ 
+@@ -55,20 +55,22 @@
+ 			QTime *obj = (QTime*) PHP_QT_FETCH();
+ 			RETURN_BOOL(obj-&gt;isValid());
+ 	}
+-
+-	if (ZEND_NUM_ARGS() == 4){
+ 		/* llll public*/
+-		long var_llll_0;    // default: 
+-		long var_llll_1;    // default: 
+-		long var_llll_2;    // default: 
+-		long var_llll_3;    // default: 0
+ 
+ 		/* int h, int m, int s, int ms,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;llll|&quot;, &amp;var_llll_0, &amp;var_llll_1, &amp;var_llll_2, &amp;var_llll_3) == SUCCESS) {
++
++	if (ZEND_NUM_ARGS() == 4){
++		zval *z_0; // define ZVAL
++		zval *z_1; // define ZVAL
++		zval *z_2; // define ZVAL
++		zval *z_3; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zzzz&quot;, &amp;z_0, &amp;z_1, &amp;z_2, &amp;z_3) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG &amp;&amp; Z_TYPE_P(z_2) == IS_LONG &amp;&amp; Z_TYPE_P(z_3) == IS_LONG){
+ 			QTime *obj = (QTime*) PHP_QT_FETCH();
+ 
+-			
+-			RETURN_BOOL(obj-&gt;isValid((int) var_llll_0 ,(int) var_llll_1 ,(int) var_llll_2 ,(int) var_llll_3));
++
++			RETURN_BOOL(obj-&gt;isValid((int) Z_LVAL_P(z_0) ,(int) Z_LVAL_P(z_1) ,(int) Z_LVAL_P(z_2) ,(int) Z_LVAL_P(z_3)));
++			}
+ 		}
+ 	}
+ }
+@@ -93,36 +95,35 @@
+  *    flags:    c
+  */
+ ZEND_METHOD(QTime, toString){
+-
+-	if (ZEND_NUM_ARGS() == 1){
+ 		/* l public*/
+-		long var_l_0;    // default: Qt::TextDate
+ 
+ 		/* int f,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l|&quot;, &amp;var_l_0) == SUCCESS) {
++		/* o public*/
++
++		/* const QString&amp; format,  */
++
++	if (ZEND_NUM_ARGS() == 1){
++		zval *z_0; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG){
+ 			QTime *obj = (QTime*) PHP_QT_FETCH();
+ 
+-			
+-			QString return_object = (QString) obj-&gt;toString((Qt::DateFormat) var_l_0);
++
++				QString return_object = (QString) obj-&gt;toString((Qt::DateFormat) Z_LVAL_P(z_0));
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QTime_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+ 				le.ptr = (void*) &amp;return_object;                                       
+ 				php_qt_register(return_value,le);                   
+ 				return;                                             
+-		}
+-		/* o public*/
+-		zval* z_var_o_0;   // default: 
+-
+-		/* const QString&amp; format,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++			}
++			if(Z_TYPE_P(z_0) == IS_OBJECT){
+ 			QTime *obj = (QTime*) PHP_QT_FETCH();
+-			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
++			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
+ 
+-			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
+-			
+-			if(tmp_o_0 == &quot;const QString&quot;) {
+-				QString return_object = (QString) obj-&gt;toString((const QString&amp;) var_o_0);
++
++			if(Z_OBJCE_P(z_0)-&gt;name == &quot;QString&quot;) {
++					QString return_object = (QString) obj-&gt;toString((const QString&amp;) obj_z_0);
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QTime_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+@@ -130,6 +131,7 @@
+ 				php_qt_register(return_value,le);                   
+ 				return;                                             
+ 			}
++			}
+ 		}
+ 	}
+ }
+@@ -154,21 +156,22 @@
+  *    flags:    c
+  */
+ ZEND_METHOD(QTime, secsTo){
+-
+-	if (ZEND_NUM_ARGS() == 1){
+ 		/* o public*/
+-		zval* z_var_o_0;   // default: 
+ 
+ 		/* const QTime&amp; ,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++
++	if (ZEND_NUM_ARGS() == 1){
++		zval *z_0; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_OBJECT){
+ 			QTime *obj = (QTime*) PHP_QT_FETCH();
+-			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
++			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
+ 
+-			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
+-			
+-			if(tmp_o_0 == &quot;const QTime&quot;) {
+-				RETURN_LONG(obj-&gt;secsTo((const QTime&amp;) var_o_0));
++
++			if(Z_OBJCE_P(z_0)-&gt;name == &quot;QTime&quot;) {
++				RETURN_LONG(obj-&gt;secsTo((const QTime&amp;) obj_z_0));
+ 			}
++			}
+ 		}
+ 	}
+ }
+@@ -193,21 +196,24 @@
+  *    flags:    s
+  */
+ ZEND_METHOD(QTime, fromString){
+-
+-	if (ZEND_NUM_ARGS() == 2){
+ 		/* ol public*/
+-		zval* z_var_ol_0;   // default: 
+-		long var_ol_1;    // default: Qt::TextDate
+ 
+ 		/* const QString&amp; s, int f,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ol|&quot;, &amp;z_var_ol_0, &amp;var_ol_1) == SUCCESS) {
++		/* oo public*/
++
++		/* const QString&amp; s, const QString&amp; format,  */
++
++	if (ZEND_NUM_ARGS() == 2){
++		zval *z_0; // define ZVAL
++		zval *z_1; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_OBJECT &amp;&amp; Z_TYPE_P(z_1) == IS_LONG){
+ 			QTime *obj = (QTime*) PHP_QT_FETCH();
+-			QObject* var_ol_0 = (QObject*) php_qt_fetch(z_var_ol_0);
++			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
+ 
+-			QString tmp_ol_0(var_ol_0-&gt;metaObject()-&gt;className());
+-			
+-			if(tmp_ol_0 == &quot;const QString&quot;) {
+-				QTime return_object = (QTime) obj-&gt;fromString((const QString&amp;) var_ol_0, (Qt::DateFormat) var_ol_1);
++
++			if(Z_OBJCE_P(z_0)-&gt;name == &quot;QString&quot;) {
++					QTime return_object = (QTime) obj-&gt;fromString((const QString&amp;) obj_z_0, (Qt::DateFormat) Z_LVAL_P(z_1));
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QTime_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+@@ -215,22 +221,15 @@
+ 				php_qt_register(return_value,le);                   
+ 				return;                                             
+ 			}
+-		}
+-		/* oo public*/
+-		zval* z_var_oo_0;   // default: 
+-		zval* z_var_oo_1;   // default: 
+-
+-		/* const QString&amp; s, const QString&amp; format,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;oo&quot;, &amp;z_var_oo_0, &amp;z_var_oo_1) == SUCCESS) {
++			}
++			if(Z_TYPE_P(z_0) == IS_OBJECT &amp;&amp; Z_TYPE_P(z_1) == IS_OBJECT){
+ 			QTime *obj = (QTime*) PHP_QT_FETCH();
+-			QObject* var_oo_0 = (QObject*) php_qt_fetch(z_var_oo_0);
+-			QObject* var_oo_1 = (QObject*) php_qt_fetch(z_var_oo_1);
++			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
++			QObject* obj_z_1 = (QObject*) php_qt_fetch(z_1);
+ 
+-			QString tmp_oo_0(var_oo_0-&gt;metaObject()-&gt;className());
+-			QString tmp_oo_1(var_oo_1-&gt;metaObject()-&gt;className());
+-			
+-			if(tmp_oo_0 == &quot;const QString&quot; &amp;&amp; tmp_oo_1 == &quot;const QString&quot;) {
+-				QTime return_object = (QTime) obj-&gt;fromString((const QString&amp;) var_oo_0, (const QString&amp;) var_oo_1);
++
++			if(Z_OBJCE_P(z_0)-&gt;name == &quot;QString&quot; &amp;&amp; Z_OBJCE_P(z_1)-&gt;name == &quot;QString&quot;) {
++					QTime return_object = (QTime) obj-&gt;fromString((const QString&amp;) obj_z_0, (const QString&amp;) obj_z_1);
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QTime_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+@@ -238,6 +237,7 @@
+ 				php_qt_register(return_value,le);                   
+ 				return;                                             
+ 			}
++			}
+ 		}
+ 	}
+ }
+@@ -264,24 +264,26 @@
+ ZEND_METHOD(QTime, __construct){
+ 	if (ZEND_NUM_ARGS() == 0){
+ 			QTime *QTime_ptr = new QTime();
+-			PHP_QT_REGISTER(QTime_ptr);
+-			RETURN_NULL();
++				PHP_QT_REGISTER(QTime_ptr);
++				RETURN_NULL();
+ 	}
+-
+-	if (ZEND_NUM_ARGS() == 4){
+ 		/* llll public*/
+-		long var_llll_0;    // default: 
+-		long var_llll_1;    // default: 
+-		long var_llll_2;    // default: 0
+-		long var_llll_3;    // default: 0
+ 
+ 		/* int h, int m, int s, int ms,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;lll|l|&quot;, &amp;var_llll_0, &amp;var_llll_1, &amp;var_llll_2, &amp;var_llll_3) == SUCCESS) {
+ 
+-			
+-			QTime *QTime_ptr = new QTime((int) var_llll_0 ,(int) var_llll_1 ,(int) var_llll_2 ,(int) var_llll_3);
+-			PHP_QT_REGISTER(QTime_ptr);
+-			RETURN_NULL();
++	if (ZEND_NUM_ARGS() == 4){
++		zval *z_0; // define ZVAL
++		zval *z_1; // define ZVAL
++		zval *z_2; // define ZVAL
++		zval *z_3; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zzzz&quot;, &amp;z_0, &amp;z_1, &amp;z_2, &amp;z_3) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG &amp;&amp; Z_TYPE_P(z_2) == IS_LONG &amp;&amp; Z_TYPE_P(z_3) == IS_LONG){
++
++
++			QTime *QTime_ptr = new QTime((int) Z_LVAL_P(z_0) ,(int) Z_LVAL_P(z_1) ,(int) Z_LVAL_P(z_2) ,(int) Z_LVAL_P(z_3));
++				PHP_QT_REGISTER(QTime_ptr);
++				RETURN_NULL();
++			}
+ 		}
+ 	}
+ }
+@@ -293,23 +295,25 @@
+  *    flags:    c
+  */
+ ZEND_METHOD(QTime, addSecs){
+-
+-	if (ZEND_NUM_ARGS() == 1){
+ 		/* l public*/
+-		long var_l_0;    // default: 
+ 
+ 		/* int secs,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++
++	if (ZEND_NUM_ARGS() == 1){
++		zval *z_0; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG){
+ 			QTime *obj = (QTime*) PHP_QT_FETCH();
+ 
+-			
+-			QTime return_object = (QTime) obj-&gt;addSecs((int) var_l_0);
++
++				QTime return_object = (QTime) obj-&gt;addSecs((int) Z_LVAL_P(z_0));
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QTime_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+ 				le.ptr = (void*) &amp;return_object;                                       
+ 				php_qt_register(return_value,le);                   
+ 				return;                                             
++			}
+ 		}
+ 	}
+ }
+@@ -321,23 +325,25 @@
+  *    flags:    c
+  */
+ ZEND_METHOD(QTime, addMSecs){
+-
+-	if (ZEND_NUM_ARGS() == 1){
+ 		/* l public*/
+-		long var_l_0;    // default: 
+ 
+ 		/* int ms,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++
++	if (ZEND_NUM_ARGS() == 1){
++		zval *z_0; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG){
+ 			QTime *obj = (QTime*) PHP_QT_FETCH();
+ 
+-			
+-			QTime return_object = (QTime) obj-&gt;addMSecs((int) var_l_0);
++
++				QTime return_object = (QTime) obj-&gt;addMSecs((int) Z_LVAL_P(z_0));
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QTime_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+ 				le.ptr = (void*) &amp;return_object;                                       
+ 				php_qt_register(return_value,le);                   
+ 				return;                                             
++			}
+ 		}
+ 	}
+ }
+@@ -351,7 +357,7 @@
+ ZEND_METHOD(QTime, currentTime){
+ 	if (ZEND_NUM_ARGS() == 0){
+ 			QTime *obj = (QTime*) PHP_QT_FETCH();
+-			QTime return_object = (QTime) obj-&gt;currentTime();
++				QTime return_object = (QTime) obj-&gt;currentTime();
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QTime_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+@@ -381,20 +387,22 @@
+  *    flags:    
+  */
+ ZEND_METHOD(QTime, setHMS){
+-
+-	if (ZEND_NUM_ARGS() == 4){
+ 		/* llll public*/
+-		long var_llll_0;    // default: 
+-		long var_llll_1;    // default: 
+-		long var_llll_2;    // default: 
+-		long var_llll_3;    // default: 0
+ 
+ 		/* int h, int m, int s, int ms,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;llll|&quot;, &amp;var_llll_0, &amp;var_llll_1, &amp;var_llll_2, &amp;var_llll_3) == SUCCESS) {
++
++	if (ZEND_NUM_ARGS() == 4){
++		zval *z_0; // define ZVAL
++		zval *z_1; // define ZVAL
++		zval *z_2; // define ZVAL
++		zval *z_3; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zzzz&quot;, &amp;z_0, &amp;z_1, &amp;z_2, &amp;z_3) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG &amp;&amp; Z_TYPE_P(z_2) == IS_LONG &amp;&amp; Z_TYPE_P(z_3) == IS_LONG){
+ 			QTime *obj = (QTime*) PHP_QT_FETCH();
+ 
+-			
+-			RETURN_BOOL(obj-&gt;setHMS((int) var_llll_0 ,(int) var_llll_1 ,(int) var_llll_2 ,(int) var_llll_3));
++
++			RETURN_BOOL(obj-&gt;setHMS((int) Z_LVAL_P(z_0) ,(int) Z_LVAL_P(z_1) ,(int) Z_LVAL_P(z_2) ,(int) Z_LVAL_P(z_3)));
++			}
+ 		}
+ 	}
+ }
+@@ -419,21 +427,22 @@
+  *    flags:    c
+  */
+ ZEND_METHOD(QTime, msecsTo){
+-
+-	if (ZEND_NUM_ARGS() == 1){
+ 		/* o public*/
+-		zval* z_var_o_0;   // default: 
+ 
+ 		/* const QTime&amp; ,  */
+-		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++
++	if (ZEND_NUM_ARGS() == 1){
++		zval *z_0; // define ZVAL
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
++			if(Z_TYPE_P(z_0) == IS_OBJECT){
+ 			QTime *obj = (QTime*) PHP_QT_FETCH();
+-			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
++			QObject* obj_z_0 = (QObject*) php_qt_fetch(z_0);
+ 
+-			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
+-			
+-			if(tmp_o_0 == &quot;const QTime&quot;) {
+-				RETURN_LONG(obj-&gt;msecsTo((const QTime&amp;) var_o_0));
++
++			if(Z_OBJCE_P(z_0)-&gt;name == &quot;QTime&quot;) {
++				RETURN_LONG(obj-&gt;msecsTo((const QTime&amp;) obj_z_0));
+ 			}
++			}
+ 		}
+ 	}
+ }
+
+Modified: trunk/qt/php_qt.cpp
+===================================================================
+--- trunk/qt/php_qt.cpp	2006-01-22 19:25:26 UTC (rev 202)
++++ trunk/qt/php_qt.cpp	2006-01-22 20:29:43 UTC (rev 203)
+@@ -52,11 +52,7 @@
+ HashTable php_qt_objptr_hash;
+ 
+ zend_class_entry *QWidget_ce_ptr; //Gyger Jean-Luc change to non static
+-zend_class_entry *QString_ce_ptr;
+ zend_class_entry *QObject_ce_ptr;
+-zend_class_entry *QLatin1String_ce_ptr;
+-zend_class_entry *QPushButton_ce_ptr;
+-zend_class_entry *QAbstractButton_ce_ptr;
+ zend_class_entry *QApplication_ce_ptr;
+ zend_class_entry *QCoreApplication_ce_ptr;
+ zend_class_entry *QEvent_ce_ptr;
+@@ -70,7 +66,6 @@
+ zend_class_entry *QSlider_ce_ptr;
+ zend_class_entry *QLineEdit_ce_ptr;
+ zend_class_entry *QFrame_ce_ptr;
+-zend_class_entry *QLCDNumber_ce_ptr;
+ zend_class_entry *QMimeSource_ce_ptr;
+ 
+ #include &quot;ag_zend_class_entry.inc&quot;
+@@ -172,23 +167,8 @@
+ 	REGISTER_LONG_CONSTANT(&quot;QAPPLICATION_TYPE_GUICLIENT&quot;,QApplication::GuiClient ,CONST_CS | CONST_PERSISTENT);	
+ 	REGISTER_LONG_CONSTANT(&quot;QAPPLICATION_TYPE_GUISERVER&quot;,QApplication::GuiServer ,CONST_CS | CONST_PERSISTENT);	
+ 	
+-    _register_QString(TSRMLS_C);
+-      REGISTER_LONG_CONSTANT(&quot;QSTRING_SECTIONFLAG_SECTIONDEFAULT&quot;, QString::SectionDefault, CONST_CS | CONST_PERSISTENT);
+-      REGISTER_LONG_CONSTANT(&quot;QSTRING_SECTIONFLAG_SECTIONSKIPEMPTY&quot;, QString::SectionSkipEmpty, CONST_CS | CONST_PERSISTENT);
+-      REGISTER_LONG_CONSTANT(&quot;QSTRING_SECTIONFLAG_SECTIONINCLUDELEADINGSEP&quot;, QString::SectionIncludeLeadingSep, CONST_CS | CONST_PERSISTENT);
+-      REGISTER_LONG_CONSTANT(&quot;QSTRING_SECTIONFLAG_SECTIONINCLUDETRAILINGSEP&quot;, QString::SectionIncludeTrailingSep, CONST_CS | CONST_PERSISTENT);
+-      REGISTER_LONG_CONSTANT(&quot;QSTRING_SECTIONFLAG_SECTIONCASEINSENSITIVESEPS&quot;, QString::SectionCaseInsensitiveSeps, CONST_CS | CONST_PERSISTENT);
+-      REGISTER_LONG_CONSTANT(&quot;QSTRING_SPLITBEHAVIOR_KEEPEMPTYPARTS&quot;, QString::KeepEmptyParts, CONST_CS | CONST_PERSISTENT);
+-      REGISTER_LONG_CONSTANT(&quot;QSTRING_SPLITBEHAVIOR_SKIPEMPTYPARTS&quot;, QString::SkipEmptyParts, CONST_CS | CONST_PERSISTENT);
+-      REGISTER_LONG_CONSTANT(&quot;QSTRING_NORMALIZATIONFORM_NORMALIZATIONFORM_D&quot;, QString::NormalizationForm_D, CONST_CS | CONST_PERSISTENT);
+-      REGISTER_LONG_CONSTANT(&quot;QSTRING_NORMALIZATIONFORM_NORMALIZATIONFORM_C&quot;, QString::NormalizationForm_C, CONST_CS | CONST_PERSISTENT);
+-      REGISTER_LONG_CONSTANT(&quot;QSTRING_NORMALIZATIONFORM_NORMALIZATIONFORM_KD&quot;, QString::NormalizationForm_KD, CONST_CS | CONST_PERSISTENT);
+-      REGISTER_LONG_CONSTANT(&quot;QSTRING_NORMALIZATIONFORM_NORMALIZATIONFORM_KC&quot;, QString::NormalizationForm_KC, CONST_CS | CONST_PERSISTENT);
+-    _register_QLatin1String(TSRMLS_C);
+     _register_QObject(TSRMLS_C);
+     _register_QWidget(TSRMLS_C);
+-    _register_QAbstractButton(TSRMLS_C);
+-    _register_QPushButton(TSRMLS_C);
+ 	
+ 	_register_QEvent(TSRMLS_C);
+ 	REGISTER_LONG_CONSTANT(&quot;QEVENT_TYPE_NONE&quot;, QEvent::None,CONST_CS | CONST_PERSISTENT);	
+@@ -343,15 +323,6 @@
+         REGISTER_LONG_CONSTANT(&quot;QFRAME__SHADOW_MASK&quot;, QFrame::Shadow_Mask, CONST_CS | CONST_PERSISTENT);
+         REGISTER_LONG_CONSTANT(&quot;QFRAME__SHAPE_MASK&quot;, QFrame::Shape_Mask, CONST_CS | CONST_PERSISTENT);
+ 
+-    _register_QLCDNumber(TSRMLS_C);
+-        REGISTER_LONG_CONSTANT(&quot;QLCDNUMBER_MODE_HEX&quot;, QLCDNumber::Hex, CONST_CS | CONST_PERSISTENT);
+-        REGISTER_LONG_CONSTANT(&quot;QLCDNUMBER_MODE_DEC&quot;, QLCDNumber::Dec, CONST_CS | CONST_PERSISTENT);
+-        REGISTER_LONG_CONSTANT(&quot;QLCDNUMBER_MODE_OCT&quot;, QLCDNumber::Oct, CONST_CS | CONST_PERSISTENT);
+-        REGISTER_LONG_CONSTANT(&quot;QLCDNUMBER_MODE_BIN&quot;, QLCDNumber::Bin, CONST_CS | CONST_PERSISTENT);
+-        REGISTER_LONG_CONSTANT(&quot;QLCDNUMBER_SEGMENTSTYLE_OUTLINE&quot;, QLCDNumber::Outline, CONST_CS | CONST_PERSISTENT);
+-        REGISTER_LONG_CONSTANT(&quot;QLCDNUMBER_SEGMENTSTYLE_FILLED&quot;, QLCDNumber::Filled, CONST_CS | CONST_PERSISTENT);
+-        REGISTER_LONG_CONSTANT(&quot;QLCDNUMBER_SEGMENTSTYLE_FLAT&quot;, QLCDNumber::Flat, CONST_CS | CONST_PERSISTENT);
+-
+ // handfixed:
+ 	  REGISTER_LONG_CONSTANT(&quot;QINTERNAL_PAINTDEVICEFLAGS_UNKNOWNDEVICE&quot;, QInternal::UnknownDevice, CONST_CS | CONST_PERSISTENT);
+ 	  REGISTER_LONG_CONSTANT(&quot;QINTERNAL_PAINTDEVICEFLAGS_WIDGET&quot;, QInternal::Widget, CONST_CS | CONST_PERSISTENT);
+@@ -1061,6 +1032,7 @@
+ 
+ #include &quot;ag_qt_minit.inc&quot;
+ 
++
+ 	le_php_qt_hashtype = zend_register_list_destructors_ex(destroy_php_qt_hashtable, NULL, &quot;PHP-Qt object list&quot;, module_number);
+ 
+ 	zend_hash_init_ex(&amp;php_qt_objptr_hash, 50, NULL, NULL, 1, 0);
+@@ -1218,6 +1190,7 @@
+ 	  php_error(E_WARNING,&quot;reference to Qt object missing.&quot;);
+ 	}
+ 	ptr = zend_list_find(Z_LVAL_PP(listhandle), &amp;type);
++
+ 	if(!ptr){
+ 		php_error(E_ERROR,&quot;reference to Qt object missing.&quot;);
+ 	} 
+@@ -1238,116 +1211,6 @@
+ 
+ 
+ ///
+-
+-static zend_function_entry QLatin1String_methods[] = {
+-    ZEND_ME(QLatin1String, __construct,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QLatin1String,latin1,NULL,ZEND_ACC_PUBLIC)
+-
+-    {NULL,NULL,NULL}
+-};
+-
+-void _register_QLatin1String(TSRMLS_D)
+-{
+-    zend_class_entry ce;
+-    INIT_CLASS_ENTRY(ce,&quot;QLatin1String&quot;,QLatin1String_methods);
+-    QLatin1String_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
+-
+-}
+-static zend_function_entry QString_methods[] = {
+-    ZEND_ME(QString,__toString,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,compare,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,utf16,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,constData,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,insert,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,clear,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,setUtf16,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,prepend,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,trimmed,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,chop,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,leftJustified,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,squeeze,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,count,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,fromAscii,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-    ZEND_ME(QString,toLongLong,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,toUpper,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString, __construct,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,normalized,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,fromUtf16,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-    ZEND_ME(QString,isRightToLeft,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,setNum,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,endsWith,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,number,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-    ZEND_ME(QString,localeAwareCompare,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,section,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,isSimpleText,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,size,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,simplified,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,toUInt,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,toUShort,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,truncate,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,toAscii,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,length,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,right,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,push_front,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,toUtf8,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,toULongLong,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,indexOf,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,fromRawData,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-    ZEND_ME(QString,constEnd,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,left,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,fromLocal8Bit,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-    ZEND_ME(QString,startsWith,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,remove,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,isEmpty,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,arg,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,vsprintf,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,toFloat,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,isDetached,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,reserve,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,toULong,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,toShort,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,split,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,setUnicode,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,fromLatin1,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-    ZEND_ME(QString,data,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,toLatin1,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,end,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,contains,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,resize,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,replace,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,fromUtf8,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-    ZEND_ME(QString,toLong,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,detach,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,append,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,mid,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,toDouble,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,fill,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,rightJustified,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,toLower,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,lastIndexOf,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,unicode,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,at,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,begin,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,push_back,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,capacity,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,constBegin,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,toLocal8Bit,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,toInt,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QString,isNull,NULL,ZEND_ACC_PUBLIC)
+-
+-    {NULL,NULL,NULL}
+-};
+-
+-void _register_QString(TSRMLS_D)
+-{
+-    zend_class_entry ce;
+-    INIT_CLASS_ENTRY(ce,&quot;QString&quot;,QString_methods);
+-    QString_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
+-
+-    zend_declare_property_string(QString_ce_ptr,&quot;QString&quot;,strlen(&quot;QString&quot;),&quot;&quot;,ZEND_ACC_PROTECTED TSRMLS_CC);
+-
+-}
+-
+ static zend_function_entry QObject_methods[] = { 
+     ZEND_ME(QObject,__construct,NULL,ZEND_ACC_PUBLIC)
+     ZEND_ME(QObject,test,NULL,ZEND_ACC_PUBLIC)    
+@@ -1578,77 +1441,6 @@
+ 
+ }
+ 
+-static zend_function_entry QPushButton_methods[] = {
+- 
+-    ZEND_ME(QPushButton,__construct,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QPushButton,autoDefault,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QPushButton,isDefault,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QPushButton,isFlat,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QPushButton,menu,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QPushButton,setAutoDefault,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QPushButton,setDefault,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QPushButton,setFlat,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QPushButton,setMenu,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QPushButton,paintEvent,NULL,ZEND_ACC_PROTECTED)
+-    {NULL,NULL,NULL}
+-
+-};
+-
+-void _register_QPushButton(TSRMLS_D)
+-{
+-    zend_class_entry ce;
+-    
+-    INIT_CLASS_ENTRY(ce,&quot;QPushButton&quot;,QPushButton_methods);
+-    
+-    QPushButton_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QAbstractButton_ce_ptr,NULL TSRMLS_CC);
+-    zend_declare_property_null(QPushButton_ce_ptr,&quot;menu&quot;,strlen(&quot;menu&quot;),ZEND_ACC_PRIVATE TSRMLS_CC);
+-
+-    PHP_QT_DECLARE_PROPERTY(&quot;autoDefault&quot;);
+-    PHP_QT_DECLARE_PROPERTY(&quot;default&quot;);
+-    PHP_QT_DECLARE_PROPERTY(&quot;flat&quot;);
+-
+-}
+-
+-static zend_function_entry QAbstractButton_methods[] = {
+- 
+-    ZEND_ME(QAbstractButton,__construct,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QAbstractButton,autoExclusive,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QAbstractButton,autoRepeat,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QAbstractButton,isCheckable,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QAbstractButton,isChecked,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QAbstractButton,isDown,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QAbstractButton,setAutoExclusive,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QAbstractButton,setAutoRepeat,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QAbstractButton,paintEvent,NULL,ZEND_ACC_PROTECTED|ZEND_ACC_ABSTRACT)
+-//    ZEND_ME(QAbstractButton,setCheckable,NULL,ZEND_ACC_PUBLIC)
+-//    ZEND_ME(QAbstractButton,setDown,NULL,ZEND_ACC_PUBLIC)
+-
+-    {NULL,NULL,NULL}
+-
+-};
+-
+-void _register_QAbstractButton(TSRMLS_D)
+-{
+-    zend_class_entry ce;
+-    
+-    INIT_CLASS_ENTRY(ce,&quot;QAbstractButton&quot;,QAbstractButton_methods);
+-    
+-    QAbstractButton_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QWidget_ce_ptr,NULL TSRMLS_CC);
+-    zend_declare_property_null(QAbstractButton_ce_ptr,&quot;menu&quot;,strlen(&quot;menu&quot;),ZEND_ACC_PRIVATE TSRMLS_CC);
+-
+-    zend_declare_property_bool(QAbstractButton_ce_ptr,&quot;autoExclusive&quot;,strlen(&quot;autoExclusive&quot;),0,ZEND_ACC_PRIVATE TSRMLS_CC);
+-    zend_declare_property_bool(QAbstractButton_ce_ptr,&quot;autoRepeat&quot;,strlen(&quot;autoRepeat&quot;),0,ZEND_ACC_PRIVATE TSRMLS_CC);
+-    zend_declare_property_bool(QAbstractButton_ce_ptr,&quot;checkable&quot;,strlen(&quot;checkable&quot;),0,ZEND_ACC_PRIVATE TSRMLS_CC);
+-    zend_declare_property_bool(QAbstractButton_ce_ptr,&quot;checked&quot;,strlen(&quot;checked&quot;),0,ZEND_ACC_PRIVATE TSRMLS_CC);
+-    zend_declare_property_bool(QAbstractButton_ce_ptr,&quot;down&quot;,strlen(&quot;down&quot;),0,ZEND_ACC_PRIVATE TSRMLS_CC);
+-
+-    zend_declare_property_null(QAbstractButton_ce_ptr,&quot;icon&quot;,strlen(&quot;icon&quot;),ZEND_ACC_PRIVATE TSRMLS_CC);
+-    zend_declare_property_null(QAbstractButton_ce_ptr,&quot;iconSize&quot;,strlen(&quot;iconSize&quot;),ZEND_ACC_PRIVATE TSRMLS_CC);
+-    zend_declare_property_null(QAbstractButton_ce_ptr,&quot;shortcut&quot;,strlen(&quot;shortcut&quot;),ZEND_ACC_PRIVATE TSRMLS_CC);
+-    zend_declare_property_null(QAbstractButton_ce_ptr,&quot;text&quot;,strlen(&quot;text&quot;),ZEND_ACC_PRIVATE TSRMLS_CC);
+-
+-}
+-
+ static zend_function_entry QCoreApplication_methods[] = {
+ 	//public members 
+     ZEND_ME(QCoreApplication,__construct,NULL,ZEND_ACC_PUBLIC)
+@@ -2159,42 +1951,7 @@
+ 
+ }
+ 
+-static zend_function_entry QLCDNumber_methods[] = {
+-    ZEND_ME(QLCDNumber,__construct,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QLCDNumber,smallDecimalPoint,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QLCDNumber,numDigits,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QLCDNumber,checkOverflow,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QLCDNumber,mode,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QLCDNumber,segmentStyle,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QLCDNumber,value,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QLCDNumber,intValue,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QLCDNumber,sizeHint,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QLCDNumber,setHexMode,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QLCDNumber,setDecMode,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QLCDNumber,setOctMode,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QLCDNumber,setBinMode,NULL,ZEND_ACC_PUBLIC)
+-    ZEND_ME(QLCDNumber,staticMetaObject,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-    ZEND_ME(QLCDNumber,tr,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+-    ZEND_ME(QLCDNumber,trUtf8,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+ 
+-    {NULL,NULL,NULL}
+-};
+-
+-void _register_QLCDNumber(TSRMLS_D)
+-{
+-    zend_class_entry ce;
+-    INIT_CLASS_ENTRY(ce,&quot;QLCDNumber&quot;,QLCDNumber_methods);
+-    QLCDNumber_ce_ptr = zend_register_internal_class_ex(&amp;ce TSRMLS_CC, QFrame_ce_ptr,NULL TSRMLS_CC);
+-
+-    PHP_QT_DECLARE_PROPERTY(&quot;smallDecimalPoint&quot;);
+-    PHP_QT_DECLARE_PROPERTY(&quot;numDigits&quot;);
+-    PHP_QT_DECLARE_PROPERTY(&quot;mode&quot;);
+-    PHP_QT_DECLARE_PROPERTY(&quot;segmentStyle&quot;);
+-    PHP_QT_DECLARE_PROPERTY(&quot;value&quot;);
+-    PHP_QT_DECLARE_PROPERTY(&quot;intValue&quot;);
+-
+-}
+-
+ #include &quot;ag_php_qt_cpp.inc&quot;
+ 
+ /* }}} */
+
+Modified: trunk/qt/php_qt.h
+===================================================================
+--- trunk/qt/php_qt.h	2006-01-22 19:25:26 UTC (rev 202)
++++ trunk/qt/php_qt.h	2006-01-22 20:29:43 UTC (rev 203)
+@@ -330,14 +330,10 @@
+ extern int le_php_qt_hashtype;
+ extern HashTable php_qt_objptr_hash;
+ 
+-void _register_QString();
+-void _register_QLatin1String();
+ void _register_QObject();
+ void _register_QApplication();
+ void _register_QCoreApplication();
+ void _register_QWidget();
+-void _register_QAbstractButton();
+-void _register_QPushButton();
+ void _register_QEvent();
+ void _register_QLayoutItem();
+ void _register_QLayout();
+@@ -348,13 +344,8 @@
+ void _register_QSlider();
+ void _register_QLineEdit();
+ void _register_QFrame();
+-void _register_QLCDNumber();
+ 
+-extern zend_class_entry *QString_ce_ptr;
+ extern zend_class_entry *QObject_ce_ptr;
+-extern zend_class_entry *QLatin1String_ce_ptr;
+-extern zend_class_entry *QPushButton_ce_ptr;
+-extern zend_class_entry *QAbstractButton_ce_ptr;
+ extern zend_class_entry *QApplication_ce_ptr;
+ extern zend_class_entry *QWidget_ce_ptr;
+ extern zend_class_entry *QCoreApplication_ce_ptr;
+@@ -369,7 +360,6 @@
+ extern zend_class_entry *QSlider_ce_ptr;
+ extern zend_class_entry *QLineEdit_ce_ptr;
+ extern zend_class_entry *QFrame_ce_ptr;
+-extern zend_class_entry *QLCDNumber_ce_ptr;
+ extern zend_class_entry *QMimeSource_ce_ptr;
+ 
+ extern zend_class_entry *QCharRef_ce_ptr;
+
+Modified: trunk/qt/text_related/qstring.cpp
+===================================================================
+--- trunk/qt/text_related/qstring.cpp	2006-01-22 19:25:26 UTC (rev 202)
++++ trunk/qt/text_related/qstring.cpp	2006-01-22 20:29:43 UTC (rev 203)
+@@ -36,7 +36,9 @@
+   QString *QString_ptr = (QString *) PHP_QT_FETCH();
+ 
+   int l = QString_ptr-&gt;size();
+-  char* c = (char*) (QString_ptr-&gt;toAscii()).constData();
++
++  char* c = (char*) (QString_ptr-&gt;toUtf8()).constData();
++
+   RETURN_STRING(c,l);
+ }
+ 
+@@ -2013,10 +2015,15 @@
+ 		zval *z_1; // define ZVAL
+ 		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
+ 			if(Z_TYPE_P(z_0) == IS_STRING &amp;&amp; Z_TYPE_P(z_1) == IS_LONG){
+-			QString *obj = (QString*) PHP_QT_FETCH();
+ 
+-
+-				QString return_object = (QString) obj-&gt;fromUtf8( (const char*) Z_STRVAL_P(z_0) ,(int) Z_LVAL_P(z_1));
++	QString return_object;			
++    if(getThis() != NULL){
++        QString *obj = (QString*) PHP_QT_FETCH();
++        return_object = (QString) obj-&gt;fromUtf8( (const char*) Z_STRVAL_P(z_0) ,(int) Z_LVAL_P(z_1));
++    }else {
++        return_object = (QString) QString::fromUtf8( (const char*) Z_STRVAL_P(z_0) ,(int) Z_LVAL_P(z_1));
++    }
++				
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QString_ce_ptr);     
+ 				zend_rsrc_list_entry le;                            
+
+Modified: trunk/qt/zend_php_qt.h
+===================================================================
+--- trunk/qt/zend_php_qt.h	2006-01-22 19:25:26 UTC (rev 202)
++++ trunk/qt/zend_php_qt.h	2006-01-22 20:29:43 UTC (rev 203)
+@@ -316,30 +316,6 @@
+ ZEND_METHOD(QApplication,widgetAt); //WARNING 2 imlementation,
+ ZEND_METHOD(QApplication,windowIcon); 
+ 
+-/* QAbstractButton */
+-ZEND_METHOD(QAbstractButton,__construct);
+-ZEND_METHOD(QAbstractButton,autoExclusive);
+-ZEND_METHOD(QAbstractButton,autoRepeat);
+-ZEND_METHOD(QAbstractButton,isCheckable);
+-ZEND_METHOD(QAbstractButton,isChecked);
+-ZEND_METHOD(QAbstractButton,isDown);
+-ZEND_METHOD(QAbstractButton,setAutoExclusive);
+-ZEND_METHOD(QAbstractButton,setAutoRepeat);
+-ZEND_METHOD(QAbstractButton,setCheckable);
+-ZEND_METHOD(QAbstractButton,paintEvent);
+-
+-/* QPushButton */
+-ZEND_METHOD(QPushButton,__construct);
+-ZEND_METHOD(QPushButton,autoDefault);
+-ZEND_METHOD(QPushButton,isDefault);
+-ZEND_METHOD(QPushButton,isFlat);
+-ZEND_METHOD(QPushButton,menu);
+-ZEND_METHOD(QPushButton,setAutoDefault);
+-ZEND_METHOD(QPushButton,setDefault);
+-ZEND_METHOD(QPushButton,setFlat);
+-ZEND_METHOD(QPushButton,setMenu);
+-ZEND_METHOD(QPushButton,paintEvent);
+-
+ /* QWidget */
+ ZEND_METHOD(QWidget,__construct);
+ ZEND_METHOD(QWidget,show);
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000051.html">[Php-qt-svn] r202 - trunk
+</A></li>
+	<LI>Next message: <A HREF="000054.html">[Php-qt-svn] r204 - trunk/qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#52">[ date ]</a>
+              <a href="thread.html#52">[ thread ]</a>
+              <a href="subject.html#52">[ subject ]</a>
+              <a href="author.html#52">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

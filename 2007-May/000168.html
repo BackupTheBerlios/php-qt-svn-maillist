@@ -1,0 +1,406 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r324 - in trunk: php_qt tests
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-May/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r324%20-%20in%20trunk%3A%20php_qt%20tests&In-Reply-To=%3C200705310537.l4V5bXKs011300%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000167.html">
+   
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r324 - in trunk: php_qt tests</H1>
+    <B>Katrina.Niolet at mail.berlios.de</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r324%20-%20in%20trunk%3A%20php_qt%20tests&In-Reply-To=%3C200705310537.l4V5bXKs011300%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r324 - in trunk: php_qt tests">Katrina.Niolet at mail.berlios.de
+       </A><BR>
+    <I>Thu May 31 07:37:33 CEST 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000167.html">[Php-qt-svn] r323 - in trunk: php_qt tests
+</A></li>
+        
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#168">[ date ]</a>
+              <a href="thread.html#168">[ thread ]</a>
+              <a href="subject.html#168">[ subject ]</a>
+              <a href="author.html#168">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: Katrina Niolet
+Date: 2007-05-31 07:37:32 +0200 (Thu, 31 May 2007)
+New Revision: 324
+
+Modified:
+   trunk/php_qt/functions.cpp
+   trunk/php_qt/php_qt.cpp
+   trunk/php_qt/php_qt.h
+   trunk/tests/qFunctions.php
+Log:
+Added support for the following Qt namespace functions:
+qFuzzyCompare,qIsNull,qIntCast,qVersion,PHPQtVersion,QiDiVersin,qSharedBuild,qMalloc,qFree,qRealloc,qMemCopy and updated tests/qFunctions.php accordingly.
+
+Modified: trunk/php_qt/functions.cpp
+===================================================================
+--- trunk/php_qt/functions.cpp	2007-05-30 20:50:45 UTC (rev 323)
++++ trunk/php_qt/functions.cpp	2007-05-31 05:37:32 UTC (rev 324)
+@@ -330,6 +330,195 @@
+ 			break;
+ 	}
+ }
++
++/**
++ * Returns true if x-y is between 0.0 and 0.00000000001
++ */
++PHP_FUNCTION(qFuzzyCompare) {
++	double x;
++	double y;
++	double ret;
++	
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;dd&quot;,&amp;x,&amp;y)==FAILURE) {
++		php_error(E_PARSE,&quot;wrong parameters for qFuzzyCompare&quot;);
++		return;
++	}
++	//Just so happens the Qt version does just what we need for this one
++	RETURN_BOOL(qFuzzyCompare(x,y));
++}
++		
++/**
++ * Returns true if variable is NULL or a numeric 0
++ * This varies slightly from the Qt implementation which tests
++ * a double or float for a NULL value only.
++ */
++PHP_FUNCTION(qIsNull) {
++	zval *var;
++	
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;,&amp;var)==FAILURE) {
++		php_error(E_PARSE,&quot;wrong parameters for qIsNull&quot;);
++		return;
++	}
++	if(Z_TYPE_P(var)==IS_NULL)
++		RETURN_BOOL(true);
++	if(Z_TYPE_P(var)==IS_LONG) {
++		if(Z_LVAL_P(var) == 0)
++			RETURN_BOOL(true);
++	}
++	if(Z_TYPE_P(var)==IS_DOUBLE) {
++		if(Z_DVAL_P(var) == 0.0)
++			RETURN_BOOL(true);
++	}
++	RETURN_BOOL(false);
++}
++
++/**
++ * Cast a variable to an integer. NULL casts to 0 Resources and Arrays return false.
++ * Objects will call the __toInt() method if available, otherwise will return false.
++ * This differs from the Qt version which can only convert a float or double to an int
++ * TODO: implement __toInt() functionality
++ */
++PHP_FUNCTION(qIntCast) {
++	zval *var;
++	
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;,&amp;var)==FAILURE)
++		return;
++	switch(Z_TYPE_P(var)) {
++		case IS_NULL:
++			RETURN_LONG(0);
++			break;
++		case IS_LONG:
++			RETURN_LONG(Z_LVAL_P(var));
++			break;
++		case IS_DOUBLE:
++			RETURN_LONG((long)Z_DVAL_P(var));
++			break;
++		case IS_RESOURCE:
++			RETURN_BOOL(false);
++			break;
++		case IS_ARRAY:
++			RETURN_BOOL(false);
++			break;
++		case IS_OBJECT:
++			RETURN_BOOL(false);
++			break;
++	}
++}
++
++/**
++ * Return the version of Qt being used
++ */
++PHP_FUNCTION(qVersion) {
++	RETURN_STRING(QT_VERSION_STR,1);
++}
++
++/**
++ * Return the version of PHP-Qt being used
++ */
++PHP_FUNCTION(PHPQtVersion) {
++	RETURN_STRING(PHPQT_VERSION,1);
++}
++
++/**
++ * Return the version of QiDi that this release complies with
++ */
++PHP_FUNCTION(QiDiVersion) {
++	RETURN_STRING(QIDI_VERSION,1);
++}
++
++PHP_FUNCTION(qSharedBuild) {
++	RETURN_BOOL(qSharedBuild);
++}
++
++/**
++ * We don't REALLY need to allocate memory in PHP, this is just here for ease of
++ * porting code from C++
++ * This doesn't ACTUALLY return a pointer to allocated memory exactly,
++ * it creates a space of allocated memory and assigns to it a null string
++ * then returns a pointer to this null string.
++ */
++PHP_FUNCTION(qMalloc) {
++	long size;
++	char *tmp;
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;,&amp;size)==FAILURE)
++		return;
++	tmp = (char *)emalloc(size);
++	qMemCopy(&amp;tmp[0],&quot;\0&quot;,1);
++	RETURN_STRING(tmp,0);
++}
++
++/**
++ * Simulate freeing the memory used by a variable by setting it to NULL
++ */
++PHP_FUNCTION(qFree) {
++	zval* var;
++	
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;,&amp;var)==FAILURE)
++		return;
++	convert_to_null(var);
++}
++
++/**
++ * We don't REALLY need to allocate memory in PHP, this is just here for ease of
++ * porting code from C++
++ */
++PHP_FUNCTION(qRealloc) {
++	zval *val;
++	double size;
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zd&quot;,&amp;val,&amp;size)==FAILURE)
++		return;
++	RETURN_BOOL(true);
++}
++
++/**
++ * Copy the contents of one pointer to another pointer
++ * This is reasonably zval safe, but note the destination must already exist.
++ * Additionally, the destination will automatically grow if the
++ * size of the coppied data is to large
++ * Currently this only supports string, int and float types
++ * TODO: add support for array, objects, bool
++ */
++PHP_FUNCTION(qMemCopy) {
++	zval* dest;
++	zval* src;
++	
++	long size;
++	int src_orig_type;
++	int dest_orig_type;
++	
++	if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zzl&quot;,&amp;dest,&amp;src,&amp;size)==FAILURE)
++		return;
++
++	src_orig_type = Z_TYPE_P(src);
++	dest_orig_type = Z_TYPE_P(dest);
++	
++	switch(Z_TYPE_P(src)) {
++		case IS_STRING:
++		case IS_LONG:
++		case IS_DOUBLE:
++			convert_to_string(src);
++			convert_to_string(dest);
++			if(dest-&gt;value.str.len &lt; size) {
++				dest-&gt;value.str.val = (char*)emalloc((size_t)size);
++				dest-&gt;value.str.len = size;
++			}
++			qMemCopy(dest-&gt;value.str.val,src-&gt;value.str.val,(size_t)size);
++			break;
++		default:
++			RETURN_FALSE;
++	}
++	if(src_orig_type==IS_STRING || dest_orig_type==IS_STRING)
++		RETURN_TRUE;
++	if(src_orig_type==IS_DOUBLE || dest_orig_type==IS_DOUBLE) {
++		convert_to_double(dest);
++		RETURN_TRUE;
++	}
++	if(src_orig_type==IS_LONG || dest_orig_type==IS_LONG) {
++		convert_to_long(dest);
++		RETURN_TRUE;
++	}
++}
++
+ /*!
+  *	tr() returns QObject::tr()
+  *
+
+Modified: trunk/php_qt/php_qt.cpp
+===================================================================
+--- trunk/php_qt/php_qt.cpp	2007-05-30 20:50:45 UTC (rev 323)
++++ trunk/php_qt/php_qt.cpp	2007-05-31 05:37:32 UTC (rev 324)
+@@ -82,6 +82,17 @@
+ 	PHP_FE(qMax,		NULL)
+ 	PHP_FE(qBound,		NULL)
+ 	PHP_FE(qPrintable,	NULL)
++	PHP_FE(qFuzzyCompare,	NULL)
++	PHP_FE(qIsNull,		NULL)
++	PHP_FE(qIntCast,	NULL)
++	PHP_FE(qVersion,	NULL)
++	PHP_FE(PHPQtVersion,	NULL)
++	PHP_FE(QiDiVersion,	NULL)
++	PHP_FE(qSharedBuild,		NULL)
++	PHP_FE(qMalloc,		NULL)
++	PHP_FE(qFree,		NULL)
++	PHP_FE(qRealloc,	NULL)
++	PHP_FE(qMemCopy,	NULL)
+ 	PHP_FE(qobject_cast,	phpqt_cast_arginfo)
+ 	PHP_FE(tr,	NULL)
+ 	PHP_FE(check_qobject,	NULL)
+
+Modified: trunk/php_qt/php_qt.h
+===================================================================
+--- trunk/php_qt/php_qt.h	2007-05-30 20:50:45 UTC (rev 323)
++++ trunk/php_qt/php_qt.h	2007-05-31 05:37:32 UTC (rev 324)
+@@ -25,6 +25,7 @@
+ #define QTPHP_H
+ 
+ #define PHPQT_VERSION &quot;0.0.4&quot;
++#define QIDI_VERSION &quot;1.0&quot;
+ 
+ #define MONITOR
+ 
+@@ -106,6 +107,17 @@
+ PHP_FUNCTION(qMax);
+ PHP_FUNCTION(qBound);
+ PHP_FUNCTION(qPrintable);
++PHP_FUNCTION(qFuzzyCompare);
++PHP_FUNCTION(qIsNull);
++PHP_FUNCTION(qIntCast);
++PHP_FUNCTION(qVersion);
++PHP_FUNCTION(PHPQtVersion);
++PHP_FUNCTION(QiDiVersion);
++PHP_FUNCTION(qSharedBuild);
++PHP_FUNCTION(qMalloc);
++PHP_FUNCTION(qFree);
++PHP_FUNCTION(qRealloc);
++PHP_FUNCTION(qMemCopy);
+ PHP_FUNCTION(qobject_cast);
+ PHP_FUNCTION(tr);
+ PHP_FUNCTION(check_qobject);
+
+Modified: trunk/tests/qFunctions.php
+===================================================================
+--- trunk/tests/qFunctions.php	2007-05-30 20:50:45 UTC (rev 323)
++++ trunk/tests/qFunctions.php	2007-05-31 05:37:32 UTC (rev 324)
+@@ -40,7 +40,65 @@
+ class test {}
+ echo &quot;qPrintable(new test) = &quot;.qPrintable(new test).&quot;\n&quot;;
+ 
+-echo &quot;\nTesting qDebug:\n&quot;;
++echo &quot;\nTesting qFuzzyCompare:\n&quot;;
++echo &quot;qFuzzyCompare(4.0000000000001,4) = &quot;;
++if(qFuzzyCompare(4.0000000000001,4))
++	echo &quot;TRUE\n&quot;;
++else
++	echo &quot;FALSE\n&quot;;
++echo &quot;qFuzzyCompare(4.1,4) = &quot;;
++if(qFuzzyCompare(4.1,4))
++	        echo &quot;TRUE\n&quot;;
++else
++	        echo &quot;FALSE\n&quot;;
++
++echo &quot;\nTesting qVersion:\n&quot;;
++echo &quot;qVersion() = &quot;.qVersion().&quot;\n&quot;;
++
++echo &quot;\nTesting PHPQtVersion:\n&quot;;
++echo &quot;PHPQtVersion() = &quot;.PHPQtVersion().&quot;\n&quot;;
++
++echo &quot;\nTesting QiDiVersion:\n&quot;;
++echo &quot;QiDiVersion() = &quot;.QiDiVersion().&quot;\n&quot;;
++
++echo &quot;\nTesting qMalloc:\n&quot;;
++print_r(var_dump(qMalloc(10)));
++echo &quot;\n&quot;;
++
++echo &quot;\nTesting qFree:\n&quot;;
++echo &quot;a = 5...&quot;;
++$a = 5;
++qFree($a);
++if(isset($a))
++	echo &quot;qFree failed\n&quot;;
++else
++	echo &quot;a succsessfully freed\n&quot;;
++
++echo &quot;\nTesting qMemCopy:\n&quot;;
++echo &quot;a='abcdefg'\n&quot;;
++echo &quot;b=222.34\n&quot;;
++echo 'qMemCopy($b,$a,2)=';
++$a = &quot;abcdefg&quot;;
++$b = 222.34;
++qMemCopy($b,$a,2);
++echo $b.&quot;\n&quot;;
++echo &quot;a=333333\n&quot;;
++echo &quot;b=222\n&quot;;
++echo 'qMemCopy($b,$a,2)=';
++$a = 333333;
++$b = 222;
++qMemCopy($b,$a,2);
++echo $b.&quot;\n&quot;;
++echo &quot;a=3.33333\n&quot;;
++echo &quot;b=222.56\n&quot;;
++echo 'qMemCopy($b,$a,2)=';
++$a = 3.33333;
++$b = 222.56;
++qMemCopy($b,$a,2);
++echo $b.&quot;\n&quot;;
++
++
++/*echo &quot;\nTesting qDebug:\n&quot;;
+ qDebug(&quot;This is a debug message&quot;);
+ 
+ echo &quot;Testing qWarning:\n&quot;;
+@@ -48,5 +106,5 @@
+ 
+ echo &quot;Testing qCritical:\n&quot;;
+ qCritical(&quot;This is a fatal error&quot;);
+-
++ */
+ ?&gt;
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000167.html">[Php-qt-svn] r323 - in trunk: php_qt tests
+</A></li>
+	
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#168">[ date ]</a>
+              <a href="thread.html#168">[ thread ]</a>
+              <a href="subject.html#168">[ subject ]</a>
+              <a href="author.html#168">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

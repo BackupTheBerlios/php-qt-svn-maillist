@@ -1,0 +1,1906 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r158 - in trunk: . qt qt/classes
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-January/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r158%20-%20in%20trunk%3A%20.%20qt%20qt/classes&In-Reply-To=%3C200601080114.k081EF8x022613%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000006.html">
+   <LINK REL="Next"  HREF="000008.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r158 - in trunk: . qt qt/classes</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r158%20-%20in%20trunk%3A%20.%20qt%20qt/classes&In-Reply-To=%3C200601080114.k081EF8x022613%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r158 - in trunk: . qt qt/classes">tm243 at berlios.de
+       </A><BR>
+    <I>Sun Jan  8 02:14:15 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000006.html">[Php-qt-svn] r157 - trunk/tools
+</A></li>
+        <LI>Next message: <A HREF="000008.html">[Php-qt-svn] r159 - in trunk/qt: . object_model text_related
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#7">[ date ]</a>
+              <a href="thread.html#7">[ thread ]</a>
+              <a href="subject.html#7">[ subject ]</a>
+              <a href="author.html#7">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-01-08 02:14:05 +0100 (Sun, 08 Jan 2006)
+New Revision: 158
+
+Added:
+   trunk/qt/ag_extern_zend_class_entry.h
+   trunk/qt/ag_php_qt_cpp.h
+   trunk/qt/ag_qt_minit.h
+   trunk/qt/ag_zend_class_entry.h
+   trunk/qt/ag_zend_php_qt.h
+   trunk/qt/classes/
+   trunk/qt/classes/qdate.cpp
+   trunk/qt/classes/qdatetime.cpp
+   trunk/qt/classes/qtime.cpp
+Modified:
+   trunk/config.m4
+   trunk/qt/php_qt.cpp
+   trunk/qt/php_qt.h
+   trunk/qt/zend_php_qt.h
+Log:
+new classes: QTime, QDate, QDateTime.
+
+Modified: trunk/config.m4
+===================================================================
+--- trunk/config.m4	2006-01-06 23:50:37 UTC (rev 157)
++++ trunk/config.m4	2006-01-08 01:14:05 UTC (rev 158)
+@@ -104,6 +104,9 @@
+   qt/text_related/qlatin1string.cpp \
+   qt/text_related/qchar.cpp \
+   qt/event/qevent.cpp \
++  qt/classes/qdate.cpp \ 
++  qt/classes/qdatetime.cpp \ 
++  qt/classes/qtime.cpp \ 
+   qt/php_qt.cpp,$ext_shared)
+ 
+   PHP_ADD_BUILD_DIR($ext_builddir/qt)
+
+Added: trunk/qt/ag_extern_zend_class_entry.h
+===================================================================
+--- trunk/qt/ag_extern_zend_class_entry.h	2006-01-06 23:50:37 UTC (rev 157)
++++ trunk/qt/ag_extern_zend_class_entry.h	2006-01-08 01:14:05 UTC (rev 158)
+@@ -0,0 +1,6 @@
++extern zend_class_entry *QDate_ce_ptr;
++void 	_register_QDate();
++extern zend_class_entry *QDateTime_ce_ptr;
++void 	_register_QDateTime();
++extern zend_class_entry *QTime_ce_ptr;
++void 	_register_QTime();
+
+Added: trunk/qt/ag_php_qt_cpp.h
+===================================================================
+--- trunk/qt/ag_php_qt_cpp.h	2006-01-06 23:50:37 UTC (rev 157)
++++ trunk/qt/ag_php_qt_cpp.h	2006-01-08 01:14:05 UTC (rev 158)
+@@ -0,0 +1,59 @@
++static zend_function_entry QDate_methods[] = {
++	ZEND_ME(QDate,longDayName,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QDate,isValid,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QDate,setYMD,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDate,shortMonthName,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QDate,isLeapYear,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QDate,fromJulianDay,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QDate,addDays,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDate,gregorianToJulian,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QDate,longMonthName,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QDate,julianToGregorian,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QDate,shortDayName,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QDate,weekNumber,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDate,addMonths,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDate,addYears,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QDate(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QDate&quot;,QDate_methods);
++    QDate_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
++
++}
++static zend_function_entry QDateTime_methods[] = {
++	ZEND_ME(QDateTime,setTime_t,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDateTime,addDays,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDateTime,addMonths,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDateTime,addSecs,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QDateTime,addYears,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QDateTime(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QDateTime&quot;,QDateTime_methods);
++    QDateTime_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
++
++}
++static zend_function_entry QTime_methods[] = {
++	ZEND_ME(QTime,isValid,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
++	ZEND_ME(QTime,addSecs,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTime,addMSecs,NULL,ZEND_ACC_PUBLIC)
++	ZEND_ME(QTime,setHMS,NULL,ZEND_ACC_PUBLIC)
++
++    {NULL,NULL,NULL}
++};
++
++void _register_QTime(TSRMLS_D)
++{
++    zend_class_entry ce;
++    INIT_CLASS_ENTRY(ce,&quot;QTime&quot;,QTime_methods);
++    QTime_ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
++
++}
+
+Added: trunk/qt/ag_qt_minit.h
+===================================================================
+--- trunk/qt/ag_qt_minit.h	2006-01-06 23:50:37 UTC (rev 157)
++++ trunk/qt/ag_qt_minit.h	2006-01-08 01:14:05 UTC (rev 158)
+@@ -0,0 +1,6 @@
++
++	_register_QDate(TSRMLS_C);
++
++	_register_QDateTime(TSRMLS_C);
++
++	_register_QTime(TSRMLS_C);
+
+Added: trunk/qt/ag_zend_class_entry.h
+===================================================================
+--- trunk/qt/ag_zend_class_entry.h	2006-01-06 23:50:37 UTC (rev 157)
++++ trunk/qt/ag_zend_class_entry.h	2006-01-08 01:14:05 UTC (rev 158)
+@@ -0,0 +1,3 @@
++zend_class_entry *QDate_ce_ptr;
++zend_class_entry *QDateTime_ce_ptr;
++zend_class_entry *QTime_ce_ptr;
+
+Added: trunk/qt/ag_zend_php_qt.h
+===================================================================
+--- trunk/qt/ag_zend_php_qt.h	2006-01-06 23:50:37 UTC (rev 157)
++++ trunk/qt/ag_zend_php_qt.h	2006-01-08 01:14:05 UTC (rev 158)
+@@ -0,0 +1,24 @@
++
++ZEND_METHOD(QDate, longDayName);
++ZEND_METHOD(QDate, isValid);
++ZEND_METHOD(QDate, setYMD);
++ZEND_METHOD(QDate, shortMonthName);
++ZEND_METHOD(QDate, isLeapYear);
++ZEND_METHOD(QDate, fromJulianDay);
++ZEND_METHOD(QDate, addDays);
++ZEND_METHOD(QDate, gregorianToJulian);
++ZEND_METHOD(QDate, longMonthName);
++ZEND_METHOD(QDate, julianToGregorian);
++ZEND_METHOD(QDate, shortDayName);
++ZEND_METHOD(QDate, weekNumber);
++ZEND_METHOD(QDate, addMonths);
++ZEND_METHOD(QDate, addYears);
++ZEND_METHOD(QDateTime, setTime_t);
++ZEND_METHOD(QDateTime, addDays);
++ZEND_METHOD(QDateTime, addMonths);
++ZEND_METHOD(QDateTime, addSecs);
++ZEND_METHOD(QDateTime, addYears);
++ZEND_METHOD(QTime, isValid);
++ZEND_METHOD(QTime, addSecs);
++ZEND_METHOD(QTime, addMSecs);
++ZEND_METHOD(QTime, setHMS);
+
+Added: trunk/qt/classes/qdate.cpp
+===================================================================
+--- trunk/qt/classes/qdate.cpp	2006-01-06 23:50:37 UTC (rev 157)
++++ trunk/qt/classes/qdate.cpp	2006-01-08 01:14:05 UTC (rev 158)
+@@ -0,0 +1,599 @@
++/*
++ * PHP-Qt - The PHP language bindings for Qt
++ *
++ * Copyright (C) 2005
++ * Thomas Moenicke &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">tm at ippfp.org</A>&gt;,
++ * Jean-Luc Gyger &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">jean_luc.gyger at freesurf.ch</A>&gt;
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ *
++ * QDate.cpp - QDate PHP implementation.
++ * begin           : Sun Jan  8 02:08:27 2006
++ * generated by    : moni using kalyptus 0.9.
++ */
++
++#include &lt;iostream&gt;
++using namespace std;
++
++#include &lt;QDate&gt;
++#include &quot;../php_qt.h&quot;
++
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  longDayName
++ *    flags:    s
++ */
++ZEND_METHOD(QDate, longDayName){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l */
++		long var_l_0;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  dayOfWeek
++ *    flags:    c
++ */
++ZEND_METHOD(QDate, dayOfWeek){
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++			RETURN_LONG(obj-&gt;dayOfWeek());
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  daysInMonth
++ *    flags:    c
++ */
++ZEND_METHOD(QDate, daysInMonth){
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++			RETURN_LONG(obj-&gt;daysInMonth());
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  month
++ *    flags:    c
++ */
++ZEND_METHOD(QDate, month){
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++			RETURN_LONG(obj-&gt;month());
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  isValid
++ *    flags:    c
++ */
++ZEND_METHOD(QDate, isValid){
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++			RETURN_BOOL(obj-&gt;isValid());
++
++	if (ZEND_NUM_ARGS() == 3){
++		/* lll */
++		long var_lll_0;    // default: 
++		long var_lll_1;    // default: 
++		long var_lll_2;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;lll&quot;, &amp;var_lll_0, &amp;var_lll_1, &amp;var_lll_2) == SUCCESS) {
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  setYMD
++ *    flags:    
++ */
++ZEND_METHOD(QDate, setYMD){
++
++	if (ZEND_NUM_ARGS() == 3){
++		/* lll */
++		long var_lll_0;    // default: 
++		long var_lll_1;    // default: 
++		long var_lll_2;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;lll&quot;, &amp;var_lll_0, &amp;var_lll_1, &amp;var_lll_2) == SUCCESS) {
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  shortMonthName
++ *    flags:    s
++ */
++ZEND_METHOD(QDate, shortMonthName){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l */
++		long var_l_0;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  toString
++ *    flags:    c
++ */
++ZEND_METHOD(QDate, toString){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* s */
++		char* var_s_0;   // default: Qt::TextDate
++		int* len_s_0;
++
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s|&quot;, &amp;var_s_0, &amp;len_s_0) == SUCCESS) {
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++
++			
++		}
++		/* o */
++		zval* z_var_o_1;   // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_1) == SUCCESS) {
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++			QObject* var_o_1 = (QObject*) php_qt_fetch(z_var_o_1);
++
++			QString tmp_o_0(var_o_1-&gt;metaObject()-&gt;className());
++			
++			if(tmp_o_0 == &quot;const QString&amp;&quot;) {
++				QString return_object = (QString) obj-&gt;toString((const QString&amp;) var_o_1);
++			zend_class_entry *ce;                                   
++			object_init_ex(return_value, QDate_ce_ptr);     
++			zend_rsrc_list_entry le;                            
++			le.ptr = &amp;return_object;                                       
++			php_qt_register(return_value,le);                   
++			return;                                             
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  isLeapYear
++ *    flags:    s
++ */
++ZEND_METHOD(QDate, isLeapYear){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l */
++		long var_l_0;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  fromJulianDay
++ *    flags:    s
++ */
++ZEND_METHOD(QDate, fromJulianDay){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l */
++		long var_l_0;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  currentDate
++ *    flags:    s
++ */
++ZEND_METHOD(QDate, currentDate){
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++			QDate return_object = (QDate) obj-&gt;currentDate();
++			zend_class_entry *ce;                                   
++			object_init_ex(return_value, QDate_ce_ptr);     
++			zend_rsrc_list_entry le;                            
++			le.ptr = &amp;return_object;                                       
++			php_qt_register(return_value,le);                   
++			return;                                             
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  addDays
++ *    flags:    c
++ */
++ZEND_METHOD(QDate, addDays){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l */
++		long var_l_0;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  day
++ *    flags:    c
++ */
++ZEND_METHOD(QDate, day){
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++			RETURN_LONG(obj-&gt;day());
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  gregorianToJulian
++ *    flags:    s
++ */
++ZEND_METHOD(QDate, gregorianToJulian){
++
++	if (ZEND_NUM_ARGS() == 3){
++		/* lll */
++		long var_lll_0;    // default: 
++		long var_lll_1;    // default: 
++		long var_lll_2;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;lll&quot;, &amp;var_lll_0, &amp;var_lll_1, &amp;var_lll_2) == SUCCESS) {
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  longMonthName
++ *    flags:    s
++ */
++ZEND_METHOD(QDate, longMonthName){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l */
++		long var_l_0;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  julianToGregorian
++ *    flags:    s
++ */
++ZEND_METHOD(QDate, julianToGregorian){
++
++	if (ZEND_NUM_ARGS() == 4){
++		/* llll */
++		long var_llll_0;    // default: 
++		long var_llll_1;    // default: 
++		long var_llll_2;    // default: 
++		long var_llll_3;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;llll&quot;, &amp;var_llll_0, &amp;var_llll_1, &amp;var_llll_2, &amp;var_llll_3) == SUCCESS) {
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  shortDayName
++ *    flags:    s
++ */
++ZEND_METHOD(QDate, shortDayName){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l */
++		long var_l_0;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  fromString
++ *    flags:    s
++ */
++ZEND_METHOD(QDate, fromString){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* oo */
++		zval* z_var_oo_0;   // default: 
++		zval* z_var_oo_1;   // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;oo&quot;, &amp;z_var_oo_0, &amp;z_var_oo_1) == SUCCESS) {
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++			QObject* var_oo_0 = (QObject*) php_qt_fetch(z_var_oo_0);
++			QObject* var_oo_1 = (QObject*) php_qt_fetch(z_var_oo_1);
++
++			QString tmp_oo_0(var_oo_0-&gt;metaObject()-&gt;className());
++			QString tmp_oo_1(var_oo_1-&gt;metaObject()-&gt;className());
++			
++			if(tmp_oo_0 == &quot;const QString&amp;&quot; &amp;&amp; tmp_oo_1 == &quot;const QString&amp;&quot;) {
++				QDate return_object = (QDate) obj-&gt;fromString((const QString&amp;) var_oo_0, (const QString&amp;) var_oo_1);
++			zend_class_entry *ce;                                   
++			object_init_ex(return_value, QDate_ce_ptr);     
++			zend_rsrc_list_entry le;                            
++			le.ptr = &amp;return_object;                                       
++			php_qt_register(return_value,le);                   
++			return;                                             
++			}
++		}
++		/* os */
++		zval* z_var_os_2;   // default: 
++		char* var_os_3;   // default: Qt::TextDate
++		int* len_os_3;
++
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;os|&quot;, &amp;z_var_os_2, &amp;var_os_3, &amp;len_os_3) == SUCCESS) {
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++			QObject* var_os_2 = (QObject*) php_qt_fetch(z_var_os_2);
++
++			QString tmp_os_0(var_os_2-&gt;metaObject()-&gt;className());
++			
++			if(tmp_os_0 == &quot;const QString&amp;&quot;) {
++				QDate return_object = (QDate) obj-&gt;fromString((const QString&amp;) var_os_2, (const char*) var_os_3);
++			zend_class_entry *ce;                                   
++			object_init_ex(return_value, QDate_ce_ptr);     
++			zend_rsrc_list_entry le;                            
++			le.ptr = &amp;return_object;                                       
++			php_qt_register(return_value,le);                   
++			return;                                             
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  dayOfYear
++ *    flags:    c
++ */
++ZEND_METHOD(QDate, dayOfYear){
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++			RETURN_LONG(obj-&gt;dayOfYear());
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  weekNumber
++ *    flags:    c
++ */
++ZEND_METHOD(QDate, weekNumber){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l */
++		long var_l_0;    // default: 0
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l|&quot;, &amp;var_l_0) == SUCCESS) {
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  addMonths
++ *    flags:    c
++ */
++ZEND_METHOD(QDate, addMonths){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l */
++		long var_l_0;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  toJulianDay
++ *    flags:    c
++ */
++ZEND_METHOD(QDate, toJulianDay){
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++			RETURN_LONG(obj-&gt;toJulianDay());
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  addYears
++ *    flags:    c
++ */
++ZEND_METHOD(QDate, addYears){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l */
++		long var_l_0;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  daysTo
++ *    flags:    c
++ */
++ZEND_METHOD(QDate, daysTo){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* o */
++		zval* z_var_o_0;   // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
++
++			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_o_0 == &quot;const QDate&amp;&quot;) {
++				RETURN_LONG(obj-&gt;daysTo((const QDate&amp;) var_o_0));
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  isNull
++ *    flags:    c
++ */
++ZEND_METHOD(QDate, isNull){
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++			RETURN_BOOL(obj-&gt;isNull());
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  year
++ *    flags:    c
++ */
++ZEND_METHOD(QDate, year){
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++			RETURN_LONG(obj-&gt;year());
++}
++
++/*********************************
++ *    class     QDate */
++/*
++ *    function  daysInYear
++ *    flags:    c
++ */
++ZEND_METHOD(QDate, daysInYear){
++			QDate *obj = (QDate*) PHP_QT_FETCH();
++			RETURN_LONG(obj-&gt;daysInYear());
++}
++
++
++
++ZEND_METHOD(QDate,__construct){
++
++	QDate *QDate_ptr = new QDate();
++
++
++	if(ZEND_NUM_ARGS() == 3){
++		zval* param_0;
++		zval* param_1;
++		zval* param_2;
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zzz&quot;, &amp;param_0, &amp;param_1, &amp;param_2) == FAILURE) {
++			return;
++		}
++		 /*long y int*/
++/*		if(Z_TYPE_P(param_0) == IS_LONG) {
++			int tmp(Z_STRVAL_P(param_0));
++			QDate_ptr = new QDate(tmp);
++		}
++*/		 /*long m int*/
++/*		if(Z_TYPE_P(param_1) == IS_LONG) {
++			int tmp(Z_STRVAL_P(param_1));
++			QDate_ptr = new QDate(tmp);
++		}
++*/		 /*long d int*/
++/*		if(Z_TYPE_P(param_2) == IS_LONG) {
++			int tmp(Z_STRVAL_P(param_2));
++			QDate_ptr = new QDate(tmp);
++		}
++*/	}
++
++	PHP_QT_REGISTER(QDate_ptr);
++	RETURN_NULL();
++}
++
++PHP_QT_DESTRUCT(QDate);
++
+
+Added: trunk/qt/classes/qdatetime.cpp
+===================================================================
+--- trunk/qt/classes/qdatetime.cpp	2006-01-06 23:50:37 UTC (rev 157)
++++ trunk/qt/classes/qdatetime.cpp	2006-01-08 01:14:05 UTC (rev 158)
+@@ -0,0 +1,584 @@
++/*
++ * PHP-Qt - The PHP language bindings for Qt
++ *
++ * Copyright (C) 2005
++ * Thomas Moenicke &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">tm at ippfp.org</A>&gt;,
++ * Jean-Luc Gyger &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">jean_luc.gyger at freesurf.ch</A>&gt;
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ *
++ * QDateTime.cpp - QDateTime PHP implementation.
++ * begin           : Sun Jan  8 02:08:27 2006
++ * generated by    : moni using kalyptus 0.9.
++ */
++
++#include &lt;iostream&gt;
++using namespace std;
++
++#include &lt;QDateTime&gt;
++#include &quot;../php_qt.h&quot;
++
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  time
++ *    flags:    c
++ */
++ZEND_METHOD(QDateTime, time){
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++			QTime return_object = (QTime) obj-&gt;time();
++			zend_class_entry *ce;                                   
++			object_init_ex(return_value, QDateTime_ce_ptr);     
++			zend_rsrc_list_entry le;                            
++			le.ptr = &amp;return_object;                                       
++			php_qt_register(return_value,le);                   
++			return;                                             
++}
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  date
++ *    flags:    c
++ */
++ZEND_METHOD(QDateTime, date){
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++			QDate return_object = (QDate) obj-&gt;date();
++			zend_class_entry *ce;                                   
++			object_init_ex(return_value, QDateTime_ce_ptr);     
++			zend_rsrc_list_entry le;                            
++			le.ptr = &amp;return_object;                                       
++			php_qt_register(return_value,le);                   
++			return;                                             
++}
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  isValid
++ *    flags:    c
++ */
++ZEND_METHOD(QDateTime, isValid){
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++			RETURN_BOOL(obj-&gt;isValid());
++}
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  toString
++ *    flags:    c
++ */
++ZEND_METHOD(QDateTime, toString){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* s */
++		char* var_s_0;   // default: Qt::TextDate
++		int* len_s_0;
++
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s|&quot;, &amp;var_s_0, &amp;len_s_0) == SUCCESS) {
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++
++			
++		}
++		/* o */
++		zval* z_var_o_1;   // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_1) == SUCCESS) {
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++			QObject* var_o_1 = (QObject*) php_qt_fetch(z_var_o_1);
++
++			QString tmp_o_0(var_o_1-&gt;metaObject()-&gt;className());
++			
++			if(tmp_o_0 == &quot;const QString&amp;&quot;) {
++				QString return_object = (QString) obj-&gt;toString((const QString&amp;) var_o_1);
++			zend_class_entry *ce;                                   
++			object_init_ex(return_value, QDateTime_ce_ptr);     
++			zend_rsrc_list_entry le;                            
++			le.ptr = &amp;return_object;                                       
++			php_qt_register(return_value,le);                   
++			return;                                             
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  toTime_t
++ *    flags:    c
++ */
++ZEND_METHOD(QDateTime, toTime_t){
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++			RETURN_LONG(obj-&gt;toTime_t());
++}
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  setTime_t
++ *    flags:    
++ */
++ZEND_METHOD(QDateTime, setTime_t){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l */
++		long var_l_0;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  addDays
++ *    flags:    c
++ */
++ZEND_METHOD(QDateTime, addDays){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l */
++		long var_l_0;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  secsTo
++ *    flags:    c
++ */
++ZEND_METHOD(QDateTime, secsTo){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* o */
++		zval* z_var_o_0;   // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
++
++			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_o_0 == &quot;const QDateTime&amp;&quot;) {
++				RETURN_LONG(obj-&gt;secsTo((const QDateTime&amp;) var_o_0));
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  toTimeSpec
++ *    flags:    c
++ */
++ZEND_METHOD(QDateTime, toTimeSpec){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l */
++		long var_l_0;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  fromString
++ *    flags:    s
++ */
++ZEND_METHOD(QDateTime, fromString){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* oo */
++		zval* z_var_oo_0;   // default: 
++		zval* z_var_oo_1;   // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;oo&quot;, &amp;z_var_oo_0, &amp;z_var_oo_1) == SUCCESS) {
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++			QObject* var_oo_0 = (QObject*) php_qt_fetch(z_var_oo_0);
++			QObject* var_oo_1 = (QObject*) php_qt_fetch(z_var_oo_1);
++
++			QString tmp_oo_0(var_oo_0-&gt;metaObject()-&gt;className());
++			QString tmp_oo_1(var_oo_1-&gt;metaObject()-&gt;className());
++			
++			if(tmp_oo_0 == &quot;const QString&amp;&quot; &amp;&amp; tmp_oo_1 == &quot;const QString&amp;&quot;) {
++				QDateTime return_object = (QDateTime) obj-&gt;fromString((const QString&amp;) var_oo_0, (const QString&amp;) var_oo_1);
++			zend_class_entry *ce;                                   
++			object_init_ex(return_value, QDateTime_ce_ptr);     
++			zend_rsrc_list_entry le;                            
++			le.ptr = &amp;return_object;                                       
++			php_qt_register(return_value,le);                   
++			return;                                             
++			}
++		}
++		/* os */
++		zval* z_var_os_2;   // default: 
++		char* var_os_3;   // default: Qt::TextDate
++		int* len_os_3;
++
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;os|&quot;, &amp;z_var_os_2, &amp;var_os_3, &amp;len_os_3) == SUCCESS) {
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++			QObject* var_os_2 = (QObject*) php_qt_fetch(z_var_os_2);
++
++			QString tmp_os_0(var_os_2-&gt;metaObject()-&gt;className());
++			
++			if(tmp_os_0 == &quot;const QString&amp;&quot;) {
++				QDateTime return_object = (QDateTime) obj-&gt;fromString((const QString&amp;) var_os_2, (const char*) var_os_3);
++			zend_class_entry *ce;                                   
++			object_init_ex(return_value, QDateTime_ce_ptr);     
++			zend_rsrc_list_entry le;                            
++			le.ptr = &amp;return_object;                                       
++			php_qt_register(return_value,le);                   
++			return;                                             
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  timeSpec
++ *    flags:    c
++ */
++ZEND_METHOD(QDateTime, timeSpec){
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++			Qt::TimeSpec return_object = (Qt::TimeSpec) obj-&gt;timeSpec();
++			zend_class_entry *ce;                                   
++			object_init_ex(return_value, QDateTime_ce_ptr);     
++			zend_rsrc_list_entry le;                            
++			le.ptr = &amp;return_object;                                       
++			php_qt_register(return_value,le);                   
++			return;                                             
++}
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  setTime
++ *    flags:    
++ */
++ZEND_METHOD(QDateTime, setTime){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* o */
++		zval* z_var_o_0;   // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
++
++			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_o_0 == &quot;const QTime&amp;&quot;) {
++				obj-&gt;setTime((const QTime&amp;) var_o_0);
++			RETURN_NULL();
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  addMonths
++ *    flags:    c
++ */
++ZEND_METHOD(QDateTime, addMonths){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l */
++		long var_l_0;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  QDateTime
++ *    flags:    
++ */
++/*ZEND_METHOD(QDateTime, QDateTime){
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++			RETURN_~(obj-&gt;QDateTime());
++}
++*/
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  addSecs
++ *    flags:    c
++ */
++ZEND_METHOD(QDateTime, addSecs){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l */
++		long var_l_0;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  setDate
++ *    flags:    
++ */
++ZEND_METHOD(QDateTime, setDate){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* o */
++		zval* z_var_o_0;   // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
++
++			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_o_0 == &quot;const QDate&amp;&quot;) {
++				obj-&gt;setDate((const QDate&amp;) var_o_0);
++			RETURN_NULL();
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  currentDateTime
++ *    flags:    s
++ */
++ZEND_METHOD(QDateTime, currentDateTime){
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++			QDateTime return_object = (QDateTime) obj-&gt;currentDateTime();
++			zend_class_entry *ce;                                   
++			object_init_ex(return_value, QDateTime_ce_ptr);     
++			zend_rsrc_list_entry le;                            
++			le.ptr = &amp;return_object;                                       
++			php_qt_register(return_value,le);                   
++			return;                                             
++}
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  daysTo
++ *    flags:    c
++ */
++ZEND_METHOD(QDateTime, daysTo){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* o */
++		zval* z_var_o_0;   // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
++
++			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_o_0 == &quot;const QDateTime&amp;&quot;) {
++				RETURN_LONG(obj-&gt;daysTo((const QDateTime&amp;) var_o_0));
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  addYears
++ *    flags:    c
++ */
++ZEND_METHOD(QDateTime, addYears){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l */
++		long var_l_0;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  isNull
++ *    flags:    c
++ */
++ZEND_METHOD(QDateTime, isNull){
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++			RETURN_BOOL(obj-&gt;isNull());
++}
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  toUTC
++ *    flags:    c
++ */
++ZEND_METHOD(QDateTime, toUTC){
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++			QDateTime return_object = (QDateTime) obj-&gt;toUTC();
++			zend_class_entry *ce;                                   
++			object_init_ex(return_value, QDateTime_ce_ptr);     
++			zend_rsrc_list_entry le;                            
++			le.ptr = &amp;return_object;                                       
++			php_qt_register(return_value,le);                   
++			return;                                             
++}
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  toLocalTime
++ *    flags:    c
++ */
++ZEND_METHOD(QDateTime, toLocalTime){
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++			QDateTime return_object = (QDateTime) obj-&gt;toLocalTime();
++			zend_class_entry *ce;                                   
++			object_init_ex(return_value, QDateTime_ce_ptr);     
++			zend_rsrc_list_entry le;                            
++			le.ptr = &amp;return_object;                                       
++			php_qt_register(return_value,le);                   
++			return;                                             
++}
++
++/*********************************
++ *    class     QDateTime */
++/*
++ *    function  setTimeSpec
++ *    flags:    
++ */
++ZEND_METHOD(QDateTime, setTimeSpec){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l */
++		long var_l_0;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QDateTime *obj = (QDateTime*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++
++
++ZEND_METHOD(QDateTime,__construct){
++
++	QDateTime *QDateTime_ptr = new QDateTime();
++
++	if(ZEND_NUM_ARGS() == 0){
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;&quot;) == FAILURE) {
++			return;
++		}
++	}
++
++/*	if(ZEND_NUM_ARGS() == 1){
++		zval* param_0;
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;param_0) == FAILURE) {
++			return;
++		}
++
++		if(Z_TYPE_P(param_0) == IS_OBJECT) {
++			QDate&amp; tmp(Z_STRVAL_P(param_0));
++			QDateTime_ptr = new QDateTime(tmp);
++		}
++	}
++
++	if(ZEND_NUM_ARGS() == 3){
++		zval* param_0;
++		zval* param_1;
++		zval* param_2;
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zzz&quot;, &amp;param_0, &amp;param_1, &amp;param_2) == FAILURE) {
++			return;
++		}
++
++		if(Z_TYPE_P(param_0) == IS_OBJECT) {
++			QDate&amp; tmp(Z_STRVAL_P(param_0));
++			QDateTime_ptr = new QDateTime(tmp);
++		}
++
++		if(Z_TYPE_P(param_1) == IS_OBJECT) {
++			QTime&amp; tmp(Z_STRVAL_P(param_1));
++			QDateTime_ptr = new QDateTime(tmp);
++		}
++
++		if(Z_TYPE_P(param_2) == IS_OBJECT) {
++			Qt::TimeSpec tmp(Z_STRVAL_P(param_2));
++			QDateTime_ptr = new QDateTime(tmp);
++		}
++	}
++
++	if(ZEND_NUM_ARGS() == 1){
++		zval* param_0;
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;param_0) == FAILURE) {
++			return;
++		}
++
++		if(Z_TYPE_P(param_0) == IS_OBJECT) {
++			QDateTime&amp; tmp(Z_STRVAL_P(param_0));
++			QDateTime_ptr = new QDateTime(tmp);
++		}
++	}
++*/
++	PHP_QT_REGISTER(QDateTime_ptr);
++	RETURN_NULL();
++}
++
++PHP_QT_DESTRUCT(QDateTime);
++
+
+Added: trunk/qt/classes/qtime.cpp
+===================================================================
+--- trunk/qt/classes/qtime.cpp	2006-01-06 23:50:37 UTC (rev 157)
++++ trunk/qt/classes/qtime.cpp	2006-01-08 01:14:05 UTC (rev 158)
+@@ -0,0 +1,422 @@
++/*
++ * PHP-Qt - The PHP language bindings for Qt
++ *
++ * Copyright (C) 2005
++ * Thomas Moenicke &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">tm at ippfp.org</A>&gt;,
++ * Jean-Luc Gyger &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">jean_luc.gyger at freesurf.ch</A>&gt;
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ *
++ * QTime.cpp - QTime PHP implementation.
++ * begin           : Sun Jan  8 02:08:27 2006
++ * generated by    : moni using kalyptus 0.9.
++ */
++
++#include &lt;iostream&gt;
++using namespace std;
++
++#include &lt;QTime&gt;
++#include &quot;../php_qt.h&quot;
++
++
++/*********************************
++ *    class     QTime */
++/*
++ *    function  hour
++ *    flags:    c
++ */
++ZEND_METHOD(QTime, hour){
++			QTime *obj = (QTime*) PHP_QT_FETCH();
++			RETURN_LONG(obj-&gt;hour());
++}
++
++/*********************************
++ *    class     QTime */
++/*
++ *    function  isValid
++ *    flags:    c
++ */
++ZEND_METHOD(QTime, isValid){
++			QTime *obj = (QTime*) PHP_QT_FETCH();
++			RETURN_BOOL(obj-&gt;isValid());
++
++	if (ZEND_NUM_ARGS() == 4){
++		/* llll */
++		long var_llll_0;    // default: 
++		long var_llll_1;    // default: 
++		long var_llll_2;    // default: 
++		long var_llll_3;    // default: 0
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;llll|&quot;, &amp;var_llll_0, &amp;var_llll_1, &amp;var_llll_2, &amp;var_llll_3) == SUCCESS) {
++			QTime *obj = (QTime*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QTime */
++/*
++ *    function  elapsed
++ *    flags:    c
++ */
++ZEND_METHOD(QTime, elapsed){
++			QTime *obj = (QTime*) PHP_QT_FETCH();
++			RETURN_LONG(obj-&gt;elapsed());
++}
++
++/*********************************
++ *    class     QTime */
++/*
++ *    function  toString
++ *    flags:    c
++ */
++ZEND_METHOD(QTime, toString){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* s */
++		char* var_s_0;   // default: Qt::TextDate
++		int* len_s_0;
++
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;s|&quot;, &amp;var_s_0, &amp;len_s_0) == SUCCESS) {
++			QTime *obj = (QTime*) PHP_QT_FETCH();
++
++			
++		}
++		/* o */
++		zval* z_var_o_1;   // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_1) == SUCCESS) {
++			QTime *obj = (QTime*) PHP_QT_FETCH();
++			QObject* var_o_1 = (QObject*) php_qt_fetch(z_var_o_1);
++
++			QString tmp_o_0(var_o_1-&gt;metaObject()-&gt;className());
++			
++			if(tmp_o_0 == &quot;const QString&amp;&quot;) {
++				QString return_object = (QString) obj-&gt;toString((const QString&amp;) var_o_1);
++			zend_class_entry *ce;                                   
++			object_init_ex(return_value, QTime_ce_ptr);     
++			zend_rsrc_list_entry le;                            
++			le.ptr = &amp;return_object;                                       
++			php_qt_register(return_value,le);                   
++			return;                                             
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QTime */
++/*
++ *    function  msec
++ *    flags:    c
++ */
++ZEND_METHOD(QTime, msec){
++			QTime *obj = (QTime*) PHP_QT_FETCH();
++			RETURN_LONG(obj-&gt;msec());
++}
++
++/*********************************
++ *    class     QTime */
++/*
++ *    function  secsTo
++ *    flags:    c
++ */
++ZEND_METHOD(QTime, secsTo){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* o */
++		zval* z_var_o_0;   // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++			QTime *obj = (QTime*) PHP_QT_FETCH();
++			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
++
++			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_o_0 == &quot;const QTime&amp;&quot;) {
++				RETURN_LONG(obj-&gt;secsTo((const QTime&amp;) var_o_0));
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QTime */
++/*
++ *    function  restart
++ *    flags:    
++ */
++ZEND_METHOD(QTime, restart){
++			QTime *obj = (QTime*) PHP_QT_FETCH();
++			RETURN_LONG(obj-&gt;restart());
++}
++
++/*********************************
++ *    class     QTime */
++/*
++ *    function  fromString
++ *    flags:    s
++ */
++ZEND_METHOD(QTime, fromString){
++
++	if (ZEND_NUM_ARGS() == 2){
++		/* oo */
++		zval* z_var_oo_0;   // default: 
++		zval* z_var_oo_1;   // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;oo&quot;, &amp;z_var_oo_0, &amp;z_var_oo_1) == SUCCESS) {
++			QTime *obj = (QTime*) PHP_QT_FETCH();
++			QObject* var_oo_0 = (QObject*) php_qt_fetch(z_var_oo_0);
++			QObject* var_oo_1 = (QObject*) php_qt_fetch(z_var_oo_1);
++
++			QString tmp_oo_0(var_oo_0-&gt;metaObject()-&gt;className());
++			QString tmp_oo_1(var_oo_1-&gt;metaObject()-&gt;className());
++			
++			if(tmp_oo_0 == &quot;const QString&amp;&quot; &amp;&amp; tmp_oo_1 == &quot;const QString&amp;&quot;) {
++				QTime return_object = (QTime) obj-&gt;fromString((const QString&amp;) var_oo_0, (const QString&amp;) var_oo_1);
++			zend_class_entry *ce;                                   
++			object_init_ex(return_value, QTime_ce_ptr);     
++			zend_rsrc_list_entry le;                            
++			le.ptr = &amp;return_object;                                       
++			php_qt_register(return_value,le);                   
++			return;                                             
++			}
++		}
++		/* os */
++		zval* z_var_os_2;   // default: 
++		char* var_os_3;   // default: Qt::TextDate
++		int* len_os_3;
++
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;os|&quot;, &amp;z_var_os_2, &amp;var_os_3, &amp;len_os_3) == SUCCESS) {
++			QTime *obj = (QTime*) PHP_QT_FETCH();
++			QObject* var_os_2 = (QObject*) php_qt_fetch(z_var_os_2);
++
++			QString tmp_os_0(var_os_2-&gt;metaObject()-&gt;className());
++			
++			if(tmp_os_0 == &quot;const QString&amp;&quot;) {
++				QTime return_object = (QTime) obj-&gt;fromString((const QString&amp;) var_os_2, (const char*) var_os_3);
++			zend_class_entry *ce;                                   
++			object_init_ex(return_value, QTime_ce_ptr);     
++			zend_rsrc_list_entry le;                            
++			le.ptr = &amp;return_object;                                       
++			php_qt_register(return_value,le);                   
++			return;                                             
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QTime */
++/*
++ *    function  second
++ *    flags:    c
++ */
++ZEND_METHOD(QTime, second){
++			QTime *obj = (QTime*) PHP_QT_FETCH();
++			RETURN_LONG(obj-&gt;second());
++}
++
++/*********************************
++ *    class     QTime */
++/*
++ *    function  addSecs
++ *    flags:    c
++ */
++ZEND_METHOD(QTime, addSecs){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l */
++		long var_l_0;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QTime *obj = (QTime*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QTime */
++/*
++ *    function  addMSecs
++ *    flags:    c
++ */
++ZEND_METHOD(QTime, addMSecs){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* l */
++		long var_l_0;    // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;l&quot;, &amp;var_l_0) == SUCCESS) {
++			QTime *obj = (QTime*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QTime */
++/*
++ *    function  setHMS
++ *    flags:    
++ */
++ZEND_METHOD(QTime, setHMS){
++
++	if (ZEND_NUM_ARGS() == 4){
++		/* llll */
++		long var_llll_0;    // default: 
++		long var_llll_1;    // default: 
++		long var_llll_2;    // default: 
++		long var_llll_3;    // default: 0
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;llll|&quot;, &amp;var_llll_0, &amp;var_llll_1, &amp;var_llll_2, &amp;var_llll_3) == SUCCESS) {
++			QTime *obj = (QTime*) PHP_QT_FETCH();
++
++			
++		}
++	}
++}
++
++/*********************************
++ *    class     QTime */
++/*
++ *    function  minute
++ *    flags:    c
++ */
++ZEND_METHOD(QTime, minute){
++			QTime *obj = (QTime*) PHP_QT_FETCH();
++			RETURN_LONG(obj-&gt;minute());
++}
++
++/*********************************
++ *    class     QTime */
++/*
++ *    function  currentTime
++ *    flags:    s
++ */
++ZEND_METHOD(QTime, currentTime){
++			QTime *obj = (QTime*) PHP_QT_FETCH();
++			QTime return_object = (QTime) obj-&gt;currentTime();
++			zend_class_entry *ce;                                   
++			object_init_ex(return_value, QTime_ce_ptr);     
++			zend_rsrc_list_entry le;                            
++			le.ptr = &amp;return_object;                                       
++			php_qt_register(return_value,le);                   
++			return;                                             
++}
++
++/*********************************
++ *    class     QTime */
++/*
++ *    function  isNull
++ *    flags:    c
++ */
++ZEND_METHOD(QTime, isNull){
++			QTime *obj = (QTime*) PHP_QT_FETCH();
++			RETURN_BOOL(obj-&gt;isNull());
++}
++
++/*********************************
++ *    class     QTime */
++/*
++ *    function  msecsTo
++ *    flags:    c
++ */
++ZEND_METHOD(QTime, msecsTo){
++
++	if (ZEND_NUM_ARGS() == 1){
++		/* o */
++		zval* z_var_o_0;   // default: 
++
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
++			QTime *obj = (QTime*) PHP_QT_FETCH();
++			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
++
++			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
++			
++			if(tmp_o_0 == &quot;const QTime&amp;&quot;) {
++				RETURN_LONG(obj-&gt;msecsTo((const QTime&amp;) var_o_0));
++			}
++		}
++	}
++}
++
++/*********************************
++ *    class     QTime */
++/*
++ *    function  start
++ *    flags:    
++ */
++ZEND_METHOD(QTime, start){
++			QTime *obj = (QTime*) PHP_QT_FETCH();
++			obj-&gt;start();
++			RETURN_NULL();
++}
++
++
++
++ZEND_METHOD(QTime,__construct){
++
++	QTime *QTime_ptr = new QTime();
++
++	if(ZEND_NUM_ARGS() == 0){
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;&quot;) == FAILURE) {
++			return;
++		}
++	}
++
++/*	if(ZEND_NUM_ARGS() == 4){
++		zval* param_0;
++		zval* param_1;
++		zval* param_2;
++		zval* param_3;
++		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zzzz&quot;, &amp;param_1, &amp;param_2, &amp;param_3, &amp;param_4) == FAILURE) {
++			return;
++		}
++
++		if(Z_TYPE_P(param_0) == IS_LONG) {
++			int tmp(Z_STRVAL_P(param_0));
++			QTime_ptr = new QTime(tmp);
++		}
++
++		if(Z_TYPE_P(param_1) == IS_LONG) {
++			int tmp(Z_STRVAL_P(param_1));
++			QTime_ptr = new QTime(tmp);
++		}
++
++		if(Z_TYPE_P(param_2) == IS_LONG) {
++			int tmp(Z_STRVAL_P(param_2));
++			QTime_ptr = new QTime(tmp);
++		}
++
++		if(Z_TYPE_P(param_3) == IS_LONG) {
++			int tmp(Z_STRVAL_P(param_3));
++			QTime_ptr = new QTime(tmp);
++		}
++	}
++*/
++	PHP_QT_REGISTER(QTime_ptr);
++	RETURN_NULL();
++}
++
++PHP_QT_DESTRUCT(QTime);
++
+
+Modified: trunk/qt/php_qt.cpp
+===================================================================
+--- trunk/qt/php_qt.cpp	2006-01-06 23:50:37 UTC (rev 157)
++++ trunk/qt/php_qt.cpp	2006-01-08 01:14:05 UTC (rev 158)
+@@ -64,6 +64,8 @@
+ zend_class_entry *QFrame_ce_ptr;
+ zend_class_entry *QLCDNumber_ce_ptr;
+ 
++#include &quot;ag_zend_class_entry.h&quot;
++
+ /* {{{ php_qt_functions[]
+  *
+  * Every user visible function must have an entry in php_qt_functions[].
+@@ -333,6 +335,8 @@
+ 
+ //    objects_handle = zend_register_list_destructors_ex(NULL,NULL,&quot;Qt Wrapper&quot;,module_number);
+ 
++#include &quot;ag_qt_minit.h&quot;
++
+ 	return SUCCESS;
+ }
+ /* }}} */
+@@ -1364,6 +1368,8 @@
+ 
+ }
+ 
++#include &quot;ag_php_qt_cpp.h&quot;
++
+ /* }}} */
+ /* The previous line is meant for vim and emacs, so it can correctly fold and 
+    unfold functions in source code. See the corresponding marks just before 
+
+Modified: trunk/qt/php_qt.h
+===================================================================
+--- trunk/qt/php_qt.h	2006-01-06 23:50:37 UTC (rev 157)
++++ trunk/qt/php_qt.h	2006-01-08 01:14:05 UTC (rev 158)
+@@ -380,3 +380,5 @@
+ extern zend_class_entry *QLineEdit_ce_ptr;
+ extern zend_class_entry *QFrame_ce_ptr;
+ extern zend_class_entry *QLCDNumber_ce_ptr;
++
++#include &quot;ag_extern_zend_class_entry.h&quot;
+
+Modified: trunk/qt/zend_php_qt.h
+===================================================================
+--- trunk/qt/zend_php_qt.h	2006-01-06 23:50:37 UTC (rev 157)
++++ trunk/qt/zend_php_qt.h	2006-01-08 01:14:05 UTC (rev 158)
+@@ -570,6 +570,8 @@
+ ZEND_METHOD(QLCDNumber, tr);
+ ZEND_METHOD(QLCDNumber, trUtf8);
+ 
++#include &quot;ag_zend_php_qt.h&quot;
++
+ /* 
+   	Declare any global variables you may need between the BEGIN
+ 	and END macros here:     
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000006.html">[Php-qt-svn] r157 - trunk/tools
+</A></li>
+	<LI>Next message: <A HREF="000008.html">[Php-qt-svn] r159 - in trunk/qt: . object_model text_related
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#7">[ date ]</a>
+              <a href="thread.html#7">[ thread ]</a>
+              <a href="subject.html#7">[ subject ]</a>
+              <a href="author.html#7">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

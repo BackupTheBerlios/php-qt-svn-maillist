@@ -1,0 +1,278 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r235 - in trunk: qt qt/classes qt/object_model tutorials tutorials/t7
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-May/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r235%20-%20in%20trunk%3A%20qt%20qt/classes%20qt/object_model%20tutorials%20tutorials/t7&In-Reply-To=%3C200605102111.k4ALBebc019429%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000078.html">
+   <LINK REL="Next"  HREF="000080.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r235 - in trunk: qt qt/classes qt/object_model tutorials tutorials/t7</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r235%20-%20in%20trunk%3A%20qt%20qt/classes%20qt/object_model%20tutorials%20tutorials/t7&In-Reply-To=%3C200605102111.k4ALBebc019429%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r235 - in trunk: qt qt/classes qt/object_model tutorials tutorials/t7">tm243 at berlios.de
+       </A><BR>
+    <I>Wed May 10 23:11:40 CEST 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000078.html">[Php-qt-svn] r234 - in trunk/qt: . classes
+</A></li>
+        <LI>Next message: <A HREF="000080.html">[Php-qt-svn] r236 - trunk/qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#79">[ date ]</a>
+              <a href="thread.html#79">[ thread ]</a>
+              <a href="subject.html#79">[ subject ]</a>
+              <a href="author.html#79">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-05-10 23:11:39 +0200 (Wed, 10 May 2006)
+New Revision: 235
+
+Added:
+   trunk/tutorials/t7/
+   trunk/tutorials/t7/main.php
+Modified:
+   trunk/qt/classes/qwidget.cpp
+   trunk/qt/object_model/qobject.cpp
+   trunk/qt/php_qt.cpp
+Log:
+custom signals implemented, tutorial 7 added.
+
+Modified: trunk/qt/classes/qwidget.cpp
+===================================================================
+--- trunk/qt/classes/qwidget.cpp	2006-05-09 22:47:53 UTC (rev 234)
++++ trunk/qt/classes/qwidget.cpp	2006-05-10 21:11:39 UTC (rev 235)
+@@ -56,6 +56,7 @@
+     this-&gt;zend_ptr = zend_ptr;
+     dynamicMetaObject = new QMetaObject;
+     dynamicMetaObject = php_qt_getMocData(this-&gt;zend_ptr,&quot;QWidget&quot;,&amp;staticMetaObject);
++//    cout &lt;&lt; dynamicMetaObject-&gt;indexOfSignal(&quot;valueChanged(int)&quot;)&lt;&lt;&quot;\n&quot;;
+ }
+ 
+ int QWidget_moc::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
+@@ -65,6 +66,7 @@
+     char* method_name = new char[strlen((d-&gt;method(_id)).signature())];
+     strcpy(method_name,(char*) (d-&gt;method(_id)).signature());
+ 
++    // breaks the string at the first bracket
+     int i;
+     for(i = 0; i &lt; strlen(method_name); i++){
+         if(method_name[i] == 40){
+@@ -73,22 +75,30 @@
+         }
+     }
+ 
+-    int j = 0;
+-    zval** args[1];
+-    QList&lt;QByteArray&gt; qargs = d-&gt;method(_id).parameterTypes();
+-    for(i = 0; i &lt; qargs.count(); i++){
++    // is a Slot
++    if(d-&gt;method(_id).methodType() == QMetaMethod::Slot){
++        int j = 0;
++        zval** args[1];
++        QList&lt;QByteArray&gt; qargs = d-&gt;method(_id).parameterTypes();
++        for(i = 0; i &lt; qargs.count(); i++){
+ 
+-        if(!strncmp(&quot;int&quot;,(const char*) qargs[i],3)){
+-            zval *arg;
+-            MAKE_STD_ZVAL(arg);
+-            ZVAL_LONG(arg, *reinterpret_cast&lt; int*&gt;(_a[1]));
+-            args[j++] = &arg;
++            if(!strncmp(&quot;int&quot;,(const char*) qargs[i],3)){
++                zval *arg;
++                MAKE_STD_ZVAL(arg);
++                ZVAL_LONG(arg, *reinterpret_cast&lt; int*&gt;(_a[1]));
++                args[j++] = &arg;
++            }
++
+         }
+ 
++        php_qt_callmethod(this-&gt;zend_ptr, method_name, j, args);
++
++    // is a signal
++    } else {
++        void *_b[] = { 0, _a[1] };
++        QMetaObject::activate(this, d, 0, _b);
+     }
+ 
+-    php_qt_callmethod(this-&gt;zend_ptr, method_name, j, args);
+-
+     delete d;
+     delete method_name;
+ 
+
+Modified: trunk/qt/object_model/qobject.cpp
+===================================================================
+--- trunk/qt/object_model/qobject.cpp	2006-05-09 22:47:53 UTC (rev 234)
++++ trunk/qt/object_model/qobject.cpp	2006-05-10 21:11:39 UTC (rev 235)
+@@ -85,20 +85,22 @@
+     zval *sender;
+     zval *signal;
+     zval *slot;
+- 
++
+     int num_args = 0;
+     num_args = ZEND_NUM_ARGS();
+-    
++
+     QObject *receiver_ptr;
+ 
+     if(num_args == 4){
+         zval *receiver;
+         if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ozoz&quot;, &amp;sender, &amp;signal, &amp;receiver, &amp;slot) == FAILURE) {
++            php_error(E_ERROR,&quot;connect failed\n&quot;);
+             RETURN_NULL(); 
+         }
+         receiver_ptr = static_cast&lt;QObject*&gt;(php_qt_fetch(receiver));    
+     } else {
+         if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;ozz&quot;, &amp;sender, &amp;signal, &amp;slot) == FAILURE) {
++            php_error(E_ERROR,&quot;connect failed\n&quot;);
+             RETURN_NULL(); 
+         }
+         receiver_ptr = static_cast&lt;QObject*&gt;(PHP_QT_FETCH());
+
+Modified: trunk/qt/php_qt.cpp
+===================================================================
+--- trunk/qt/php_qt.cpp	2006-05-09 22:47:53 UTC (rev 234)
++++ trunk/qt/php_qt.cpp	2006-05-10 21:11:39 UTC (rev 235)
+@@ -1227,7 +1227,7 @@
+         signature[i++] = 8;        
+         signature[i++] = 8;
+         signature[i++] = 8;
+-        signature[i++] = 0x0a;
++        signature[i++] = 0x05;
+ 
+         signaturecount += strlen(Z_STRVAL_PP(slotdata)) + 1;
+ 
+
+Added: trunk/tutorials/t7/main.php
+===================================================================
+--- trunk/tutorials/t7/main.php	2006-05-09 22:47:53 UTC (rev 234)
++++ trunk/tutorials/t7/main.php	2006-05-10 21:11:39 UTC (rev 235)
+@@ -0,0 +1,89 @@
++&lt;?php
++    /****************************************************************
++    **
++    ** Qt tutorial 7
++    **
++    ** <A HREF="http://doc.trolltech.com/4.0/tutorial-t6.html">http://doc.trolltech.com/4.0/tutorial-t6.html</A>
++    **
++    ****************************************************************/
++
++    if(!extension_loaded('php_qt')) {
++        dl('php_qt.' . PHP_SHLIB_SUFFIX);
++    }
++
++    class LCDRange extends QWidget
++    {
++        var $lcd;
++        var $slider;
++        var $layout;
++
++        var $slots = array(&quot;setValue(int)&quot;);
++        var $signals = array(&quot;valueChanged(int)&quot;);
++
++        function __construct(){
++
++            parent::__construct();
++
++            $this-&gt;lcd = new QLCDNumber(2,$this);
++            $this-&gt;slider = new QSlider($this);
++            $this-&gt;slider-&gt;setOrientation(QT_ORIENTATIONS_HORIZONTAL);
++
++            $this-&gt;slider-&gt;setRange(0, 99);
++            $this-&gt;slider-&gt;setValue(0);
++
++            $this-&gt;connect($this-&gt;slider, SIGNAL(&quot;valueChanged(int)&quot;),
++                    $this-&gt;lcd, SLOT(&quot;display(int)&quot;));
++
++            $this-&gt;connect($this-&gt;slider, SIGNAL(&quot;valueChanged(int)&quot;),
++                    $this,SIGNAL(&quot;valueChanged(int)&quot;));
++
++            $this-&gt;layout = new QVBoxLayout($this);
++            $this-&gt;layout-&gt;addWidget($this-&gt;lcd);
++            $this-&gt;layout-&gt;addWidget($this-&gt;slider);
++            $this-&gt;setLayout($this-&gt;layout);
++        }
++
++        function setValue($value){
++            $this-&gt;slider-&gt;setValue($value);
++        }
++
++    };
++
++    class MyWidget extends QWidget
++    {
++        var $quit;
++        var $grid;
++        var $layout;
++
++        function __construct(){
++
++            parent::__construct();
++
++            $this-&gt;quit = new QPushButton(&quot;Quit&quot;);
++    //        $this-&gt;quit-&gt;setFont(QFont(&quot;Times&quot;, 18, QFont::Bold));
++            $this-&gt;connect($this-&gt;quit, SIGNAL(&quot;clicked()&quot;), QApplication::instance(), SLOT(&quot;quit()&quot;));
++
++            $this-&gt;grid = new QGridLayout();
++            for ($row = 0; $row &lt; 3; ++$row) {
++                for ($column = 0; $column &lt; 3; ++$column) {
++                    $lcdRange = new LCDRange();
++                    $this-&gt;grid-&gt;addWidget($lcdRange, $row, $column);
++                    if($previousRange)
++                        $this-&gt;connect($lcdRange, SIGNAL(&quot;valueChanged(int)&quot;), $previousRange, SLOT(&quot;setValue(int)&quot;));
++                    $previousRange = $lcdRange;
++                }
++            }
++
++            $this-&gt;layout = new QVBoxLayout($this);
++            $this-&gt;layout-&gt;addWidget($this-&gt;quit);
++            $this-&gt;layout-&gt;addLayout($this-&gt;grid,0);
++            $this-&gt;setLayout($this-&gt;layout);
++        }
++    }
++
++    $app = new QApplication($argc,0);
++    $widget = new MyWidget();
++    $widget-&gt;show();
++    $app-&gt;exec();
++
++?&gt;
+\ No newline at end of file
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000078.html">[Php-qt-svn] r234 - in trunk/qt: . classes
+</A></li>
+	<LI>Next message: <A HREF="000080.html">[Php-qt-svn] r236 - trunk/qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#79">[ date ]</a>
+              <a href="thread.html#79">[ thread ]</a>
+              <a href="subject.html#79">[ subject ]</a>
+              <a href="author.html#79">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

@@ -1,0 +1,96 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r195 - trunk/qt/text_related
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-January/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r195%20-%20trunk/qt/text_related&In-Reply-To=%3C200601161656.k0GGuA5t024203%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000043.html">
+   <LINK REL="Next"  HREF="000045.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r195 - trunk/qt/text_related</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r195%20-%20trunk/qt/text_related&In-Reply-To=%3C200601161656.k0GGuA5t024203%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r195 - trunk/qt/text_related">tm243 at berlios.de
+       </A><BR>
+    <I>Mon Jan 16 17:56:10 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000043.html">[Php-qt-svn] r194 - trunk/qt/classes
+</A></li>
+        <LI>Next message: <A HREF="000045.html">[Php-qt-svn] r196 - trunk/qt/text_related
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#44">[ date ]</a>
+              <a href="thread.html#44">[ thread ]</a>
+              <a href="subject.html#44">[ subject ]</a>
+              <a href="author.html#44">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-01-16 17:56:09 +0100 (Mon, 16 Jan 2006)
+New Revision: 195
+
+Modified:
+   trunk/qt/text_related/qstring.cpp
+Log:
+setUnicode repaired.
+
+Modified: trunk/qt/text_related/qstring.cpp
+===================================================================
+--- trunk/qt/text_related/qstring.cpp	2006-01-16 16:39:18 UTC (rev 194)
++++ trunk/qt/text_related/qstring.cpp	2006-01-16 16:56:09 UTC (rev 195)
+@@ -2036,9 +2036,9 @@
+ 			QString *obj = (QString*) PHP_QT_FETCH();
+ 			QObject* var_ol_0 = (QObject*) php_qt_fetch(z_var_ol_0);
+ 
+-			QString tmp_ol_0(var_ol_0-&gt;metaObject()-&gt;className());
++//			QString tmp_ol_0(var_ol_0-&gt;metaObject()-&gt;className());
+ 			
+-			if(tmp_ol_0 == &quot;const QChar&quot;) {
++//			if(tmp_ol_0 == &quot;QChar&quot;) {
+ 				QString &amp; return_object = (QString &amp;) obj-&gt;setUnicode((const QChar*) var_ol_0, (int) var_ol_1);
+ 				zend_class_entry *ce;                                   
+ 				object_init_ex(return_value, QString_ce_ptr);     
+@@ -2046,7 +2046,7 @@
+ 				le.ptr = (void*) &amp;return_object;                                       
+ 				php_qt_register(return_value,le);                   
+ 				return;                                             
+-			}
++//			}
+ 		}
+ 	}
+ }
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000043.html">[Php-qt-svn] r194 - trunk/qt/classes
+</A></li>
+	<LI>Next message: <A HREF="000045.html">[Php-qt-svn] r196 - trunk/qt/text_related
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#44">[ date ]</a>
+              <a href="thread.html#44">[ thread ]</a>
+              <a href="subject.html#44">[ subject ]</a>
+              <a href="author.html#44">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

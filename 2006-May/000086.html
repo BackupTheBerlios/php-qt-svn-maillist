@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r242 - trunk/qt/classes
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-May/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r242%20-%20trunk/qt/classes&In-Reply-To=%3C200605190817.k4J8HHfh001840%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000085.html">
+   <LINK REL="Next"  HREF="000087.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r242 - trunk/qt/classes</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r242%20-%20trunk/qt/classes&In-Reply-To=%3C200605190817.k4J8HHfh001840%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r242 - trunk/qt/classes">tm243 at berlios.de
+       </A><BR>
+    <I>Fri May 19 10:17:17 CEST 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000085.html">[Php-qt-svn] r241 - trunk/qt/text_related
+</A></li>
+        <LI>Next message: <A HREF="000087.html">[Php-qt-svn] r243 - in trunk/tutorials: . calculator
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#86">[ date ]</a>
+              <a href="thread.html#86">[ thread ]</a>
+              <a href="subject.html#86">[ subject ]</a>
+              <a href="author.html#86">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-05-19 10:17:17 +0200 (Fri, 19 May 2006)
+New Revision: 242
+
+Modified:
+   trunk/qt/classes/qdialog.cpp
+Log:
+class_entry_ptr repaired.
+
+Modified: trunk/qt/classes/qdialog.cpp
+===================================================================
+--- trunk/qt/classes/qdialog.cpp	2006-05-19 08:11:15 UTC (rev 241)
++++ trunk/qt/classes/qdialog.cpp	2006-05-19 08:17:17 UTC (rev 242)
+@@ -162,7 +162,7 @@
+           *return_object = static_cast &lt; QString &gt; (QDialog::tr((const char *)Z_STRVAL_P(z_0), (const char *)Z_STRVAL_P(z_1)));
+         } zend_class_entry *ce;
+ 
+-        object_init_ex(return_value, QDialog_ce_ptr);
++        object_init_ex(return_value, QString_ce_ptr);
+         zend_rsrc_list_entry le;
+ 
+         le.ptr = return_object;
+@@ -178,21 +178,21 @@
+ 
+     if (zend_parse_parameters(ZEND_NUM_ARGS()TSRMLS_CC, &quot;z&quot;, &amp;z_0) == SUCCESS) {
+       if (Z_TYPE_P(z_0) == IS_STRING) {
+-        QString *return_object;
++        QString *return_object = new QString;
+         if (getThis() != NULL) {
+ /// return value is object: QString
+-        QDialog *obj = static_cast&lt;QDialog *&gt;(PHP_QT_FETCH());
+-          *return_object = static_cast &lt; QString &gt; (obj-&gt;tr((const char *)Z_STRVAL_P(z_0)));
++            QDialog *obj = static_cast&lt;QDialog *&gt;(PHP_QT_FETCH());
++            *return_object = static_cast &lt; QString &gt; (obj-&gt;tr((const char *)Z_STRVAL_P(z_0)));
+ /// check whether method call is static.
+         } else {
+-          return_object = (QString *) malloc(sizeof (QDialog::tr((const char *)Z_STRVAL_P(z_0))));   /// memory allocation
+-          *return_object = static_cast &lt; QString &gt; (QDialog::tr((const char *)Z_STRVAL_P(z_0)));
+-        } zend_class_entry *ce;
+-        object_init_ex(return_value, QToolButton_ce_ptr);
+-        zend_rsrc_list_entry le;
+-        le.ptr = return_object;
+-        php_qt_register(return_value, le);
+-        return;
++            *return_object = static_cast &lt; QString &gt; (QDialog::tr((const char *)Z_STRVAL_P(z_0)));
++        } 
++            zend_class_entry *ce;
++            object_init_ex(return_value, QString_ce_ptr);
++            zend_rsrc_list_entry le;
++            le.ptr = return_object;
++            php_qt_register(return_value, le);
++            return;
+       } else {
+         php_error(E_ERROR, &quot;argument not allowed&quot;);
+       }                         /// END check of argument types
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000085.html">[Php-qt-svn] r241 - trunk/qt/text_related
+</A></li>
+	<LI>Next message: <A HREF="000087.html">[Php-qt-svn] r243 - in trunk/tutorials: . calculator
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#86">[ date ]</a>
+              <a href="thread.html#86">[ thread ]</a>
+              <a href="subject.html#86">[ subject ]</a>
+              <a href="author.html#86">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r284 - trunk
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-November/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r284%20-%20trunk&In-Reply-To=%3C200611091752.kA9HqToN008545%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000127.html">
+   <LINK REL="Next"  HREF="000129.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r284 - trunk</H1>
+    <B>tm243 at mail.berlios.de</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r284%20-%20trunk&In-Reply-To=%3C200611091752.kA9HqToN008545%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r284 - trunk">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Thu Nov  9 18:52:29 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000127.html">[Php-qt-svn] r283 - in trunk/smoke: . qt
+</A></li>
+        <LI>Next message: <A HREF="000129.html">[Php-qt-svn] r285 - trunk/qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#128">[ date ]</a>
+              <a href="thread.html#128">[ thread ]</a>
+              <a href="subject.html#128">[ subject ]</a>
+              <a href="author.html#128">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-11-09 18:52:26 +0100 (Thu, 09 Nov 2006)
+New Revision: 284
+
+Modified:
+   trunk/config.m4
+Log:
+static linking of Smoke library
+
+Modified: trunk/config.m4
+===================================================================
+--- trunk/config.m4	2006-11-09 17:43:08 UTC (rev 283)
++++ trunk/config.m4	2006-11-09 17:52:26 UTC (rev 284)
+@@ -117,8 +117,7 @@
+ 		   $GLLIB \
+ 		   $LIBQSCINTILLA \
+ 		    -lQtSvg \
+-		    -lQtUiTools \
+-		    -lsmokeqt&quot;
++		    -lQtUiTools&quot;
+ 
+   LDFLAGS=&quot;$LDFLAGS $all_libraries $USER_LDFLAGS $LIBQT $smoke_libraries&quot;
+   PHP_REQUIRE_CXX
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000127.html">[Php-qt-svn] r283 - in trunk/smoke: . qt
+</A></li>
+	<LI>Next message: <A HREF="000129.html">[Php-qt-svn] r285 - trunk/qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#128">[ date ]</a>
+              <a href="thread.html#128">[ thread ]</a>
+              <a href="subject.html#128">[ subject ]</a>
+              <a href="author.html#128">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

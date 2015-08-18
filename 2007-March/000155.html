@@ -1,0 +1,418 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r311 - trunk/php_qt
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-March/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r311%20-%20trunk/php_qt&In-Reply-To=%3C200703260930.l2Q9UkLo027247%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000154.html">
+   <LINK REL="Next"  HREF="000156.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r311 - trunk/php_qt</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r311%20-%20trunk/php_qt&In-Reply-To=%3C200703260930.l2Q9UkLo027247%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r311 - trunk/php_qt">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Mon Mar 26 11:30:46 CEST 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000154.html">[Php-qt-svn] r310 - trunk/php_qt
+</A></li>
+        <LI>Next message: <A HREF="000156.html">[Php-qt-svn] r312 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#155">[ date ]</a>
+              <a href="thread.html#155">[ thread ]</a>
+              <a href="subject.html#155">[ subject ]</a>
+              <a href="author.html#155">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2007-03-26 11:30:46 +0200 (Mon, 26 Mar 2007)
+New Revision: 311
+
+Modified:
+   trunk/php_qt/functions.cpp
+   trunk/php_qt/marshall_basetypes.h
+   trunk/php_qt/php_qt.cpp
+   trunk/php_qt/php_qt.h
+   trunk/php_qt/smokephp.cpp
+Log:
+* code cleaned up
+
+
+
+Modified: trunk/php_qt/functions.cpp
+===================================================================
+--- trunk/php_qt/functions.cpp	2007-03-26 09:09:29 UTC (rev 310)
++++ trunk/php_qt/functions.cpp	2007-03-26 09:30:46 UTC (rev 311)
+@@ -159,7 +159,6 @@
+ 	le.ptr = o;
+ 	phpqt_register(return_value, le);
+ 	phpqt_setSmokePHPObject(o);
+-	phpqt_setZvalPtr(o, o-&gt;zval_ptr);
+     return;
+ }
+ 
+
+Modified: trunk/php_qt/marshall_basetypes.h
+===================================================================
+--- trunk/php_qt/marshall_basetypes.h	2007-03-26 09:09:29 UTC (rev 310)
++++ trunk/php_qt/marshall_basetypes.h	2007-03-26 09:30:46 UTC (rev 311)
+@@ -170,9 +170,7 @@
+ 	    zend_rsrc_list_entry le;
+ 	    le.ptr = o;
+ 	    phpqt_register(obj, le);
+-	    phpqt_setZvalPtr(o, obj);
+ 
+-
+ //	    if(m-&gt;type().isConst() &amp;&amp; m-&gt;type().isRef()) {
+ 	    if(m-&gt;type().isRef()) {
+ 		p = construct_copy( o );
+
+Modified: trunk/php_qt/php_qt.cpp
+===================================================================
+--- trunk/php_qt/php_qt.cpp	2007-03-26 09:09:29 UTC (rev 310)
++++ trunk/php_qt/php_qt.cpp	2007-03-26 09:30:46 UTC (rev 311)
+@@ -20,8 +20,6 @@
+  *
+  */
+ 
+-// TODO		references
+-
+ #include &lt;zend_interfaces.h&gt;
+ #include &quot;php_qt.h&quot;
+ #include &quot;ext/standard/php_string.h&quot;
+@@ -40,7 +38,6 @@
+ extern TypeHandler Qt_handlers[];
+ void install_handlers(TypeHandler *);
+ 
+-/* True global resources - no need for thread safety here */
+ static int le_php_qt;
+ 
+ // object list
+@@ -58,6 +55,61 @@
+ static opcode_handler_t *phpqt_original_opcode_handlers;
+ static opcode_handler_t phpqt_opcode_handlers[PHPQT_OPHANDLER_COUNT];
+ 
++
++/*! php_qt_functions[]
++ *
++ * Every user visible function must have an entry in php_qt_functions[].
++ */
++#undef emit
++function_entry php_qt_functions[] = {
++	PHP_FE(confirm_php_qt_compiled,	NULL)		/* For testing, remove later. */
++	PHP_FE(SIGNAL,	NULL)
++	PHP_FE(SLOT,	NULL)	
++	PHP_FE(emit,	NULL)	
++	PHP_FE(qobject_cast,	NULL)
++	PHP_FE(tr,	NULL)
++	PHP_FE(check_qobject,	NULL)
++	{NULL, NULL, NULL}	/* Must be the last line in php_qt_functions[] */
++};
++
++/*! php_qt_module_entry
++ */
++zend_module_entry php_qt_module_entry = {
++#if ZEND_MODULE_API_NO &gt;= 20010901
++	STANDARD_MODULE_HEADER,
++#endif
++	&quot;php_qt&quot;,
++	php_qt_functions,
++	PHP_MINIT(php_qt),
++	PHP_MSHUTDOWN(php_qt),
++	PHP_RINIT(php_qt),		/* Replace with NULL if there's nothing to do at request start */
++	PHP_RSHUTDOWN(php_qt),	/* Replace with NULL if there's nothing to do at request end */
++	PHP_MINFO(php_qt),
++#if ZEND_MODULE_API_NO &gt;= 20010901
++	PHPQT_VERSION,
++#endif
++	STANDARD_MODULE_PROPERTIES
++};
++
++#ifdef COMPILE_DL_PHP_QT
++ZEND_GET_MODULE(php_qt)
++#endif
++
++QHash&lt;void*, smokephp_object*&gt; SmokeQtObjects;
++QStack&lt;QByteArray*&gt; methodNameStack;
++
++// cached
++Smoke::Index qbool;
++Smoke::Index qstring;
++Smoke::Index qobject;
++zend_class_entry* qobject_ce;
++extern zend_class_entry* qstring_ce;
++extern void 	_register_QString();
++
++/*
++ *	constants handler
++ */
++
+ static int constantHandler(ZEND_OPCODE_HANDLER_ARGS) {
+ 
+ 	zend_op *opline = EX__(opline);
+@@ -110,57 +162,7 @@
+ 
+ }
+ 
+-/*! php_qt_functions[]
+- *
+- * Every user visible function must have an entry in php_qt_functions[].
+- */
+-#undef emit
+-function_entry php_qt_functions[] = {
+-	PHP_FE(confirm_php_qt_compiled,	NULL)		/* For testing, remove later. */
+-	PHP_FE(SIGNAL,	NULL)
+-	PHP_FE(SLOT,	NULL)	
+-	PHP_FE(emit,	NULL)	
+-	PHP_FE(qobject_cast,	NULL)
+-	PHP_FE(tr,	NULL)
+-	PHP_FE(check_qobject,	NULL)
+-	{NULL, NULL, NULL}	/* Must be the last line in php_qt_functions[] */
+-};
+ 
+-/*! php_qt_module_entry
+- */
+-zend_module_entry php_qt_module_entry = {
+-#if ZEND_MODULE_API_NO &gt;= 20010901
+-	STANDARD_MODULE_HEADER,
+-#endif
+-	&quot;php_qt&quot;,
+-	php_qt_functions,
+-	PHP_MINIT(php_qt),
+-	PHP_MSHUTDOWN(php_qt),
+-	PHP_RINIT(php_qt),		/* Replace with NULL if there's nothing to do at request start */
+-	PHP_RSHUTDOWN(php_qt),	/* Replace with NULL if there's nothing to do at request end */
+-	PHP_MINFO(php_qt),
+-#if ZEND_MODULE_API_NO &gt;= 20010901
+-	&quot;0.0.4&quot;, /* Replace with version number for your extension */
+-#endif
+-	STANDARD_MODULE_PROPERTIES
+-};
+-
+-#ifdef COMPILE_DL_PHP_QT
+-ZEND_GET_MODULE(php_qt)
+-#endif
+-
+-static QHash&lt;smokephp_object*, zval*&gt; smoke_x_zval;
+-QHash&lt;void*, smokephp_object*&gt; SmokeQtObjects;
+-QStack&lt;QString*&gt; methodNameStack;
+-
+-// cached
+-Smoke::Index qbool;
+-Smoke::Index qstring;
+-Smoke::Index qobject;
+-zend_class_entry* qobject_ce;
+-extern zend_class_entry* qstring_ce;
+-extern void 	_register_QString();
+-
+ /**
+  *	proxy handler
+  */
+@@ -187,7 +189,7 @@
+     fbc = zend_orig_handler.get_method(obj_ptr, methodName, methodName_len);
+ 
+     if(!fbc) {    // maybe a Qt object
+-        methodNameStack.push(new QString(methodName));
++        methodNameStack.push(new QByteArray(methodName));
+ 	    // call proxy
+ 	    fbc = zend_orig_handler.get_method(obj_ptr, &quot;proxyMethod&quot;, 11);
+     }
+@@ -236,7 +238,6 @@
+ {
+     if(phpqt_SmokePHPObjectExists(getThis())) {
+ 	smokephp_object *o = phpqt_getSmokePHPObjectFromZval(getThis());
+-	phpqt_removeZvalPtr(o);
+ 	SmokeQtObjects.remove(o-&gt;ptr);
+ 
+ 	efree(o-&gt;zval_ptr);
+@@ -266,9 +267,9 @@
+ 	    WRONG_PARAM_COUNT;
+     }
+ 
+-    methodNameStack.push(new QString(ce-&gt;name));
+-    smokephp_prepareMethodName(args, argc, methodNameStack);
+-    Smoke::Index method = smokephp_getMethod(ce-&gt;name, (methodNameStack.top())-&gt;toAscii(), ZEND_NUM_ARGS(), args);
++    methodNameStack.push(new QByteArray(ce-&gt;name));
++    smokephp_prepareMethodName(args, argc, methodNameStack);	// #, $, ?
++    Smoke::Index method = smokephp_getMethod(ce-&gt;name, methodNameStack.top()-&gt;constData(), ZEND_NUM_ARGS(), args);
+     MethodCall c(PQ::smoke(), method, getThis(), args, argc-1, getThis());
+     c.next();
+ 
+@@ -334,7 +335,7 @@
+         char* class_name = get_active_class_name(&amp;space);
+         char* method_name = get_active_function_name();
+         ce = zend_fetch_class(class_name,strlen(class_name), ZEND_FETCH_CLASS_AUTO TSRMLS_DC);
+-        methodNameStack.push(new QString(method_name));
++        methodNameStack.push(new QByteArray(method_name));
+     }
+ 
+     // find parents
+@@ -351,17 +352,17 @@
+     }
+ 
+     smokephp_prepareMethodName(args, argc, methodNameStack);
+-    Smoke::Index method = smokephp_getMethod(ce-&gt;name, (methodNameStack.top())-&gt;toAscii(), argc, args);
++    Smoke::Index method = smokephp_getMethod(ce-&gt;name, methodNameStack.top()-&gt;constData(), argc, args);
+ 
+     if(method &lt;= 0) {
+-	if(methodNameStack.top()-&gt;toAscii().constData()) {
++	if(methodNameStack.top()-&gt;constData()) {
+ 
+ 	    // is it a signal?
+ 	    if(getThis()){
+ 		smokephp_object* o = phpqt_getSmokePHPObjectFromZval(getThis());
+ 		if(o-&gt;meta != NULL){
+ 		    QMetaObject* mo = (QMetaObject*) o-&gt;meta;
+-		    QByteArray signalname(methodNameStack.top()-&gt;toAscii().constData());
++		    QByteArray signalname(methodNameStack.top()-&gt;constData());
+ 		    signalname.replace(&quot;$&quot;,&quot;&quot;);
+ 		    signalname.replace(&quot;#&quot;,&quot;&quot;);
+ 		    signalname.replace(&quot;?&quot;,&quot;&quot;);
+@@ -384,7 +385,7 @@
+ 		}
+ 	    }
+ 
+-	    php_error(E_ERROR,&quot;Call to undefined method %s::%s()&quot;, ce-&gt;name, methodNameStack.top()-&gt;toAscii().constData());
++	    php_error(E_ERROR,&quot;Call to undefined method %s::%s()&quot;, ce-&gt;name, methodNameStack.top()-&gt;constData());
+ 	}
+ 	else 
+ 	    php_error(E_ERROR,&quot;Call to undefined method!&quot;);
+@@ -878,38 +879,6 @@
+   	}
+ }
+ 
+-/*!
+- *	fetchs the zval-ptr from hashtable
+- *	@param	QObject*
+- *	@return	zval*
+- */
+-
+-
+-void
+-phpqt_setZvalPtr(smokephp_object *o, zval* z) {
+-	smoke_x_zval.insert(o,z);
+-}
+-
+-void
+-phpqt_removeZvalPtr(smokephp_object *o) {
+-	smoke_x_zval.remove(o);
+-}
+-
+-zval* 
+-phpqt_fetchZvalPtr(smokephp_object *o){
+-	return smoke_x_zval.value(o);
+-}
+-
+-bool
+-phpqt_ZvalPtrExists(smokephp_object *o){
+-	return (smoke_x_zval.find(o) != smoke_x_zval.end());
+-}
+-
+-/**
+- *	maps method names to the related names of operator-extension
+- *	@param	const char*		fname		function name
+- */
+-
+ char*
+ phpqt_checkForOperator(const char* fname){
+ 	return (char*) fname;
+@@ -1006,6 +975,5 @@
+ 	le.ptr = o;
+ 	object_init_ex(zval_ptr, ce);
+ 	phpqt_register(o-&gt;zval_ptr,le);
+-	phpqt_setZvalPtr(o, o-&gt;zval_ptr);
+ 
+ }
+
+Modified: trunk/php_qt/php_qt.h
+===================================================================
+--- trunk/php_qt/php_qt.h	2007-03-26 09:09:29 UTC (rev 310)
++++ trunk/php_qt/php_qt.h	2007-03-26 09:30:46 UTC (rev 311)
+@@ -23,6 +23,8 @@
+ #ifndef QTPHP_H
+ #define QTPHP_H
+ 
++#define PHPQT_VERSION &quot;0.0.4&quot;
++
+ #define MONITOR
+ 
+ #define COMPILE_DL_PHP_QT
+@@ -122,11 +124,6 @@
+ int				phpqt_metacall(smokephp_object* this_ptr, Smoke::StackItem* args, QMetaObject::Call _c, int _id, void **_a);
+ char*				phpqt_checkForOperator(const char* fname);
+ 
+-void 				phpqt_setZvalPtr(smokephp_object *o, zval* z);
+-void 				phpqt_removeZvalPtr(smokephp_object *o);
+-zval* 				phpqt_fetchZvalPtr(smokephp_object *o);
+-bool				phpqt_ZvalPtrExists(smokephp_object *o);
+-
+ void* 				phpqt_getQtObjectFromZval(zval* this_ptr);
+ smokephp_object* 		phpqt_getSmokePHPObjectFromZval(zval* this_ptr);
+ smokephp_object*		phpqt_getSmokePHPObjectFromQt(void* QtPtr);
+@@ -153,7 +150,7 @@
+ void 				smokephp_convertArgsCxxToZend(zval*** args, int argc, Smoke::StackItem* qargs);
+ bool 				smokephp_isQObject(Smoke::Index classId);
+ Smoke::Index 			smokephp_getClassId(const char* classname);
+-void				smokephp_prepareMethodName(zval*** args, int argc, QStack&lt;QString*&gt; &amp;methodNameStack);
++void				smokephp_prepareMethodName(zval*** args, int argc, QStack&lt;QByteArray*&gt; &amp;methodNameStack);
+ QByteArray* 			smokephp_getSignature(int argc, zval ***argv, MocArgument* mocStack);
+ Smoke::Index			smokephp_getMethod(const char* c, const char* m, int argc, zval*** args);
+ void				smokephp_prepareConnect(zval*** args, int argc, Smoke::StackItem* qargs, const Smoke::Index method);
+
+Modified: trunk/php_qt/smokephp.cpp
+===================================================================
+--- trunk/php_qt/smokephp.cpp	2007-03-26 09:09:29 UTC (rev 310)
++++ trunk/php_qt/smokephp.cpp	2007-03-26 09:30:46 UTC (rev 311)
+@@ -73,6 +73,7 @@
+ 
+ 		    VirtualMethodCall c(smoke, method, args, o-&gt;zval_ptr, sp);
+ //		    c.next();
++		    efree(sp);
+ 		}
+ 		
+ 		return false;
+@@ -321,7 +322,7 @@
+ 
+ }
+ 
+-void smokephp_prepareMethodName(zval*** args, int argc, QStack&lt;QString*&gt; &amp;methodNameStack){
++void smokephp_prepareMethodName(zval*** args, int argc, QStack&lt;QByteArray*&gt; &amp;methodNameStack){
+ 
+     for(int i=0;i&lt;argc;i++){
+ 	    uint type = ((int) ((zval) **args[i]).type);
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000154.html">[Php-qt-svn] r310 - trunk/php_qt
+</A></li>
+	<LI>Next message: <A HREF="000156.html">[Php-qt-svn] r312 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#155">[ date ]</a>
+              <a href="thread.html#155">[ thread ]</a>
+              <a href="subject.html#155">[ subject ]</a>
+              <a href="author.html#155">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

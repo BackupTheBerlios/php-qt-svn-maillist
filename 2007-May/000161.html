@@ -1,0 +1,235 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r317 - trunk
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-May/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r317%20-%20trunk&In-Reply-To=%3C200705212019.l4LKJ83l029489%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000160.html">
+   <LINK REL="Next"  HREF="000162.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r317 - trunk</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r317%20-%20trunk&In-Reply-To=%3C200705212019.l4LKJ83l029489%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r317 - trunk">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Mon May 21 22:19:08 CEST 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000160.html">[Php-qt-svn] r316 - in trunk: . examples/calculator php_qt tests	tutorials/t5
+</A></li>
+        <LI>Next message: <A HREF="000162.html">[Php-qt-svn] r318 - trunk/tests
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#161">[ date ]</a>
+              <a href="thread.html#161">[ thread ]</a>
+              <a href="subject.html#161">[ subject ]</a>
+              <a href="author.html#161">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2007-05-21 22:19:08 +0200 (Mon, 21 May 2007)
+New Revision: 317
+
+Modified:
+   trunk/README
+Log:
+* fixed grammar and capitalization errors, removed reference to php_qt/build because it doesnt work always. Thanks Katrina!
+
+
+
+Modified: trunk/README
+===================================================================
+--- trunk/README	2007-05-20 21:13:23 UTC (rev 316)
++++ trunk/README	2007-05-21 20:19:08 UTC (rev 317)
+@@ -1,69 +1,92 @@
+-PHP-Qt - an extension for PHP5 that aims to write software with the Qt Toolkit.
++PHP-Qt - an extension for PHP5 that enables the writing of PHP software using 
++the Qt Toolkit.
+ ================================================================================
+ 
+-PHP-Qt is an extension for PHP5 that aims to write software with the Qt Toolkit. 
+-It provides an object-oriented interface to the Qt4 Framework and allowes 
+-to write Qt applications in the PHP language.
++PHP-Qt is an extension for PHP5 that provides an object-oriented interface to 
++the Qt4 Framework and allows 
++one to write Qt applications in the PHP language.
+ 
+ Requirements
+ ============
+ 
+-PHP-Qt requires PHP 5.1 or greater, the Qt4 header files and CMake.
++PHP 5.1 or greater
++PHP header files and the development scripts
++(package may be called php-devel)
+ 
+-PHP5: You should have a the header files and the development scripts.
+-Qt4: You should have the header files.
++Qt4 header files
++(package may be called qt4-devel)
+ 
+-Note: at this time compilation is only tested in a Unix environment.
++CMake
+ 
++Note: at this time compilation has only been tested in a Unix environment.
++
+ Compiling and installation
+ ==========================
+ 
+-short:
++Both of these methods will compile and install PHP-Qt as a module.
+ 
++The quick and easy way:
++
+ cmake /path/to/php_qt
+ make
+ make install
+ 
+-more detailed:
+ 
+-You have cmake installed and the path to your PHP5 header files. After 
+-downloading or checking out from SVN the easiest way is to create a build 
+-directory in your copy of PHP-Qt. The extension will be built out-of-source 
+-which allows you to have a clean copy of PHP-Qt without any files of the build 
+-system.
++The more detailed way:
+ 
+-PHP-Qt will be compiled as module! 
++First make sure CMake, your PHP header files, and your Qt header files are 
++installed.
++Then, get PHP-Qt either by downloading or checking out from SVN and placing it 
++into
++its own directory.
+ 
+-At first it is neccessary to create your build environment for compiling.
+-To do that just change into the 'php_qt/build' directory and run cmake:
++Next it is neccessary to create your build environment for compiling.
++To do this, just change into the directory where you placed PHP-Qt and run 
++cmake:
+ 
+-cmake ..
++cmake
+ 
+-You can give arguments to cmake via the -D option:
+-  -DQT_INCLUDE_DIR=/usr/lib/qt4/include \
+-  -DQT_LIBRARY_DIR=/usr/lib/qt4
++If needed you can give arguments to CMake via the -D option, such as:
++&#160; -DQT_INCLUDE_DIR=/usr/lib/qt4/include
++&#160; -DQT_LIBRARY_DIR=/usr/lib/qt4
++&#160; -DQT_QMAKE_EXECUTABLE=/usr/lib/qt4/bin/qmake
++&#160; 
++If no arguments are given, CMake will try to find the Qt4 and PHP5 files in 
++the default or standard 
++paths such as /usr/include, /usr/local/include etc.
+ 
+-If no argument is given cmake will try to find the Qt4 and PHP5 files in the default or standard 
+-pathes as /usr/include, /usr/local/include etc.
++Finally, run:
+ 
+-Finally, run 
+-
+ make
+ 
+-to build the extension. If the compilation is successful run 
++to build the extension. If the compilation is successful run:
+ 
+ make install
+ 
+-to copy 'php_qt.so' into php's extension directory. If it fails please check if you have 
+-permissions and all related pathes on your system are correct.
++to copy 'php_qt.so' into php's extension directory. If it fails please check 
++if you have 
++permissions and all related paths on your system are correct.
+ 
+-To remove old objectfiles run 
++To remove old objectfiles run:
+ 
+ make clean
+ 
+-To test it, simply run one of the test scripts in the php_qt/test/ subdirectory.
+-To get a clean build system just remove all files in the build/ directory.
++To test it, simply run one of the test scripts in the php_qt/test/ 
++subdirectory.
+ 
++Troubleshooting
++===================================
++
++If you get the following error:
++CMake Error: Could NOT find QtCore. Check CMakeFiles/CMakeError.log for more 
++details.
++
++Try running cmake as:
++cmake /path/to/php-qt &#160;-DQT_QMAKE_EXECUTABLE=/usr/lib/qt4/bin/qmake
++(you may need to replace the /usr/lib/qt4/bin/qmake if yours is in another 
++place)
++
++
+ Mailing lists
+ =============
+ 
+@@ -71,17 +94,18 @@
+ -----------------
+ users mailing list
+ 
+-address:        <A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">php-qt-users at lists.sourceforge.net</A>
+-Subscription:   <A HREF="https://lists.sourceforge.net/lists/listinfo/php-qt-users">https://lists.sourceforge.net/lists/listinfo/php-qt-users</A>
+-Archive:        <A HREF="http://sourceforge.net/mailarchive/forum.php?forum=php-qt-users">http://sourceforge.net/mailarchive/forum.php?forum=php-qt-users</A>
++address: &#160; &#160; &#160; &#160;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">php-qt-users at lists.sourceforge.net</A>
++Subscription: &#160; <A HREF="https://lists.sourceforge.net/lists/listinfo/php-qt-users">https://lists.sourceforge.net/lists/listinfo/php-qt-users</A>
++Archive: &#160; &#160; &#160; &#160;
++<A HREF="http://sourceforge.net/mailarchive/forum.php?forum=php-qt-users">http://sourceforge.net/mailarchive/forum.php?forum=php-qt-users</A>
+ 
+ Subversion commits
+ --------------------
+ The list for svn commits. Readonly!
+ 
+-address:        <A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">php-qt-svn at lists.berlios.de.</A>
+-Subscription:   <A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">https://lists.berlios.de/mailman/listinfo/php-qt-svn</A>
+-Archive:        <A HREF="https://lists.berlios.de/pipermail/php-qt-svn/">https://lists.berlios.de/pipermail/php-qt-svn/</A>
++address: &#160; &#160; &#160; &#160;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">php-qt-svn at lists.berlios.de.</A>
++Subscription: &#160; <A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">https://lists.berlios.de/mailman/listinfo/php-qt-svn</A>
++Archive: &#160; &#160; &#160; &#160;<A HREF="https://lists.berlios.de/pipermail/php-qt-svn/">https://lists.berlios.de/pipermail/php-qt-svn/</A>
+ 
+ 
+ Website
+@@ -89,6 +113,4 @@
+ 
+ The website for the project:
+ 
+-    <A HREF="http://www.php-qt.org">http://www.php-qt.org</A>
+-
+-
++&#160; &#160; <A HREF="http://www.php-qt.org">http://www.php-qt.org</A>
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000160.html">[Php-qt-svn] r316 - in trunk: . examples/calculator php_qt tests	tutorials/t5
+</A></li>
+	<LI>Next message: <A HREF="000162.html">[Php-qt-svn] r318 - trunk/tests
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#161">[ date ]</a>
+              <a href="thread.html#161">[ thread ]</a>
+              <a href="subject.html#161">[ subject ]</a>
+              <a href="author.html#161">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

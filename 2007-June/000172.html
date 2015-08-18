@@ -1,0 +1,1841 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r328 - in trunk: examples/calculator php_qt smoke tests
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-June/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r328%20-%20in%20trunk%3A%20examples/calculator%20php_qt%20smoke%20tests&In-Reply-To=%3C200706061307.l56D79IY009079%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000171.html">
+   <LINK REL="Next"  HREF="000173.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r328 - in trunk: examples/calculator php_qt smoke tests</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r328%20-%20in%20trunk%3A%20examples/calculator%20php_qt%20smoke%20tests&In-Reply-To=%3C200706061307.l56D79IY009079%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r328 - in trunk: examples/calculator php_qt smoke tests">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Wed Jun  6 15:07:09 CEST 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000171.html">[Php-qt-svn] r327 - trunk/php_qt
+</A></li>
+        <LI>Next message: <A HREF="000173.html">[Php-qt-svn] r329 - in trunk: . examples/calculator php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#172">[ date ]</a>
+              <a href="thread.html#172">[ thread ]</a>
+              <a href="subject.html#172">[ subject ]</a>
+              <a href="author.html#172">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2007-06-06 15:07:07 +0200 (Wed, 06 Jun 2007)
+New Revision: 328
+
+Modified:
+   trunk/examples/calculator/calculator.php
+   trunk/php_qt/marshall_basetypes.h
+   trunk/php_qt/marshall_types.cpp
+   trunk/php_qt/marshall_types.h
+   trunk/php_qt/php_qt.cpp
+   trunk/php_qt/php_qt.h
+   trunk/php_qt/smokephp.cpp
+   trunk/smoke/smoke.h
+   trunk/tests/QtBasicTestCase.php
+Log:
+* added a statixProxyMethod handler, static methods are not picked up anymore in a loop at module init
+* made sure that one is allowed to call parent::blablub() within both static and normal methods in a class
+* some minor improvements on the marshall system
+
+
+
+Modified: trunk/examples/calculator/calculator.php
+===================================================================
+--- trunk/examples/calculator/calculator.php	2007-06-03 10:01:16 UTC (rev 327)
++++ trunk/examples/calculator/calculator.php	2007-06-06 13:07:07 UTC (rev 328)
+@@ -170,7 +170,7 @@
+                     return true;
+                 }
+             }
+-            return QDialog::eventFilter($target, $event);
++            return parent::eventFilter($target, $event);
+         }
+ 
+         function digitClicked()
+
+Modified: trunk/php_qt/marshall_basetypes.h
+===================================================================
+--- trunk/php_qt/marshall_basetypes.h	2007-06-03 10:01:16 UTC (rev 327)
++++ trunk/php_qt/marshall_basetypes.h	2007-06-06 13:07:07 UTC (rev 328)
+@@ -29,8 +29,8 @@
+ template &lt;class T&gt; T php_to_primitive(zval*);
+ template &lt;class T&gt; zval* primitive_to_php(T, zval* return_value);
+ 
+-template &lt;class T&gt; 
+-static void marshall_from_php(Marshall *m) 
++template &lt;class T&gt;
++static void marshall_from_php(Marshall *m)
+ {
+ 	zval* zobj = m-&gt;var();
+ 	(*smoke_ptr&lt;T&gt;(m)) = php_to_primitive&lt;T&gt;(zobj);
+@@ -47,8 +47,8 @@
+ 
+ // Special case marshallers
+ 
+-template &lt;&gt; 
+-static void marshall_from_php&lt;char *&gt;(Marshall *m) 
++template &lt;&gt;
++static void marshall_from_php&lt;char *&gt;(Marshall *m)
+ {
+ 	zval* zobj = m-&gt;var();
+ 	m-&gt;item().s_voidp = php_to_primitive&lt;char*&gt;(zobj);
+@@ -130,7 +130,7 @@
+ {
+ 	if(m-&gt;item().s_voidp == 0) {
+ 		qWarning(&quot;Qt Object doesnt exist!&quot;);
+-		*(m-&gt;var()) = *(Qnil);
++		ZVAL_NULL(m-&gt;var());
+ 		return;
+ 	}
+ 	void *p = m-&gt;item().s_voidp;
+@@ -138,7 +138,7 @@
+ 	// return the original
+ 	if(phpqt_SmokePHPObjectExists(p)) {
+ 		if(m-&gt;return_value_ptr()){
+-			// destroys the return_value initialized by ZE, we creare our own:
++			// destroys the return_value initialized by ZE, we create our own:
+ 			zval_ptr_dtor(m-&gt;return_value_ptr());
+ 			// prepare the return value
+ 			smokephp_object* o = phpqt_createOriginal(m-&gt;var(), p);
+@@ -175,7 +175,7 @@
+ 		smokephp_object *o = phpqt_createObject(m-&gt;var(), __p, _ce, m-&gt;type().classId());
+ 
+ //	    if(m-&gt;type().isConst() &amp;&amp; m-&gt;type().isRef()) {
+-	    if(m-&gt;type().isRef()) 
++	    if(m-&gt;type().isRef())
+ 	    {
+ 			p = construct_copy( o );
+ #ifdef DEBUG
+
+Modified: trunk/php_qt/marshall_types.cpp
+===================================================================
+--- trunk/php_qt/marshall_types.cpp	2007-06-03 10:01:16 UTC (rev 327)
++++ trunk/php_qt/marshall_types.cpp	2007-06-06 13:07:07 UTC (rev 328)
+@@ -208,50 +208,50 @@
+ }
+ 
+ const Smoke::Method&amp;
+-MethodReturnValueBase::method() 
+-{ 
+-	return _smoke-&gt;methods[_method]; 
++MethodReturnValueBase::method()
++{
++	return _smoke-&gt;methods[_method];
+ }
+ 
+ Smoke::StackItem&amp;
+-MethodReturnValueBase::item() 
++MethodReturnValueBase::item()
+ {
+ 	return _stack[0];
+ }
+ 
+ Smoke *
+-MethodReturnValueBase::smoke() 
+-{ 
+-	return _smoke; 
++MethodReturnValueBase::smoke()
++{
++	return _smoke;
+ }
+ 
+-SmokeType 
+-MethodReturnValueBase::type() 
+-{ 
+-	return _st; 
++SmokeType
++MethodReturnValueBase::type()
++{
++	return _st;
+ }
+ 
+-void 
++void
+ MethodReturnValueBase::next() {}
+ 
+-bool 
+-MethodReturnValueBase::cleanup() 
+-{ 
+-	return false; 
++bool
++MethodReturnValueBase::cleanup()
++{
++	return false;
+ }
+ 
+-void 
+-MethodReturnValueBase::unsupported() 
++void
++MethodReturnValueBase::unsupported()
+ {
+ 	php_error(E_ERROR, &quot;Cannot handle '%s' as return-type of %s::%s&quot;,
+ 	type().name(),
+ 	classname(),
+-	_smoke-&gt;methodNames[method().name]);	
++	_smoke-&gt;methodNames[method().name]);
+ }
+ 
+-zval* 
+-MethodReturnValueBase::var() 
+-{ 
++zval*
++MethodReturnValueBase::var()
++{
+ 	return _retval;
+ }
+ 
+@@ -262,9 +262,9 @@
+ }
+ 
+ const char *
+-MethodReturnValueBase::classname() 
+-{ 
+-	return _smoke-&gt;className(method().classId); 
++MethodReturnValueBase::classname()
++{
++	return _smoke-&gt;className(method().classId);
+ }
+ 
+ zval**
+@@ -278,7 +278,7 @@
+  */
+ 
+ VirtualMethodReturnValue::VirtualMethodReturnValue(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval retval) :
+-	MethodReturnValueBase(smoke,meth,stack,NULL), _retval2(retval) 
++	MethodReturnValueBase(smoke,meth,stack,NULL), _retval2(retval)
+ {
+ 	identifier = &quot;VirtualMethodReturnValue&quot;;
+ 	_retval = &amp;_retval2;
+@@ -286,10 +286,10 @@
+ 	(*fn)(this);
+ }
+ 
+-Marshall::Action 
+-VirtualMethodReturnValue::action() 
+-{ 
+-	return Marshall::FromZVAL; 
++Marshall::Action
++VirtualMethodReturnValue::action()
++{
++	return Marshall::FromZVAL;
+ }
+ 
+ /**
+@@ -305,16 +305,16 @@
+ 	(*fn)(this);
+ }
+ 
+-Marshall::Action 
+-MethodReturnValue::action() 
+-{ 
+-	return Marshall::ToZVAL; 
++Marshall::Action
++MethodReturnValue::action()
++{
++	return Marshall::ToZVAL;
+ }
+ 
+ const char *
+-MethodReturnValue::classname() 
+-{ 
+-	return qstrcmp(MethodReturnValueBase::classname(), &quot;QGlobalSpace&quot;) == 0 ? &quot;&quot; : MethodReturnValueBase::classname(); 
++MethodReturnValue::classname()
++{
++	return qstrcmp(MethodReturnValueBase::classname(), &quot;QGlobalSpace&quot;) == 0 ? &quot;&quot; : MethodReturnValueBase::classname();
+ }
+ 
+ /**
+@@ -323,40 +323,40 @@
+ 
+ MethodCallBase::MethodCallBase(Smoke *smoke, Smoke::Index meth,zval** return_value_ptr) :
+ 	_smoke(smoke), _method(meth), _cur(-1), _called(false), _sp(0), _return_value_ptr(return_value_ptr)
+-{  
++{
+ }
+ 
+ MethodCallBase::MethodCallBase(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack,zval** return_value_ptr) :
+ 	_smoke(smoke), _method(meth), _stack(stack), _cur(-1), _called(false), _sp(0), _return_value_ptr(return_value_ptr)
+-{  
++{
+ }
+ 
+ Smoke *
+-MethodCallBase::smoke() 
+-{ 
+-	return _smoke; 
++MethodCallBase::smoke()
++{
++	return _smoke;
+ }
+ 
+-SmokeType 
+-MethodCallBase::type() 
+-{ 
+-	return SmokeType(_smoke, _args[_cur]); 
++SmokeType
++MethodCallBase::type()
++{
++	return SmokeType(_smoke, _args[_cur]);
+ }
+ 
+ Smoke::StackItem &amp;
+-MethodCallBase::item() 
+-{ 
+-	return _stack[_cur + 1]; 
++MethodCallBase::item()
++{
++	return _stack[_cur + 1];
+ }
+ 
+ const Smoke::Method &amp;
+-MethodCallBase::method() 
+-{ 
+-	return _smoke-&gt;methods[_method]; 
++MethodCallBase::method()
++{
++	return _smoke-&gt;methods[_method];
+ }
+-	
+-void 
+-MethodCallBase::next() 
++
++void
++MethodCallBase::next()
+ {
+ 	int oldcur = _cur;
+ 	_cur++;
+@@ -370,8 +370,8 @@
+ 	_cur = oldcur;
+ }
+ 
+-void 
+-MethodCallBase::unsupported() 
++void
++MethodCallBase::unsupported()
+ {
+ 	php_error(E_ERROR, &quot;Cannot handle '%s' as argument of %s::%s&quot;,
+ 		type().name(),
+@@ -379,10 +379,10 @@
+ 		_smoke-&gt;methodNames[method().name]);
+ }
+ 
+-const char* 
+-MethodCallBase::classname() 
+-{ 
+-	return _smoke-&gt;className(method().classId); 
++const char*
++MethodCallBase::classname()
++{
++	return _smoke-&gt;className(method().classId);
+ }
+ 
+ zval**
+@@ -403,33 +403,33 @@
+   	_args = _smoke-&gt;argumentList + method().args;
+ }
+ 
+-VirtualMethodCall::~VirtualMethodCall() 
++VirtualMethodCall::~VirtualMethodCall()
+ {
+     delete[] _stack;
+ }
+ 
+-Marshall::Action 
+-VirtualMethodCall::action() 
+-{ 
+-	return Marshall::ToZVAL; 
++Marshall::Action
++VirtualMethodCall::action()
++{
++	return Marshall::ToZVAL;
+ }
+ 
+ zval*
+-VirtualMethodCall::var() 
++VirtualMethodCall::var()
+ {
+ // 	*_sp[_cur] = (zval*) emalloc(sizeof(zval));
+ 	ZVAL_NULL(__sp[_cur]);
+     return __sp[_cur];
+ }
+ 
+-int 
+-VirtualMethodCall::items() 
+-{ 
+-	return method().numArgs; 
++int
++VirtualMethodCall::items()
++{
++	return method().numArgs;
+ }
+ 
+-void 
+-VirtualMethodCall::callMethod() 
++void
++VirtualMethodCall::callMethod()
+ {
+ 	if (_called) return;
+ 	_called = true;
+@@ -440,10 +440,10 @@
+  	VirtualMethodReturnValue r(_smoke, _method, _stack, _retval);
+ }
+ 
+-bool 
+-VirtualMethodCall::cleanup() 
+-{ 
+-	return false; 
++bool
++VirtualMethodCall::cleanup()
++{
++	return false;
+ }
+ 
+ /**
+@@ -475,40 +475,68 @@
+ // 	_retval = retval;
+ }
+ 
+-MethodCall::~MethodCall() 
++MethodCall::~MethodCall()
+ {
+ 	delete[] _stack;
+ }
+ 
+-Marshall::Action 
+-MethodCall::action() 
+-{ 
+-	return Marshall::FromZVAL; 
++Marshall::Action
++MethodCall::action()
++{
++	return Marshall::FromZVAL;
+ }
+ 
+-zval* 
+-MethodCall::var() 
++zval*
++MethodCall::var()
+ {
+ 	if (_cur &lt; 0) return _retval;
+ 	return (zval*) *_sp[_cur];
+ }
+ 
+-int 
+-MethodCall::items() 
+-{ 
+-	return _items; 
++void
++MethodCall::callMethod() {
++	if(_called) return;
++	_called = true;
++
++	QString className(_smoke-&gt;className(method().classId));
++
++	if (! className.endsWith(_smoke-&gt;methodNames[method().name])
++		&amp;&amp; Z_TYPE_P(_target) == IS_NULL
++		&amp;&amp; !(method().flags &amp; Smoke::mf_static) )
++	{
++		php_error(E_ERROR, &quot;Instance is not initialized, cannot call %s&quot;,
++					_smoke-&gt;methodNames[method().name]);
++	}
++
++	if (Z_TYPE_P(_target) == IS_NULL &amp;&amp; !(method().flags &amp; Smoke::mf_static)) {
++		php_error(E_ERROR, &quot;%s is not a class method\n&quot;, _smoke-&gt;methodNames[method().name]);
++	}
++
++	Smoke::ClassFn fn = _smoke-&gt;classes[method().classId].classFn;
++	void *ptr = _smoke-&gt;cast(_current_object, _current_object_class, method().classId);
++	_items = -1;
++
++	(*fn)(method().method, ptr, _stack);
++	MethodReturnValue r(_smoke, _method, _stack, _retval, _return_value_ptr);
+ }
+ 
+-bool 
+-MethodCall::cleanup() 
+-{ 
+-	return true; 
++
++int
++MethodCall::items()
++{
++	return _items;
+ }
+ 
++bool
++MethodCall::cleanup()
++{
++	return true;
++}
++
+ const char *
+-MethodCall::classname() 
+-{ 
+-	return qstrcmp(MethodCallBase::classname(), &quot;QGlobalSpace&quot;) == 0 ? &quot;&quot; : MethodCallBase::classname(); 
++MethodCall::classname()
++{
++	return qstrcmp(MethodCallBase::classname(), &quot;QGlobalSpace&quot;) == 0 ? &quot;&quot; : MethodCallBase::classname();
+ }
+ 
+ /**
+@@ -516,54 +544,54 @@
+  */
+ 
+ SigSlotBase::SigSlotBase(zval*** sp) : _cur(-1), _called(false), _sp(sp)
+-{ 
++{
+ 	identifier = &quot;SigSlotBase&quot;;
+ 	_stack = new Smoke::StackItem[_items -1];
+ }
+ 
+-SigSlotBase::~SigSlotBase() 
+-{ 
+-	delete[] _stack; 
++SigSlotBase::~SigSlotBase()
++{
++	delete[] _stack;
+ }
+ 
+ const MocArgument &amp;
+-SigSlotBase::arg() 
+-{ 
+-	return _args[_cur + 1]; 
++SigSlotBase::arg()
++{
++	return _args[_cur + 1];
+ }
+ 
+-SmokeType 
+-SigSlotBase::type() 
+-{ 
+-	return arg().st; 
++SmokeType
++SigSlotBase::type()
++{
++	return arg().st;
+ }
+ 
+ Smoke::StackItem &amp;
+-SigSlotBase::item() 
+-{ 
+-	return _stack[_cur]; 
++SigSlotBase::item()
++{
++	return _stack[_cur];
+ }
+ 
+-zval* 
+-SigSlotBase::var() 
+-{ 
+-	return (zval*) *_sp[_cur]; 
++zval*
++SigSlotBase::var()
++{
++	return (zval*) *_sp[_cur];
+ }
+ 
+ Smoke *
+-SigSlotBase::smoke() 
+-{ 
+-	return type().smoke(); 
++SigSlotBase::smoke()
++{
++	return type().smoke();
+ }
+ 
+-void 
+-SigSlotBase::unsupported() 
++void
++SigSlotBase::unsupported()
+ {
+ 	php_error(E_ERROR, &quot;Cannot handle '%s' as %s argument\n&quot;, type().name(), mytype() );
+ }
+ 
+ void
+-SigSlotBase::next() 
++SigSlotBase::next()
+ {
+ 	int oldcur = _cur;
+ 	_cur++;
+@@ -580,7 +608,7 @@
+ /**
+  *	SlotReturnValue
+  *
+- *	Converts a zval* returned by a slot invocation to a Qt slot 
++ *	Converts a zval* returned by a slot invocation to a Qt slot
+  *	reply type
+  */
+ 
+@@ -589,14 +617,14 @@
+     Smoke::Stack _stack;
+ 	zval* _result;
+ public:
+-	SlotReturnValue(void ** o, zval* result, MocArgument * replyType) 
++	SlotReturnValue(void ** o, zval* result, MocArgument * replyType)
+ 	{
+ 		_result = result;
+ 		_replyType = replyType;
+ 		_stack = new Smoke::StackItem[1];
+ 		Marshall::HandlerFn fn = getMarshallFn(type());
+ 		(*fn)(this);
+-		// Save any address in zeroth element of the arrary of 'void*'s passed to 
++		// Save any address in zeroth element of the arrary of 'void*'s passed to
+ 		// qt_metacall()
+ 		void * ptr = o[0];
+ 		smokeStackToQtStack(_stack, o, 1, _replyType);
+@@ -607,25 +635,25 @@
+ 		}
+     }
+ 
+-    SmokeType type() { 
+-		return _replyType[0].st; 
++    SmokeType type() {
++		return _replyType[0].st;
+ 	}
+     Marshall::Action action() { return Marshall::FromZVAL; }
+     Smoke::StackItem &amp;item() { return _stack[0]; }
+     zval* var() {
+     	return _result;
+     }
+-	
+-	void unsupported() 
++
++	void unsupported()
+ 	{
+ 		php_error(E_ERROR, &quot;Cannot handle '%s' as slot reply-type&quot;, type().name());
+     }
+ 	Smoke *smoke() { return type().smoke(); }
+-    
++
+ 	void next() {}
+-    
++
+ 	bool cleanup() { return false; }
+-	
++
+ 	~SlotReturnValue() {
+ 		delete[] _stack;
+ 	}
+@@ -648,37 +676,37 @@
+ 	copyArguments();
+ }
+ 
+-InvokeSlot::~InvokeSlot() 
+-{ 
+-	free(_sp);	
++InvokeSlot::~InvokeSlot()
++{
++	free(_sp);
+ }
+ 
+-Marshall::Action 
+-InvokeSlot::action() 
+-{ 
+-	return Marshall::ToZVAL; 
++Marshall::Action
++InvokeSlot::action()
++{
++	return Marshall::ToZVAL;
+ }
+ 
+ const char *
+-InvokeSlot::mytype() 
+-{ 
+-	return &quot;slot&quot;; 
++InvokeSlot::mytype()
++{
++	return &quot;slot&quot;;
+ }
+ 
+-bool 
+-InvokeSlot::cleanup() 
+-{ 
+-	return false; 
++bool
++InvokeSlot::cleanup()
++{
++	return false;
+ }
+ 
+-void 
+-InvokeSlot::copyArguments() 
++void
++InvokeSlot::copyArguments()
+ {
+ 	smokeStackFromQtStack(_stack, _o + 1, _items - 1, _args + 1);
+ }
+ 
+-void 
+-InvokeSlot::invokeSlot() 
++void
++InvokeSlot::invokeSlot()
+ {
+ 	if (_called) return;
+ 	_called = true;
+@@ -688,10 +716,10 @@
+ 	}
+ }
+ 
+-void 
+-InvokeSlot::mainfunction() 
+-{ 
+-	invokeSlot(); 
++void
++InvokeSlot::mainfunction()
++{
++	invokeSlot();
+ }
+ 
+ /**
+@@ -709,26 +737,26 @@
+ 	_result = result;
+ }
+ 
+-Marshall::Action 
+-EmitSignal::action() 
+-{ 
+-	return Marshall::FromZVAL; 
++Marshall::Action
++EmitSignal::action()
++{
++	return Marshall::FromZVAL;
+ }
+ 
+ Smoke::StackItem &amp;
+-EmitSignal::item() 
++EmitSignal::item()
+ {
+-	return _stack[_cur]; 
++	return _stack[_cur];
+ }
+ 
+ const char *
+-EmitSignal::mytype() 
+-{ 
+-	return &quot;signal&quot;; 
++EmitSignal::mytype()
++{
++	return &quot;signal&quot;;
+ }
+ 
+-void 
+-EmitSignal::emitSignal() 
++void
++EmitSignal::emitSignal()
+ {
+ 
+ 	if (_called) return;
+@@ -745,50 +773,50 @@
+ 	delete[] o;
+ }
+ 
+-void 
+-EmitSignal::mainfunction() 
+-{ 
+-	emitSignal(); 
++void
++EmitSignal::mainfunction()
++{
++	emitSignal();
+ }
+ 
+-bool 
+-EmitSignal::cleanup() 
+-{ 
+-	return true; 
++bool
++EmitSignal::cleanup()
++{
++	return true;
+ }
+ 
+-SmokeType 
+-EmitSignal::type() 
+-{ 
+-	return arg().st; 
++SmokeType
++EmitSignal::type()
++{
++	return arg().st;
+ }
+ 
+-zval* 
+-EmitSignal::var() 
+-{ 
+-	return (zval*) *_sp[_cur]; 
++zval*
++EmitSignal::var()
++{
++	return (zval*) *_sp[_cur];
+ }
+ 
+ Smoke *
+-EmitSignal::smoke() 
+-{ 
+-	return type().smoke(); 
++EmitSignal::smoke()
++{
++	return type().smoke();
+ }
+ 
+-void 
+-EmitSignal::unsupported() 
++void
++EmitSignal::unsupported()
+ {
+ 	php_error(E_ERROR, &quot;Cannot handle '%s' as %s argument\n&quot;, type().name(), mytype() );
+ }
+ 
+ const MocArgument &amp;
+-EmitSignal::arg() 
+-{ 
+-	return _args[_cur + 1]; 
++EmitSignal::arg()
++{
++	return _args[_cur + 1];
+ }
+ 
+ void
+-EmitSignal::next() 
++EmitSignal::next()
+ {
+ 	int oldcur = _cur;
+ 	_cur++;
+
+Modified: trunk/php_qt/marshall_types.h
+===================================================================
+--- trunk/php_qt/marshall_types.h	2007-06-03 10:01:16 UTC (rev 327)
++++ trunk/php_qt/marshall_types.h	2007-06-06 13:07:07 UTC (rev 328)
+@@ -38,7 +38,7 @@
+  *	MethodReturnValueBase
+  */
+ 
+-class MethodReturnValueBase : public Marshall 
++class MethodReturnValueBase : public Marshall
+ {
+ public:
+ 	MethodReturnValueBase(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval** return_value_ptr);
+@@ -104,7 +104,7 @@
+ 	Smoke::StackItem &amp;item();
+ 	const Smoke::Method &amp;method();
+ 	virtual int items() = 0;
+-	virtual void callMethod() = 0;	
++	virtual void callMethod() = 0;
+ 	void next();
+ 	void unsupported();
+ 	zval** return_value_ptr();
+@@ -135,7 +135,7 @@
+ 	int items();
+ 	void callMethod();
+ 	bool cleanup();
+- 
++
+ private:
+ 	zval* _obj;
+  	zval **__sp;
+@@ -152,32 +152,7 @@
+ 	~MethodCall();
+ 	Marshall::Action action();
+ 	zval* var();
+-	inline void callMethod() {
+-		if(_called) return;
+-		_called = true;
+-
+-		QString className(_smoke-&gt;className(method().classId));
+-
+-		if (! className.endsWith(_smoke-&gt;methodNames[method().name])
+-			&amp;&amp; Z_TYPE_P(_target) == IS_NULL
+-			&amp;&amp; !(method().flags &amp; Smoke::mf_static) ) 
+-		{
+-			php_error(E_ERROR, &quot;Instance is not initialized, cannot call %s&quot;, 
+-						_smoke-&gt;methodNames[method().name]);
+-		}
+-
+-		if (Z_TYPE_P(_target) == IS_NULL &amp;&amp; !(method().flags &amp; Smoke::mf_static)) {
+-			php_error(E_ERROR, &quot;%s is not a class method\n&quot;, _smoke-&gt;methodNames[method().name]);
+-		}
+-
+-		Smoke::ClassFn fn = _smoke-&gt;classes[method().classId].classFn;
+-		void *ptr = _smoke-&gt;cast(_current_object, _current_object_class, method().classId);
+-		_items = -1;
+-
+-		(*fn)(method().method, ptr, _stack);
+-		MethodReturnValue r(_smoke, _method, _stack, _retval, _return_value_ptr);
+-	}
+-
++	void callMethod();
+ 	int items();
+ 	bool cleanup();
+ 
+@@ -208,7 +183,7 @@
+ 	virtual const char *mytype() = 0;
+ 	virtual void mainfunction() = 0;
+ 	void unsupported();
+-	void next(); 
++	void next();
+ 
+ protected:
+ 	MocArgument *_args;
+@@ -233,7 +208,7 @@
+ 	void emitSignal();
+ 	void mainfunction();
+ 	bool cleanup();
+-	void next(); 
++	void next();
+ 	SmokeType type();
+ 	zval* var();
+ 	void unsupported();
+@@ -275,7 +250,7 @@
+ 	const char *mytype();
+     bool cleanup();
+ 	void copyArguments();
+-	void invokeSlot(); 
++	void invokeSlot();
+ 	void mainfunction();
+ };
+ 
+@@ -283,7 +258,7 @@
+ /**
+  *	SignalReturnValue
+  *
+- *	Converts a C++ value returned by a signal invocation to a PHP 
++ *	Converts a C++ value returned by a signal invocation to a PHP
+  *	reply type
+  */
+ class SignalReturnValue : public Marshall {
+@@ -291,7 +266,7 @@
+     Smoke::Stack _stack;
+ 	zval * _result;
+ public:
+-	SignalReturnValue(void ** o, zval * result, MocArgument * replyType) 
++	SignalReturnValue(void ** o, zval * result, MocArgument * replyType)
+ 	{
+ 		_result = result;
+ 		_replyType = replyType;
+@@ -301,25 +276,25 @@
+ 		(*fn)(this);
+     }
+ 
+-    SmokeType type() { 
+-		return _replyType[0].st; 
++    SmokeType type() {
++		return _replyType[0].st;
+ 	}
+     Marshall::Action action() { return Marshall::ToZVAL; }
+     Smoke::StackItem &amp;item() { return _stack[0]; }
+     zval* var() {
+     	return _result;
+     }
+-	
+-	void unsupported() 
++
++	void unsupported()
+ 	{
+ 		php_error(E_ERROR, &quot;Cannot handle '%s' as signal reply-type&quot;, type().name());
+     }
+ 	Smoke *smoke() { return type().smoke(); }
+-    
++
+ 	void next() {}
+-    
++
+ 	bool cleanup() { return false; }
+-	
++
+ 	~SignalReturnValue() {
+ 		delete[] _stack;
+ 	}
+
+Modified: trunk/php_qt/php_qt.cpp
+===================================================================
+--- trunk/php_qt/php_qt.cpp	2007-06-03 10:01:16 UTC (rev 327)
++++ trunk/php_qt/php_qt.cpp	2007-06-06 13:07:07 UTC (rev 328)
+@@ -1,7 +1,7 @@
+ /*!
+  * PHP-Qt - The PHP language bindings for Qt
+  *
+- * Copyright (C) 2006 
++ * Copyright (C) 2006
+  * Thomas Moenicke &lt;thomas.moenicke at kdemail.net&gt;
+  * Katrina Niolet &lt;katrina at niolet.name&gt;
+  *
+@@ -70,7 +70,7 @@
+ function_entry php_qt_functions[] = {
+ 	PHP_FE(confirm_php_qt_compiled,	NULL)		/* For testing, remove later. */
+ 	PHP_FE(SIGNAL,	NULL)
+-	PHP_FE(SLOT,	NULL)	
++	PHP_FE(SLOT,	NULL)
+ 	PHP_FE(emit,	NULL)
+ 	PHP_FE(qDebug,	NULL)
+ 	PHP_FE(qWarning,	NULL)
+@@ -132,6 +132,10 @@
+ QHash&lt;zend_object_handle, smokephp_object*&gt; obj_x_smokephp;
+ QStack&lt;QByteArray*&gt; methodNameStack;
+ 
++zend_class_entry* activeCe;
++zval* activeScope;
++bool parentCall;
++
+ // cached
+ Smoke::Index qbool;
+ Smoke::Index qstring;
+@@ -140,7 +144,70 @@
+ extern zend_class_entry* qstring_ce;
+ extern void 	_register_QString();
+ 
+-/*
++/*!
++ *	constant method handler
++ *
++ *	here we'll try to find a defined static method in Qt and assign the
++ *  staticProxyMethod handler
++ *  see ZEND_INIT_STATIC_METHOD_CALL_SPEC_CONST_HANDLER in zend_vm_execute.h
++ */
++#undef EX
++#define EX(element) execute_data-&gt;element
++
++static int (*originalConstantMethodHandler)(ZEND_OPCODE_HANDLER_ARGS);
++
++static int constantMethodHandler(ZEND_OPCODE_HANDLER_ARGS)
++{
++	zend_op *opline = EX(opline);
++	zend_class_entry *ce = EX_T(opline-&gt;op1.u.var).class_entry;
++	union _zend_function *fbc;
++	zval* function_name;
++	char* function_name_strval;
++	int function_name_strlen;
++
++	function_name = &amp;opline-&gt;op2.u.constant;
++	// store the active ce
++	activeCe = EX_T(opline-&gt;op1.u.var).class_entry;
++
++	if (Z_TYPE_P(function_name) != IS_STRING) {
++		zend_error_noreturn(E_ERROR, &quot;Function name must be a string&quot;);
++	}
++
++	// get method name
++  	function_name_strval = zend_str_tolower_dup(function_name-&gt;value.str.val, function_name-&gt;value.str.len);
++ 	function_name_strlen = function_name-&gt;value.str.len;
++
++	// call proxyMethod if method is not defined in userspace
++	if(zend_hash_find(&amp;ce-&gt;function_table, function_name_strval, function_name_strlen+1, (void**) &amp;fbc) == FAILURE)
++	{
++		zend_ptr_stack_3_push(&amp;EG(arg_types_stack), EX(fbc), EX(object), NULL);
++		zend_bool is_const = (IS_CONST == IS_CONST);
++
++		if(zend_hash_find(&amp;ce-&gt;function_table, &quot;staticproxymethod&quot;, 18, (void**) &amp;fbc) != FAILURE)
++		{
++
++			//! TODO	darn! we have a lowersized string here!
++			const char* methodName = PQ::findRealMethodName( function_name-&gt;value.str.val );
++			methodNameStack.push( new QByteArray( methodName ) );
++
++			EX(fbc) = fbc;
++
++			if(!is_const){ efree(function_name_strval); }
++			EX(opline)++;
++			ZEND_VM_CONTINUE();
++
++		}
++
++		if(!is_const){ efree(function_name_strval); }
++
++	}  // end try call proxyMethod
++
++  	return originalConstantMethodHandler(execute_data);
++
++}
++
++
++/*!
+  *	constants handler
+  */
+ 
+@@ -237,24 +304,16 @@
+  *	generic object
+  */
+ 
+-ZEND_METHOD(php_qt_generic_class, __construct);
+-ZEND_METHOD(php_qt_generic_class, __destruct);
+-ZEND_METHOD(php_qt_generic_class, __toString);
+-ZEND_METHOD(php_qt_generic_class, emit);
+-ZEND_METHOD(php_qt_generic_class, proxyMethod);
+-ZEND_METHOD(php_qt_generic_class, staticProxyMethod);
+-
+ static zend_function_entry php_qt_generic_methods[] = {
+     ZEND_ME(php_qt_generic_class,__construct,NULL,ZEND_ACC_PUBLIC)
+     ZEND_ME(php_qt_generic_class,__destruct,NULL,ZEND_ACC_PUBLIC)
+     ZEND_ME(php_qt_generic_class,__toString,NULL,ZEND_ACC_PUBLIC)
+     ZEND_ME(php_qt_generic_class,emit,NULL,ZEND_ACC_PUBLIC)
+     ZEND_ME(php_qt_generic_class,proxyMethod,NULL,ZEND_ACC_PUBLIC)
++    ZEND_ME(php_qt_generic_class,staticProxyMethod,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
+     {NULL,NULL,NULL}
+ };
+ 
+-static zend_function_entry*** php_qt_static_methods;
+-
+ ZEND_METHOD(php_qt_generic_class, emit){
+ }
+ 
+@@ -265,7 +324,7 @@
+ 
+ ZEND_METHOD(php_qt_generic_class, __destruct)
+ {
+-qDebug() &lt;&lt; &quot;__destruct&quot; &lt;&lt; getThis() &lt;&lt; PZVAL_IS_REF(getThis());
++// qDebug() &lt;&lt; &quot;__destruct&quot; &lt;&lt; getThis() &lt;&lt; PZVAL_IS_REF(getThis());
+ 	if(phpqt_SmokePHPObjectExists(getThis())) {
+ 
+  		smokephp_object *o = phpqt_getSmokePHPObjectFromZval(getThis());
+@@ -289,6 +348,8 @@
+ 
+ ZEND_METHOD(php_qt_generic_class, __construct)
+ {
++	activeScope = getThis();
++
+     // find parents
+     zend_class_entry *ce = Z_OBJCE_P(getThis());
+     zend_class_entry *ce_parent = Z_OBJCE_P(getThis());
+@@ -343,7 +404,7 @@
+ 		)){
+ 		  	const char* phpqt_meta_stringdata_ = estrndup(phpqt_meta_stringdata-&gt;toAscii(), phpqt_meta_stringdata-&gt;size());
+   			QMetaObject ob = {
+-				{superdata, phpqt_meta_stringdata_, 
++				{superdata, phpqt_meta_stringdata_,
+ 					phpqt_meta_data, 0}
+  			};
+  			o-&gt;meta = (QMetaObject*) emalloc(sizeof(ob));
+@@ -369,14 +430,21 @@
+     zend_class_entry *ce;
+     // nonstaticphp_qt_generic_class_proxyMethod
+     if(getThis()){
+-        ce = Z_OBJCE_P(getThis());
++    	activeScope = getThis();
++
++		// if a parent:: call occurs this_ptr has the wrong ce, so we need to
++		// correct it here
++		if(parentCall)
++		{
++			ce = activeCe;
++			parentCall = false;
++        } else {
++        	ce = Z_OBJCE_P(getThis());
++        }
++
+     // static
+     } else {
+-        char* space = &quot;::&quot;;
+-        char* class_name = get_active_class_name(&amp;space);
+-        char* method_name = get_active_function_name();
+-        ce = zend_fetch_class(class_name,strlen(class_name), ZEND_FETCH_CLASS_AUTO TSRMLS_DC);
+-        methodNameStack.push(new QByteArray(method_name));
++		ce = activeCe;
+     }
+ 
+     // find parents
+@@ -426,10 +494,10 @@
+ 		}
+ 	    }
+ 
+-	    php_error(E_ERROR,&quot;Call to undefined method %s::%s()&quot;, ce-&gt;name, methodNameStack.top()-&gt;constData());
+-		
++	    php_error(E_ERROR,&quot;Call to undefined method %s::%s() or wrong arguments&quot;, ce-&gt;name, methodNameStack.top()-&gt;constData());
++
+ 	}
+-	else 
++	else
+ 	    php_error(E_ERROR,&quot;Call to undefined method!&quot;);
+     }
+ 
+@@ -443,7 +511,27 @@
+     return;
+ } // proxyMethod
+ 
+-/*! 
++ZEND_METHOD(php_qt_generic_class, staticProxyMethod)
++{
++	this_ptr = NULL;
++
++	// do we have a parent::blablub() call?
++	if(EG(active_op_array)-&gt;scope){
++		if(EG(scope) == EG(active_op_array)-&gt;scope-&gt;parent)
++		{
++			if(activeScope)
++			{
++				parentCall = true;
++				this_ptr = activeScope;
++			}
++		}
++	}
++
++	// forward to proxyMethod
++	zim_php_qt_generic_class_proxyMethod(ht, return_value, return_value_ptr, this_ptr, return_value_used);
++}
++
++/*!
+  *	PHP_MINIT_FUNCTION
+  */
+ 
+@@ -463,42 +551,30 @@
+ 	zend_orig_handler = php_qt_handler;
+ 	php_qt_handler.get_method = proxyHandler;
+ 
+-	// overwrite :: operator
++	// overwrite :: operator, see zend_vm_execute.h
+ 	memcpy(phpqt_opcode_handlers, zend_opcode_handlers, sizeof(phpqt_opcode_handlers));
+ 	phpqt_original_opcode_handlers = zend_opcode_handlers;
+ 	zend_opcode_handlers = phpqt_opcode_handlers;
++	// ZEND_FETCH_CONSTANT = 99 =&gt; 2475
+ 	phpqt_opcode_handlers[(ZEND_FETCH_CONSTANT*25) + 0] = constantHandler;
++	// replace and store ZEND_INIT_STATIC_METHOD_CALL_SPEC_CONST_HANDLER
++	originalConstantMethodHandler = phpqt_opcode_handlers[2825];
++	phpqt_opcode_handlers[2825] = constantMethodHandler;
++	phpqt_opcode_handlers[2830] = constantMethodHandler;
++	phpqt_opcode_handlers[2835] = constantMethodHandler;
++	phpqt_opcode_handlers[2840] = constantMethodHandler;
++	phpqt_opcode_handlers[2845] = constantMethodHandler;
+ 
+ 	smokephp_init();
+ 
+-	Smoke::Index qobject = PQ::smoke()-&gt;idClass(&quot;QObject&quot;);
+-
+-	php_qt_static_methods = (zend_function_entry***) safe_emalloc((PQ::smoke()-&gt;numClasses), sizeof(zend_function_entry **), 0);
+-
+-	int method_count;
+ 	// cache class entries
+ 	Smoke::Index i = 1;
+ 	QHash&lt;const char*, zend_class_entry*&gt; tmpCeTable;
+-	// loop for all classes, register them
++
++	// loop for all classes, register class entries
+ 	for(i = 1; i &lt;= PQ::smoke()-&gt;numClasses; i++){
+ 
+-        // statical methods, there is no method handler which can be overwritten
+-        // hope this will be better in future / see zend_std_get_static_method()
+-        method_count = 0;
+-        for(int j=0;j&lt;PQ::smoke()-&gt;numMethods;j++){
+-            if(PQ::smoke()-&gt;methods[j].classId == i){
+-                if(!(PQ::smoke()-&gt;methods[j].flags &amp; Smoke::mf_enum)){
+-                    if((PQ::smoke()-&gt;methods[j].flags &amp; Smoke::mf_static)){
+-                        // avoids overloaded methods
+-                        if(strcmp(PQ::smoke()-&gt;methodNames[PQ::smoke()-&gt;methods[j-1].name],PQ::smoke()-&gt;methodNames[PQ::smoke()-&gt;methods[j].name])){
+-                            method_count++;
+-                        }
+-                    }
+-                }
+-            }
+-        } // for
+-
+-        zend_function_entry* t = (zend_function_entry*) safe_emalloc((method_count+7), sizeof(zend_function_entry), 0);
++        zend_function_entry* t = (zend_function_entry*) safe_emalloc(7, sizeof(zend_function_entry), 0);
+         zend_function_entry* p = t;
+ 
+         PHP_QT_ME(php_qt_generic_class,__construct,phpqt_cast_arginfo,ZEND_ACC_PUBLIC);
+@@ -506,57 +582,24 @@
+         PHP_QT_ME(php_qt_generic_class,__toString,NULL,ZEND_ACC_PUBLIC);
+ 		PHP_QT_ME(php_qt_generic_class,emit,NULL,ZEND_ACC_PUBLIC);
+         PHP_QT_ME(php_qt_generic_class,proxyMethod,phpqt_cast_arginfo,ZEND_ACC_PUBLIC);
++        PHP_QT_ME(php_qt_generic_class,staticProxyMethod,phpqt_cast_arginfo,ZEND_ACC_PUBLIC|ZEND_ACC_STATIC);
+ 
+-		QHash&lt;const char*, bool&gt; tmpMethodList;	// avoids doubled method names
++		// register zend class
++		zend_class_entry ce;
++		INIT_CLASS_ENTRY(ce, PQ::smoke()-&gt;classes[i].className, p);
++		ce.name_length = strlen(PQ::smoke()-&gt;classes[i].className);
++		zend_class_entry* ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
++		tmpCeTable[PQ::smoke()-&gt;classes[i].className] = ce_ptr;
++		// cache QObject
++		if(qobject == i){
++			qobject_ce = ce_ptr;
++		}
+ 
+-        for(int j=0;j&lt;PQ::smoke()-&gt;numMethods;j++)
+-	{
+-            if(PQ::smoke()-&gt;methods[j].classId == i)
+-	    {
+-                if(!(PQ::smoke()-&gt;methods[j].flags &amp; Smoke::mf_enum))
+-		{
+-                    if(PQ::smoke()-&gt;methods[j].flags &amp; Smoke::mf_static)
+-		    {
+-                        // avoids overloaded methods, fast
+-                        if(strcmp(PQ::smoke()-&gt;methodNames[PQ::smoke()-&gt;methods[j-1].name],PQ::smoke()-&gt;methodNames[PQ::smoke()-&gt;methods[j].name]))
+-			{
+-                        	if(!tmpMethodList.contains(PQ::smoke()-&gt;methodNames[PQ::smoke()-&gt;methods[j].name])) // method already defined in this class?
+-				{ 
+-								tmpMethodList[PQ::smoke()-&gt;methodNames[PQ::smoke()-&gt;methods[j].name]] = true;
+-								t-&gt;fname = (char*) emalloc(strlen(PQ::smoke()-&gt;methodNames[PQ::smoke()-&gt;methods[j].name])+1);
+-								t-&gt;fname = (char*) PQ::smoke()-&gt;methodNames[PQ::smoke()-&gt;methods[j].name];
+-								t-&gt;handler = ZEND_MN(php_qt_generic_class_proxyMethod);
+-								t-&gt;arg_info = phpqt_cast_arginfo;
+-								t-&gt;flags = ZEND_ACC_PUBLIC|ZEND_ACC_STATIC;
+-								t++;
+-                        	}
+-                        }
+-                    }
+-                }
+-	   }
+-        }
++	} // end loop classes
+ 
+-        // stops the zend-loop 'while(ptr-&gt;fname) {...}' in zend_register_functions
+-        t-&gt;fname = NULL;
+-        t-&gt;handler = NULL;
+-        t-&gt;arg_info = NULL;
+-        t-&gt;flags = (zend_uint) NULL;
+-        t++;
+-
+-	// register zend class
+-	zend_class_entry ce;
+-	INIT_CLASS_ENTRY(ce, PQ::smoke()-&gt;classes[i].className, p);
+-	ce.name_length = strlen(PQ::smoke()-&gt;classes[i].className);
+-	zend_class_entry* ce_ptr = zend_register_internal_class(&amp;ce TSRMLS_CC);
+-	tmpCeTable[PQ::smoke()-&gt;classes[i].className] = ce_ptr;
+-	// cache QObject
+-	if(qobject == i){
+-	    qobject_ce = ce_ptr;
+-	}		
+-	} // end for
+-
++	// cache some stuff
++	Smoke::Index qobject = PQ::smoke()-&gt;idClass(&quot;QObject&quot;);
+ 	_register_QString();
+-	tmpCeTable[PQ::smoke()-&gt;classes[i].className] = qstring_ce;
+ 
+ 	// do inheritance, all classes must be defined before
+ 	for(Smoke::Index i = 1; i &lt;= PQ::smoke()-&gt;numClasses; i++){
+@@ -610,7 +653,7 @@
+  *	PHP-Qt internal functions
+  */
+ 
+-int	
++int
+ phpqt_metacall(smokephp_object* so, Smoke::StackItem* args, QMetaObject::Call _c, int _id, void **_a)
+ {
+ 	QMetaObject* d = so-&gt;meta;
+@@ -644,11 +687,11 @@
+ #endif
+ 
+ 			if((int)i[0].s_int &lt; 0)
+-				return i[0].s_int;	
++				return i[0].s_int;
+ 
+ 		} else {
+ 			// should never happen
+-			php_error(E_ERROR, &quot;Cannot find %s::qt_metacall() method\n&quot;, d-&gt;className());		
++			php_error(E_ERROR, &quot;Cannot find %s::qt_metacall() method\n&quot;, d-&gt;className());
+ 		}
+ 
+ 	}
+@@ -714,10 +757,10 @@
+ 
+ 	efree(method_name);
+     return _id;
+-	
++
+ }
+ 
+-static void 
++static void
+ phpqt_destroyHashtable(zend_rsrc_list_entry *rsrc TSRMLS_DC)
+ {
+ #ifdef DEBUG
+@@ -728,7 +771,7 @@
+ bool
+ phpqt_methodExists(zend_class_entry* ce_ptr, char* methodname)
+ {
+-	
++
+ 	if(ce_ptr == NULL){
+ 	  php_error(E_ERROR,&quot;methodExists fatal error: no class entry&quot;);
+ 	}
+@@ -745,7 +788,7 @@
+ }
+ 
+ 
+-zval* 
++zval*
+ phpqt_callPHPMethod(zval* this_ptr, char* methodName, zend_uint param_count, zval** args)
+ {
+ 
+@@ -768,7 +811,7 @@
+     return retval;
+ }
+ 
+-/*! 
++/*!
+  *	creates metaObject data
+  *  example: &quot;QWidget\0\0value\0test(int)\0&quot;
+  *	@param	zval*				this_ptr	pointer of the zval
+@@ -777,7 +820,7 @@
+  *	@return	QMetaObject*
+  */
+ 
+-bool 
++bool
+ phpqt_getMocData(zval* this_ptr, char* classname, const QMetaObject* superdata, QMetaObject* meta, QString* meta_stringdata, uint* signature){
+ 
+     /// readout the slots table
+@@ -818,19 +861,19 @@
+ 		signature[7] = 0;
+ 		signature[8] = 0;
+ 		signature[9] = 0;
+-	
++
+ 		/// write classname
+ 		meta_stringdata-&gt;append(classname);
+  		meta_stringdata-&gt;append(QChar::Null);
+  		meta_stringdata-&gt;append(QChar::Null);
+- 	
++
+ 		int i;
+ 		i = 10;
+ 
+ 		zend_hash_internal_pointer_reset(signals_hash);
+ 
+ 		while(zend_hash_has_more_elements(signals_hash) == SUCCESS){
+-	
++
+ 			/// read slot from hashtable
+ 			zend_hash_get_current_key(signals_hash,&amp;assocKey,&amp;numKey,0);
+ 			zend_hash_get_current_data(signals_hash,(void**)&amp;slotdata);
+@@ -840,27 +883,27 @@
+ 			qr-&gt;append(&quot; &quot;);
+ 			cout &lt;&lt; &quot;\t&quot; &lt;&lt; signaturecount &lt;&lt; &quot;8 8 8 0x05 ::s&quot; &lt;&lt; endl;
+ #endif
+-			
++
+ 			meta_stringdata-&gt;append(Z_STRVAL_PP(slotdata));
+ 			meta_stringdata-&gt;append(QChar::Null);
+-	
++
+ 			zend_hash_move_forward(signals_hash);
+-	
++
+ 			/// write slot signature
+ 			signature[i++] = signaturecount;
+-			signature[i++] = 8;        
+ 			signature[i++] = 8;
+ 			signature[i++] = 8;
++			signature[i++] = 8;
+ 			signature[i++] = 0x05;
+-	
++
+ 			signaturecount += strlen(Z_STRVAL_PP(slotdata)) + 1;
+-	
++
+ 		}
+ 
+     	zend_hash_internal_pointer_reset(slots_hash);
+ 
+ 		while(zend_hash_has_more_elements(slots_hash) == SUCCESS){
+-	
++
+ 			/// read slot from hashtable
+ 			zend_hash_get_current_key(slots_hash,&amp;assocKey,&amp;numKey,0);
+ 			zend_hash_get_current_data(slots_hash,(void**)&amp;slotdata);
+@@ -870,21 +913,21 @@
+ 			qr-&gt;append(&quot; &quot;);
+ 			cout &lt;&lt; &quot;\t&quot; &lt;&lt; signaturecount &lt;&lt; &quot;8 8 8 0x0a ::s&quot; &lt;&lt; endl;
+ #endif
+-	
++
+ 			meta_stringdata-&gt;append(Z_STRVAL_PP(slotdata));
+ 			meta_stringdata-&gt;append(QChar::Null);
+ 
+ 			zend_hash_move_forward(slots_hash);
+-	
++
+ 			/// write slot signature
+ 			signature[i++] = signaturecount;
+ 			signature[i++] = 8;
+ 			signature[i++] = 8;
+ 			signature[i++] = 8;
+ 			signature[i++] = 0x0a;
+-	
++
+ 			signaturecount += strlen(Z_STRVAL_PP(slotdata)) + 1;
+-	
++
+ 		}
+ #if MOC_DEBUG
+ 		cout &lt;&lt; qr-&gt;toAscii().constData() &lt;&lt; endl;
+@@ -907,7 +950,7 @@
+ 	return obj_x_smokephp.contains(this_ptr-&gt;value.obj.handle);
+ }
+ 
+-smokephp_object* 
++smokephp_object*
+ phpqt_getSmokePHPObjectFromZval(zval* this_ptr)
+ {
+ 
+
+Modified: trunk/php_qt/php_qt.h
+===================================================================
+--- trunk/php_qt/php_qt.h	2007-06-03 10:01:16 UTC (rev 327)
++++ trunk/php_qt/php_qt.h	2007-06-06 13:07:07 UTC (rev 328)
+@@ -1,7 +1,7 @@
+ /*!
+  * PHP-Qt - The PHP language bindings for Qt
+  *
+- * Copyright (C) 2006 
++ * Copyright (C) 2006
+  * Thomas Moenicke &lt;thomas.moenicke at kdemail.net&gt;
+  * Katrina Niolet &lt;katrina at niolet.name&gt;
+  *
+@@ -167,6 +167,8 @@
+ 
+ const char* 		printType(int type);
+ 
++union _zend_function* proxyHandler(zval **obj_ptr, char* methodName, int methodName_len TSRMLS_DC);
++
+ extern Smoke* qt_Smoke;
+ class PQ
+ {
+@@ -177,6 +179,21 @@
+ public:
+     ~PQ();
+     static inline Smoke* smoke() { return qt_Smoke; }
++
++	typedef short Index;
++
++	static inline const char* findRealMethodName(const char* methodName)
++	{
++
++		if(!methodName) return &quot;&quot;;
++		QString _m(methodName);
++		//! TODO its slow but safe, implement a better algorithm
++		for(Index i=0; i &lt; PQ::smoke()-&gt;numMethodNames; i++){
++			if(_m.compare(PQ::smoke()-&gt;methodNames[i], Qt::CaseInsensitive) == 0){ return PQ::smoke()-&gt;methodNames[i]; }
++		}
++ 		qFatal(&quot;PQ::findRealMethodName(): could not find %s&quot;, methodName);
++	}
++
+ };
+ 
+ extern int le_php_qt_hashtype;
+@@ -273,4 +290,47 @@
+ ZEND_METHOD(QString, toInt);
+ ZEND_METHOD(QString, isNull);
+ 
++ZEND_METHOD(php_qt_generic_class, __construct);
++ZEND_METHOD(php_qt_generic_class, __destruct);
++ZEND_METHOD(php_qt_generic_class, __toString);
++ZEND_METHOD(php_qt_generic_class, emit);
++ZEND_METHOD(php_qt_generic_class, proxyMethod);
++ZEND_METHOD(php_qt_generic_class, staticProxyMethod);
++
++// smoke stuff
++
++
++
++// ZEND stuff
++
++static int zend_check_symbol(zval **pz TSRMLS_DC)
++{
++	if (Z_TYPE_PP(pz) &gt; 9) {
++		fprintf(stderr, &quot;Warning!  %x has invalid type!\n&quot;, *pz);
++	} else if (Z_TYPE_PP(pz) == IS_ARRAY) {
++		zend_hash_apply(Z_ARRVAL_PP(pz), (apply_func_t) zend_check_symbol TSRMLS_CC);
++	} else if (Z_TYPE_PP(pz) == IS_OBJECT) {
++
++		/* OBJ-TBI - doesn't support new object model! */
++		zend_hash_apply(Z_OBJPROP_PP(pz), (apply_func_t) zend_check_symbol TSRMLS_CC);
++	}
++
++	return 0;
++}
++
++#define ZEND_VM_CONTINUE() return 0
++
++#define CHECK_SYMBOL_TABLES()														\
++	zend_hash_apply(&amp;EG(symbol_table), (apply_func_t) zend_check_symbol TSRMLS_CC);	\
++	if (&amp;EG(symbol_table)!=EG(active_symbol_table)) {								\
++		zend_hash_apply(EG(active_symbol_table), (apply_func_t) zend_check_symbol TSRMLS_CC);	\
++	}
++
++
++#define ZEND_VM_NEXT_OPCODE() \
++	CHECK_SYMBOL_TABLES() \
++	EX(opline)++; \
++	ZEND_VM_CONTINUE()
++
++
+ #endif
+
+Modified: trunk/php_qt/smokephp.cpp
+===================================================================
+--- trunk/php_qt/smokephp.cpp	2007-06-03 10:01:16 UTC (rev 327)
++++ trunk/php_qt/smokephp.cpp	2007-06-06 13:07:07 UTC (rev 328)
+@@ -1,7 +1,7 @@
+ /*!
+  * PHP-Qt - The PHP language bindings for Qt
+  *
+- * Copyright (C) 2006 
++ * Copyright (C) 2006
+  * Thomas Moenicke &lt;thomas.moenicke at kdemail.net&gt;
+  *
+  * This program is free software; you can redistribute it and/or
+@@ -86,7 +86,7 @@
+ 		    VirtualMethodCall c(smoke, method, args, o-&gt;zval_ptr, &amp;zmem, &amp;o-&gt;zval_ptr);
+ 		    c.next();
+ 		}
+-		
++
+ 		return false;
+     }
+ 
+@@ -109,7 +109,7 @@
+  *	@return	-
+  */
+ 
+-void 
++void
+ smokephp_init() {
+ 
+     if (qt_Smoke != 0L) {
+@@ -127,11 +127,11 @@
+ }
+ 
+ /*!
+- *  @param  const char*     c   class-name 
++ *  @param  const char*     c   class-name
+  *  @param  const char*     m   mangled function-name
+  *  @return Smoke::Index        unambiguous method ID
+  */
+-Smoke::Index 
++Smoke::Index
+ smokephp_getMethod(const char* c, const char* m, int argc, zval*** args)
+ {
+ 
+@@ -173,7 +173,7 @@
+ 								right = true;
+ 							break;
+ 						case Smoke::t_float:
+-						case Smoke::t_double: 
++						case Smoke::t_double:
+ 							if(type == IS_DOUBLE)
+ 								right = true;
+ 							break;
+@@ -182,7 +182,7 @@
+ 							break;
+ 						case Smoke::t_class:
+ 							if(type == IS_OBJECT){
+-							    QByteArray* name = 
++							    QByteArray* name =
+ 							    new QByteArray(
+ 								PQ::smoke()-&gt;types[
+ 								    PQ::smoke()-&gt;argumentList[
+@@ -204,7 +204,7 @@
+ 					return PQ::smoke()-&gt;ambiguousMethodList[i];
+ 				}
+ 			}
+-			
++
+ 			i++;
+     	}
+     }
+@@ -242,7 +242,7 @@
+  * #define IS_RESOURCE	7
+  * #define IS_CONSTANT	8
+  * #define IS_CONSTANT_ARRAY	9
+- * 
++ *
+  *  @param  zval***                 args
+  *	@param	int						argc
+  *  @param  Smoke::StackItem*       qargs
+@@ -299,13 +299,13 @@
+ 	if(zend_hash_get_current_data_ex(((zval) *args).value.ht, (void**) &amp;first_elem, 0) == FAILURE){
+ 		php_error(E_ERROR, &quot;PHP-Qt: could not get first value of hashtable.&quot;);
+ 	}
+-	
++
+ 	uint type = (int) (**first_elem).type;
+ 	if(type &lt; 0 || type &gt; 9){
+ 		// should never happen
+ 		php_error(E_ERROR, &quot;Could not get type of array&quot;);
+ 	}
+-	
++
+ 	void* e_arrayv;
+ 
+ 	switch(type){
+@@ -358,7 +358,7 @@
+         	    methodNameStack.top()-&gt;append(&quot;#&quot;);
+         	}
+ 	    } else {
+-	        php_error(E_ERROR,&quot;Unknown argument or unsupported type %d at argument %d, cannot prepare method call\n&quot;, type, i);
++	        php_error(E_ERROR,&quot;Unknown argument or unsupported type %d at argument %d, cannot prepare method call %s()\n&quot;, type, i, methodNameStack.top()-&gt;constData());
+ // 	        exit(FAILURE);
+ 	    }
+     }
+@@ -412,7 +412,7 @@
+ }
+ 
+ 
+-void 
++void
+ smokephp_prepareConnect(zval*** args, int argc, Smoke::StackItem* qargs, const Smoke::Index method){
+ 
+     int j;
+@@ -429,11 +429,11 @@
+ 
+ }
+ 
+-bool 
++bool
+ smokephp_isQObject(Smoke::Index classId) {
+ 	if(strcmp(PQ::smoke()-&gt;classes[classId].className, &quot;QObject&quot;) == 0)
+ 		return true;
+-	
++
+ 	for(Smoke::Index *p = PQ::smoke()-&gt;inheritanceList + PQ::smoke()-&gt;classes[classId].parents;	*p;	p++) {
+ 		if(smokephp_isQObject(*p))
+ 			return true;
+
+Modified: trunk/smoke/smoke.h
+===================================================================
+--- trunk/smoke/smoke.h	2007-06-03 10:01:16 UTC (rev 327)
++++ trunk/smoke/smoke.h	2007-06-06 13:07:07 UTC (rev 328)
+@@ -320,7 +320,7 @@
+ 	int icmp = -1;
+ 	while(imax &gt;= imin) {
+ 	    icur = (imin + imax) / 2;
+-	    icmp = strcmp(methodNames[icur], m);
++ 	    icmp = strcmp(methodNames[icur], m);
+ 	    if(!icmp) break;
+ 	    if(icmp &gt; 0)
+ 		imax = icur - 1;
+
+Modified: trunk/tests/QtBasicTestCase.php
+===================================================================
+--- trunk/tests/QtBasicTestCase.php	2007-06-03 10:01:16 UTC (rev 327)
++++ trunk/tests/QtBasicTestCase.php	2007-06-06 13:07:07 UTC (rev 328)
+@@ -1,5 +1,5 @@
+ &lt;?php
+-
++// todo: set bool, empty string
+     /**
+      *	This file contains a couple of basic tests
+      *
+@@ -21,10 +21,32 @@
+ 	const a = &quot;a&quot;;
+ 	const b = 24;
+ 
++	public function __construct($parent)
++	{
++	    parent::__construct($parent);
++	}
++
+ 	public function testMethod($value = NULL) {
+ 	    if ($value) echo $value.&quot;\n&quot;;
+ 	}
+ 	
++	public static function staticMethod()
++	{
++	    return &quot;staticMethod&quot;;
++	}
++
++//	    parent::tr(&quot;&quot;);
++
++	public static function staticTrMethod($arg)
++	{
++	    return parent::tr($arg);
++	}
++
++	public function blockSignals($bool)
++	{
++	    return parent::blockSignals($bool);
++	}
++	
+     }
+ 
+ 
+@@ -58,6 +80,38 @@
+ 	    echo &quot; passed&quot;;
+ 	}
+ 
++	// try to call a static method
++	function testCallStaticMethod() {
++	    echo &quot;\ntesting foo::staticMethod()&quot;;
++	    $this-&gt;assertEquals(foo::staticMethod(), &quot;staticMethod&quot;, &quot;Could not call a static method!&quot;);
++	    echo &quot; passed&quot;;
++	}
++
++	// try to call a static Qt method
++	function testCallStaticQtMethod() {
++	    echo &quot;\ntesting foo::tr()&quot;;
++	    $this-&gt;assertEquals(foo::tr(&quot;hello&quot;) == &quot;hello&quot;, &quot;Could not call a static Qt method!&quot;);
++	    echo &quot; passed&quot;;
++	}
++
++	// try to call a parent Qt method within a method
++	function testCallParentQtMethod() {
++	    echo &quot;\ntesting parent::blockSignals() within foo::blockSignals()&quot;;
++	    $o = new QObject();
++	    $p = new foo($o);
++	    // set blockSignals to true, so we can test it
++	    $p-&gt;blockSignals(true); 
++    	    $this-&gt;assertTrue($p-&gt;blockSignals(true), &quot;Could not call a parent Qt method!&quot;);
++	    echo &quot; passed&quot;;
++	}
++
++	// try to call a static Qt method within a static PHP method
++	function testCallStaticQtMethodWithinStaticPHPMethod() {
++	    echo &quot;\ntesting foo::staticTrMethod()&quot;;
++	    $this-&gt;assertEquals(foo::staticTrMethod(&quot;hello&quot;) == &quot;hello&quot;, &quot;Could not call a static Qt method!&quot;);
++	    echo &quot; passed&quot;;
++	}
++
+ 	// test the __toString() method
+ 	function testQString() {
+ 	    echo &quot;\ntesting QString::__toString()&quot;;
+@@ -176,7 +230,7 @@
+ 	}
+ 
+ 	function testTr(){
+-	    echo &quot;\ntesting tr()&quot;;
++	    echo &quot;\ntesting global tr()&quot;;
+ 	    $s = tr(&quot;hello world&quot;);
+ 	    $this-&gt;assertEquals($s-&gt;__toString(), &quot;hello world&quot;, &quot;tr() doesnt work!&quot;);
+ 	    echo &quot; passed&quot;;
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000171.html">[Php-qt-svn] r327 - trunk/php_qt
+</A></li>
+	<LI>Next message: <A HREF="000173.html">[Php-qt-svn] r329 - in trunk: . examples/calculator php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#172">[ date ]</a>
+              <a href="thread.html#172">[ thread ]</a>
+              <a href="subject.html#172">[ subject ]</a>
+              <a href="author.html#172">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

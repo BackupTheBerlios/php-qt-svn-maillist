@@ -1,0 +1,1926 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r352 - in trunk: . cmake/modules examples/calculator	php_qt tests tutorials tutorials/t8
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-July/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r352%20-%20in%20trunk%3A%20.%20cmake/modules%20examples/calculator%0A%09php_qt%20tests%20tutorials%20tutorials/t8&In-Reply-To=%3C200707110941.l6B9f5Rr001232%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   
+   <LINK REL="Next"  HREF="000197.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r352 - in trunk: . cmake/modules examples/calculator	php_qt tests tutorials tutorials/t8</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r352%20-%20in%20trunk%3A%20.%20cmake/modules%20examples/calculator%0A%09php_qt%20tests%20tutorials%20tutorials/t8&In-Reply-To=%3C200707110941.l6B9f5Rr001232%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r352 - in trunk: . cmake/modules examples/calculator	php_qt tests tutorials tutorials/t8">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Wed Jul 11 11:41:05 CEST 2007</I>
+    <P><UL>
+        
+        <LI>Next message: <A HREF="000197.html">[Php-qt-svn] r353 - trunk
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#196">[ date ]</a>
+              <a href="thread.html#196">[ thread ]</a>
+              <a href="subject.html#196">[ subject ]</a>
+              <a href="author.html#196">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2007-07-11 11:41:04 +0200 (Wed, 11 Jul 2007)
+New Revision: 352
+
+Added:
+   trunk/README.SVN
+   trunk/cmake/modules/FindQwt5.cmake
+   trunk/cmake/modules/MacroPushRequiredVars.cmake
+   trunk/prepare_svn.sh
+   trunk/tests/QtApplicationTestCase.php
+   trunk/tests/QtStressTestCase.php
+   trunk/tests/phpqt_from_scratch.sh
+   trunk/tutorials/t8/
+   trunk/tutorials/t8/cannonfield.php
+   trunk/tutorials/t8/lcdrange.php
+   trunk/tutorials/t8/main.php
+Modified:
+   trunk/.cvsignore
+   trunk/COPYING
+   trunk/cmake/modules/FindQt4.cmake
+   trunk/cmake/modules/FindQwt.cmake
+   trunk/examples/calculator/calculator.php
+   trunk/examples/calculator/main.php
+   trunk/php_qt/CMakeLists.txt
+   trunk/php_qt/functions.cpp
+   trunk/php_qt/marshall.h
+   trunk/php_qt/marshall_basetypes.h
+   trunk/php_qt/marshall_primitives.h
+   trunk/php_qt/marshall_types.cpp
+   trunk/php_qt/marshall_types.h
+   trunk/php_qt/php_qt.cpp
+   trunk/php_qt/php_qt.h
+   trunk/php_qt/phpqt_internals.cpp
+   trunk/php_qt/phpqt_internals.h
+   trunk/php_qt/smokephp.cpp
+Log:
+* synced with KDE svn
+
+
+
+Modified: trunk/.cvsignore
+===================================================================
+--- trunk/.cvsignore	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/.cvsignore	2007-07-11 09:41:04 UTC (rev 352)
+@@ -1,3 +1,4 @@
+ .deps
+ *.lo
+ *.la
++*~
+
+Modified: trunk/COPYING
+===================================================================
+--- trunk/COPYING	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/COPYING	2007-07-11 09:41:04 UTC (rev 352)
+@@ -6,7 +6,7 @@
+ 
+ You may write commercial, proprietary, or otherwise non-free software only if you have purchased a commercial edition of Qt.
+ Purchase of a commercial edition of Qt, however, does not entitle you to support (technical or otherwise) for PHP-Qt of any kind.
+-Additionally the following coditions apply to PHP-Qt when linked against Qt Commercial Edition:
++Additionally the following conditions apply to PHP-Qt when linked against Qt Commercial Edition:
+ 
+ 1. BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
+ FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
+
+Added: trunk/README.SVN
+===================================================================
+--- trunk/README.SVN	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/README.SVN	2007-07-11 09:41:04 UTC (rev 352)
+@@ -0,0 +1,5 @@
++- make sure you have dbus support in Qt, set QTDIR and put qmake into your path
++- run ./prepare_svn.sh to fetch smoke, kalyptus and cmake modules
++- create a build dir and run cmake, make and make install
++- define qt.codec=Latin1 and extension=php_qt.so in your php.ini file
++
+
+Modified: trunk/cmake/modules/FindQt4.cmake
+===================================================================
+--- trunk/cmake/modules/FindQt4.cmake	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/cmake/modules/FindQt4.cmake	2007-07-11 09:41:04 UTC (rev 352)
+@@ -29,7 +29,7 @@
+ #  
+ #  macro QT4_WRAP_CPP(outfiles inputfile ... )
+ #  macro QT4_WRAP_UI(outfiles inputfile ... )
+-#  macro QT4_ADD_RESOURCE(outfiles inputfile ... )
++#  macro QT4_ADD_RESOURCES(outfiles inputfile ... )
+ #  macro QT4_AUTOMOC(inputfile ... )
+ #  macro QT4_GENERATE_MOC(inputfile outputfile )
+ #
+@@ -43,6 +43,16 @@
+ #        for all listed interface xml files
+ #        the name will be automatically determined from the name of the xml file
+ #
++#  macro QT4_ADD_DBUS_INTERFACE_NO_NAMESPACE(outfiles interface basename)
++#        create a the interface without namespace header and implementation files with the
++#        given basename from the given interface xml file and add it to
++#        the list of sources
++#
++#  macro QT4_ADD_DBUS_INTERFACES_NO_NAMESPACE(outfiles inputfile ... )
++#        create the interface header without namespace and implementation files
++#        for all listed interface xml files
++#        the name will be automatically determined from the name of the xml file
++#
+ #  macro QT4_ADD_DBUS_ADAPTOR(outfiles xmlfile parentheader parentclassname [basename] )
+ #        create a dbus adaptor (header and implementation file) from the xml file
+ #        describing the interface, and add it to the list of sources. The adaptor
+@@ -73,6 +83,7 @@
+ #  QT_QTSQL_FOUND         True if QtSql was found.
+ #  QT_QTXML_FOUND         True if QtXml was found.
+ #  QT_QTSVG_FOUND         True if QtSvg was found.
++#  QT_QTSCRIPT_FOUND      True if QtScript was found.
+ #  QT_QTTEST_FOUND        True if QtTest was found.
+ #  QT_QTUITOOLS_FOUND     True if QtUiTools was found.
+ #                      
+@@ -100,6 +111,7 @@
+ #  QT_QTSQL_INCLUDE_DIR        Path to &quot;include/QtSql&quot; 
+ #  QT_QTXML_INCLUDE_DIR        Path to &quot;include/QtXml&quot; 
+ #  QT_QTSVG_INCLUDE_DIR        Path to &quot;include/QtSvg&quot;
++#  QT_QTSCRIPT_INCLUDE_DIR     Path to &quot;include/QtScript&quot;
+ #  QT_QTTEST_INCLUDE_DIR       Path to &quot;include/QtTest&quot;
+ #                            
+ #  QT_LIBRARY_DIR              Path to &quot;lib&quot; of Qt4
+@@ -137,6 +149,8 @@
+ #
+ # The QtSvg library:          QT_QTSVG_LIBRARY
+ #
++# The QtScript library:       QT_QTSCRIPT_LIBRARY
++#
+ # The QtTest library:         QT_QTTEST_LIBRARY
+ #
+ # The qtmain library for Windows QT_QTMAIN_LIBRARY
+@@ -173,6 +187,7 @@
+ 
+ INCLUDE(CheckSymbolExists)
+ INCLUDE(MacroAddFileDependencies)
++INCLUDE(MacroPushRequiredVars)
+ 
+ SET(QT_USE_FILE ${CMAKE_ROOT}/Modules/UseQt4.cmake)
+ 
+@@ -372,14 +387,19 @@
+   # Find out what window system we're using
+   #
+   #############################################
+-  # Save required includes variable
+-  SET(CMAKE_REQUIRED_INCLUDES_SAVE ${CMAKE_REQUIRED_INCLUDES})
++  # Save required includes and required_flags variables
++  macro_push_required_vars()
+   # Add QT_INCLUDE_DIR to CMAKE_REQUIRED_INCLUDES
+   SET(CMAKE_REQUIRED_INCLUDES &quot;${CMAKE_REQUIRED_INCLUDES};${QT_INCLUDE_DIR}&quot;)
++  # On Mac OS X when Qt has framework support, also add the framework path
++  IF( QT_USE_FRAMEWORKS )
++    SET(CMAKE_REQUIRED_FLAGS &quot;-F${QT_LIBRARY_DIR} &quot;)
++  ENDIF( QT_USE_FRAMEWORKS )
+   # Check for Window system symbols (note: only one should end up being set)
+   CHECK_SYMBOL_EXISTS(Q_WS_X11 &quot;QtCore/qglobal.h&quot; Q_WS_X11)
++  CHECK_SYMBOL_EXISTS(Q_WS_WIN &quot;QtCore/qglobal.h&quot; Q_WS_WIN)
++  CHECK_SYMBOL_EXISTS(Q_WS_QWS &quot;QtCore/qglobal.h&quot; Q_WS_QWS)
+   CHECK_SYMBOL_EXISTS(Q_WS_MAC &quot;QtCore/qglobal.h&quot; Q_WS_MAC)
+-  CHECK_SYMBOL_EXISTS(Q_WS_WIN &quot;QtCore/qglobal.h&quot; Q_WS_WIN)
+ 
+   IF (QT_QTCOPY_REQUIRED)
+      CHECK_SYMBOL_EXISTS(QT_IS_QTCOPY &quot;QtCore/qglobal.h&quot; QT_KDE_QT_COPY)
+@@ -388,8 +408,8 @@
+      ENDIF (NOT QT_IS_QTCOPY)
+   ENDIF (QT_QTCOPY_REQUIRED)
+ 
+-  # Restore CMAKE_REQUIRED_INCLUDES variable
+-  SET(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES_SAVE})
++  # Restore CMAKE_REQUIRED_INCLUDES+CMAKE_REQUIRED_FLAGS variables
++  macro_pop_required_vars()
+   #
+   #############################################
+ 
+@@ -429,6 +449,14 @@
+     NO_DEFAULT_PATH
+     )
+ 
++  # Set QT_QTSVG_INCLUDE_DIR
++  FIND_PATH(QT_QTSCRIPT_INCLUDE_DIR QtScript
++    PATHS
++    ${QT_INCLUDE_DIR}/QtScript
++    ${QT_LIBRARY_DIR}/QtScript.framework/Headers
++    NO_DEFAULT_PATH
++    )
++
+   # Set QT_QTTEST_INCLUDE_DIR
+   FIND_PATH(QT_QTTEST_INCLUDE_DIR QtTest
+     PATHS
+@@ -541,61 +569,126 @@
+   IF (QT_USE_FRAMEWORKS)
+     # If FIND_LIBRARY found libraries in Apple frameworks, we would NOT have
+     # to jump through these hoops.
+-    SET(QT_QTCORE_LIBRARY &quot;-F${QT_LIBRARY_DIR} -framework QtCore&quot; CACHE STRING &quot;The QtCore library.&quot;)
+-    SET(QT_QT3SUPPORT_LIBRARY &quot;-framework Qt3Support&quot; CACHE STRING &quot;The Qt3Support library.&quot;)
+-    SET(QT_QTGUI_LIBRARY      &quot;-framework QtGui&quot;      CACHE STRING &quot;The QtGui library.&quot;)
+-    SET(QT_QTNETWORK_LIBRARY  &quot;-framework QtNetwork&quot;  CACHE STRING &quot;The QtNetwork library.&quot;)
+-    SET(QT_QTOPENGL_LIBRARY   &quot;-framework QtOpenGL&quot;   CACHE STRING &quot;The QtOpenGL library.&quot;)
+-    SET(QT_QTSQL_LIBRARY      &quot;-framework QtSql&quot;      CACHE STRING &quot;The QtSql library.&quot;)
+-    SET(QT_QTXML_LIBRARY      &quot;-framework QtXml&quot;      CACHE STRING &quot;The QtXml library.&quot;)
+-    SET(QT_QTSVG_LIBRARY      &quot;-framework QtSvg&quot;      CACHE STRING &quot;The QtSvg library.&quot;)
+-    SET(QT_QTDBUS_LIBRARY     &quot;-framework QtDBus&quot;     CACHE STRING &quot;The QtDBus library.&quot;)
+-    SET(QT_QTTEST_LIBRARY     &quot;-framework QtTest&quot;     CACHE STRING &quot;The QtTest library.&quot;)
++    IF(EXISTS ${QT_LIBRARY_DIR}/QtCore.framework)
++      SET(QT_QTCORE_FOUND TRUE)
++      SET(QT_QTCORE_LIBRARY &quot;-F${QT_LIBRARY_DIR} -framework QtCore&quot; CACHE STRING &quot;The QtCore library.&quot;)
++    ELSE(EXISTS ${QT_LIBRARY_DIR}/QtCore.framework)
++      SET(QT_QTCORE_FOUND FALSE)
++    ENDIF(EXISTS ${QT_LIBRARY_DIR}/QtCore.framework)
+ 
++    IF(EXISTS ${QT_LIBRARY_DIR}/QtGui.framework)
++      SET(QT_QTGUI_FOUND TRUE)
++      SET(QT_QTGUI_LIBRARY &quot;-F${QT_LIBRARY_DIR} -framework QtGui&quot; CACHE STRING &quot;The QtGui library.&quot;)
++    ELSE(EXISTS ${QT_LIBRARY_DIR}/QtGui.framework)
++      SET(QT_QTGUI_FOUND FALSE)
++    ENDIF(EXISTS ${QT_LIBRARY_DIR}/QtGui.framework)
++
++    IF(EXISTS ${QT_LIBRARY_DIR}/Qt3Support.framework)
++      SET(QT_QT3SUPPORT_FOUND TRUE)
++      SET(QT_QT3SUPPORT_LIBRARY &quot;-F${QT_LIBRARY_DIR} -framework Qt3Support&quot; CACHE STRING &quot;The Qt3Support library.&quot;)
++    ELSE(EXISTS ${QT_LIBRARY_DIR}/Qt3Support.framework)
++      SET(QT_QT3SUPPORT_FOUND FALSE)
++    ENDIF(EXISTS ${QT_LIBRARY_DIR}/Qt3Support.framework)
++
++    IF(EXISTS ${QT_LIBRARY_DIR}/QtNetwork.framework)
++      SET(QT_QTNETWORK_FOUND TRUE)
++      SET(QT_QTNETWORK_LIBRARY &quot;-F${QT_LIBRARY_DIR} -framework QtNetwork&quot; CACHE STRING &quot;The QtNetwork library.&quot;)
++    ELSE(EXISTS ${QT_LIBRARY_DIR}/QtNetwork.framework)
++      SET(QT_QTNETWORK_FOUND FALSE)
++    ENDIF(EXISTS ${QT_LIBRARY_DIR}/QtNetwork.framework)
++
++    IF(EXISTS ${QT_LIBRARY_DIR}/QtOpenGL.framework)
++      SET(QT_QTOPENGL_FOUND TRUE)
++      SET(QT_QTOPENGL_LIBRARY &quot;-F${QT_LIBRARY_DIR} -framework QtOpenGL&quot; CACHE STRING &quot;The QtOpenGL library.&quot;)
++    ELSE(EXISTS ${QT_LIBRARY_DIR}/QtOpenGL.framework)
++      SET(QT_QTOPENGL_FOUND FALSE)
++    ENDIF(EXISTS ${QT_LIBRARY_DIR}/QtOpenGL.framework)
++
++    IF(EXISTS ${QT_LIBRARY_DIR}/QtSql.framework)
++      SET(QT_QTSQL_FOUND TRUE)
++      SET(QT_QTSQL_LIBRARY &quot;-F${QT_LIBRARY_DIR} -framework QtSql&quot; CACHE STRING &quot;The QtSql library.&quot;)
++    ELSE(EXISTS ${QT_LIBRARY_DIR}/QtSql.framework)
++      SET(QT_QTSQL_FOUND FALSE)
++    ENDIF(EXISTS ${QT_LIBRARY_DIR}/QtSql.framework)
++
++    IF(EXISTS ${QT_LIBRARY_DIR}/QtXml.framework)
++      SET(QT_QTXML_FOUND TRUE)
++      SET(QT_QTXML_LIBRARY &quot;-F${QT_LIBRARY_DIR} -framework QtXml&quot; CACHE STRING &quot;The QtXml library.&quot;)
++    ELSE(EXISTS ${QT_LIBRARY_DIR}/QtXml.framework)
++      SET(QT_QTXML_FOUND FALSE)
++    ENDIF(EXISTS ${QT_LIBRARY_DIR}/QtXml.framework)
++
++    IF(EXISTS ${QT_LIBRARY_DIR}/QtSvg.framework)
++      SET(QT_QTSVG_FOUND TRUE)
++      SET(QT_QTSVG_LIBRARY &quot;-F${QT_LIBRARY_DIR} -framework QtSvg&quot; CACHE STRING &quot;The QtSvg library.&quot;)
++    ELSE(EXISTS ${QT_LIBRARY_DIR}/QtSvg.framework)
++      SET(QT_QTSVG_FOUND FALSE)
++    ENDIF(EXISTS ${QT_LIBRARY_DIR}/QtSvg.framework)
++
++    IF(EXISTS ${QT_LIBRARY_DIR}/QtDBus.framework)
++      SET(QT_QTDBUS_FOUND TRUE)
++      SET(QT_QTDBUS_LIBRARY &quot;-F${QT_LIBRARY_DIR} -framework QtDBus&quot; CACHE STRING &quot;The QtDBus library.&quot;)
++    ELSE(EXISTS ${QT_LIBRARY_DIR}/QtDBus.framework)
++      SET(QT_QTDBUS_FOUND FALSE)
++    ENDIF(EXISTS ${QT_LIBRARY_DIR}/QtDBus.framework)
++
++    IF(EXISTS ${QT_LIBRARY_DIR}/QtTest.framework)
++      SET(QT_QTTEST_FOUND TRUE)
++      SET(QT_QTTEST_LIBRARY &quot;-F${QT_LIBRARY_DIR} -framework QtTest&quot; CACHE STRING &quot;The QtTest library.&quot;)
++    ELSE(EXISTS ${QT_LIBRARY_DIR}/QtTest.framework)
++      SET(QT_QTTEST_FOUND FALSE)
++    ENDIF(EXISTS ${QT_LIBRARY_DIR}/QtTest.framework)
++
+     # WTF?  why don't we have frameworks?  :P
+-    SET(QT_QTUITOOLS_LIBRARY      &quot;-L${QT_LIBRARY_DIR} -lQtUiTools&quot;      CACHE STRING &quot;The QtUiTools library.&quot;)
++    # Set QT_QTUITOOLS_LIBRARY
++    FIND_LIBRARY(QT_QTUITOOLS_LIBRARY NAMES QtUiTools QtUiTools4 PATHS ${QT_LIBRARY_DIR} )
++    # Set QT_QTSCRIPT_LIBRARY
++    FIND_LIBRARY(QT_QTSCRIPT_LIBRARY NAMES QtScript QtScript4    PATHS ${QT_LIBRARY_DIR} )
+ 
+   ELSE (QT_USE_FRAMEWORKS)
+     
+     # Set QT_QTCORE_LIBRARY by searching for a lib with &quot;QtCore.&quot;  as part of the filename
+-    FIND_LIBRARY(QT_QTCORE_LIBRARY NAMES QtCore QtCore4 PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH )
++    FIND_LIBRARY(QT_QTCORE_LIBRARY NAMES QtCore QtCore4          PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH )
+ 
+     # Set QT_QT3SUPPORT_LIBRARY
+-    FIND_LIBRARY(QT_QT3SUPPORT_LIBRARY NAMES Qt3Support Qt3Support4 PATHS ${QT_LIBRARY_DIR}        NO_DEFAULT_PATH)
++    FIND_LIBRARY(QT_QT3SUPPORT_LIBRARY NAMES Qt3Support Qt3Support4 PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
+ 
+     # Set QT_QTGUI_LIBRARY
+-    FIND_LIBRARY(QT_QTGUI_LIBRARY NAMES QtGui QtGui4 PATHS ${QT_LIBRARY_DIR}        NO_DEFAULT_PATH)
++    FIND_LIBRARY(QT_QTGUI_LIBRARY NAMES QtGui QtGui4             PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
+ 
+     # Set QT_QTMOTIF_LIBRARY
+     IF(Q_WS_X11)
+-      FIND_LIBRARY(QT_QTMOTIF_LIBRARY NAMES QtMotif PATHS ${QT_LIBRARY_DIR}       NO_DEFAULT_PATH)
++      FIND_LIBRARY(QT_QTMOTIF_LIBRARY NAMES QtMotif              PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
+     ENDIF(Q_WS_X11)
+ 
+     # Set QT_QTNETWORK_LIBRARY
+-    FIND_LIBRARY(QT_QTNETWORK_LIBRARY NAMES QtNetwork QtNetwork4 PATHS ${QT_LIBRARY_DIR}        NO_DEFAULT_PATH)
++    FIND_LIBRARY(QT_QTNETWORK_LIBRARY NAMES QtNetwork QtNetwork4 PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
+ 
+     # Set QT_QTNSPLUGIN_LIBRARY
+-    FIND_LIBRARY(QT_QTNSPLUGIN_LIBRARY NAMES QtNsPlugin PATHS ${QT_LIBRARY_DIR}       NO_DEFAULT_PATH)
++    FIND_LIBRARY(QT_QTNSPLUGIN_LIBRARY NAMES QtNsPlugin          PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
+ 
+     # Set QT_QTOPENGL_LIBRARY
+-    FIND_LIBRARY(QT_QTOPENGL_LIBRARY NAMES QtOpenGL QtOpenGL4 PATHS ${QT_LIBRARY_DIR}        NO_DEFAULT_PATH)
++    FIND_LIBRARY(QT_QTOPENGL_LIBRARY NAMES QtOpenGL QtOpenGL4    PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
+ 
+     # Set QT_QTSQL_LIBRARY
+-    FIND_LIBRARY(QT_QTSQL_LIBRARY NAMES QtSql QtSql4 PATHS ${QT_LIBRARY_DIR}        NO_DEFAULT_PATH)
++    FIND_LIBRARY(QT_QTSQL_LIBRARY NAMES QtSql QtSql4             PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
+ 
+     # Set QT_QTXML_LIBRARY
+-    FIND_LIBRARY(QT_QTXML_LIBRARY NAMES QtXml QtXml4 PATHS ${QT_LIBRARY_DIR}        NO_DEFAULT_PATH)
++    FIND_LIBRARY(QT_QTXML_LIBRARY NAMES QtXml QtXml4             PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
+ 
+     # Set QT_QTSVG_LIBRARY
+-    FIND_LIBRARY(QT_QTSVG_LIBRARY NAMES QtSvg QtSvg4 PATHS ${QT_LIBRARY_DIR}        NO_DEFAULT_PATH)
++    FIND_LIBRARY(QT_QTSVG_LIBRARY NAMES QtSvg QtSvg4             PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
+ 
++    # Set QT_QTSCRIPT_LIBRARY
++    FIND_LIBRARY(QT_QTSCRIPT_LIBRARY NAMES QtScript QtScript4    PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
++
+     # Set QT_QTUITOOLS_LIBRARY
+-    FIND_LIBRARY(QT_QTUITOOLS_LIBRARY NAMES QtUiTools QtUiTools4 PATHS ${QT_LIBRARY_DIR}        NO_DEFAULT_PATH)
++    FIND_LIBRARY(QT_QTUITOOLS_LIBRARY NAMES QtUiTools QtUiTools4 PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
+ 
+     # Set QT_QTTEST_LIBRARY
+-    FIND_LIBRARY(QT_QTTEST_LIBRARY NAMES QtTest QtTest4 PATHS ${QT_LIBRARY_DIR}                      NO_DEFAULT_PATH)
++    FIND_LIBRARY(QT_QTTEST_LIBRARY NAMES QtTest QtTest4          PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
+ 
+-    FIND_LIBRARY(QT_QTDBUS_LIBRARY NAMES QtDBus QtDBus4 PATHS ${QT_LIBRARY_DIR}                      NO_DEFAULT_PATH)
++    FIND_LIBRARY(QT_QTDBUS_LIBRARY NAMES QtDBus QtDBus4          PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
+ 
+     IF(MSVC)
+       FIND_LIBRARY(QT_QTCORE_LIBRARY_DEBUG      NAMES QtCored4            PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
+@@ -606,10 +699,13 @@
+       FIND_LIBRARY(QT_QTSQL_LIBRARY_DEBUG       NAMES QtSqld4             PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
+       FIND_LIBRARY(QT_QTXML_LIBRARY_DEBUG       NAMES QtXmld4             PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
+       FIND_LIBRARY(QT_QTSVG_LIBRARY_DEBUG       NAMES QtSvgd4             PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
++      FIND_LIBRARY(QT_QTSCRIPT_LIBRARY_DEBUG    NAMES QtScriptd4          PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
+       FIND_LIBRARY(QT_QTUITOOLS_LIBRARY_DEBUG   NAMES QtUiToolsd QtUiToolsd4 PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
+       FIND_LIBRARY(QT_QTTEST_LIBRARY_DEBUG      NAMES QtTestd4            PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
+       FIND_LIBRARY(QT_QTDBUS_LIBRARY_DEBUG      NAMES QtDBusd4            PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
+       FIND_LIBRARY(QT_QTASSISTANT_LIBRARY_DEBUG NAMES QtAssistantClientd4 PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
++      FIND_LIBRARY(QT_QTDESIGNER_LIBRARY_DEBUG           NAMES QtDesigner4            PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
++      FIND_LIBRARY(QT_QTDESIGNERCOMPONENTS_LIBRARY_DEBUG NAMES QtDesignerComponentsd4 PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
+       FIND_LIBRARY(QT_QTMAIN_LIBRARY_DEBUG      NAMES qtmaind             PATHS ${QT_LIBRARY_DIR} NO_DEFAULT_PATH)
+     ENDIF(MSVC)
+ 
+@@ -693,6 +789,7 @@
+   _QT4_ADJUST_LIB_VARS(QTSQL)
+   _QT4_ADJUST_LIB_VARS(QTXML)
+   _QT4_ADJUST_LIB_VARS(QTSVG)
++  _QT4_ADJUST_LIB_VARS(QTSCRIPT)
+   _QT4_ADJUST_LIB_VARS(QTUITOOLS)
+   _QT4_ADJUST_LIB_VARS(QTTEST)
+   _QT4_ADJUST_LIB_VARS(QTDBUS)
+@@ -705,7 +802,6 @@
+   IF(WIN32)
+     _QT4_ADJUST_LIB_VARS(QTMAIN)
+   ENDIF(WIN32)
+-  
+ 
+   #######################################
+   #
+@@ -838,7 +934,7 @@
+   ENDMACRO (QT4_WRAP_UI)
+ 
+ 
+-  # QT4_ADD_RESOURCE(outfiles inputfile ... )
++  # QT4_ADD_RESOURCES(outfiles inputfile ... )
+   # TODO  perhaps consider adding support for compression and root options to rcc
+ 
+   MACRO (QT4_ADD_RESOURCES outfiles )
+@@ -872,11 +968,18 @@
+     SET(_header ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.h)
+     SET(_impl   ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.cpp)
+     SET(_moc    ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.moc)
+-  
+-    ADD_CUSTOM_COMMAND(OUTPUT ${_impl} ${_header}
+-        COMMAND ${QT_DBUSXML2CPP_EXECUTABLE} -m -p ${_basename} ${_infile}
++
++    GET_SOURCE_FILE_PROPERTY(_nonamespace ${_infile} NO_NAMESPACE)
++    IF ( _nonamespace )
++        SET(_params -N -m -p)
++    ELSE ( _nonamespace )
++        SET(_params -m -p)
++    ENDIF ( _nonamespace )
++
++     ADD_CUSTOM_COMMAND(OUTPUT ${_impl} ${_header}
++        COMMAND ${QT_DBUSXML2CPP_EXECUTABLE} ${_params} ${_basename} ${_infile}
+         DEPENDS ${_infile})
+-  
++
+     SET_SOURCE_FILES_PROPERTIES(${_impl} PROPERTIES SKIP_AUTOMOC TRUE)
+     
+     QT4_GENERATE_MOC(${_header} ${_moc})
+@@ -885,21 +988,34 @@
+     MACRO_ADD_FILE_DEPENDENCIES(${_impl} ${_moc})
+   
+   ENDMACRO(QT4_ADD_DBUS_INTERFACE)
+-  
+-  
++ 
++  MACRO(QT4_ADD_DBUS_INTERFACE_NO_NAMESPACE _sources _interface _basename)
++    SET_SOURCE_FILES_PROPERTIES(${_interface} PROPERTIES NO_NAMESPACE TRUE)
++    QT4_ADD_DBUS_INTERFACE(${_sources} ${_interface} ${_basename})
++  ENDMACRO(QT4_ADD_DBUS_INTERFACE_NO_NAMESPACE)
++
++  # Internal (avoid to duplicate code between QT4_ADD_DBUS_INTERFACES_NO_NAMESPACE and QT4_ADD_DBUS_INTERFACES 
++  MACRO(_QT4_ADD_DBUS_INTERFACES _sources _filename)
++        GET_FILENAME_COMPONENT(_infile ${_filename} ABSOLUTE)
++        # get the part before the &quot;.xml&quot; suffix
++        STRING(REGEX REPLACE &quot;(.*[/\\.])?([^\\.]+)\\.xml&quot; &quot;\\2&quot; _basename ${_current_FILE})
++        STRING(TOLOWER ${_basename} _basename)
++        QT4_ADD_DBUS_INTERFACE(${_sources} ${_infile} ${_basename}interface)     
++  ENDMACRO(_QT4_ADD_DBUS_INTERFACES)
++
+   MACRO(QT4_ADD_DBUS_INTERFACES _sources)
+      FOREACH (_current_FILE ${ARGN})
+-        GET_FILENAME_COMPONENT(_infile ${_current_FILE} ABSOLUTE)
+-  
+-  # get the part before the &quot;.xml&quot; suffix
+-        STRING(REGEX REPLACE &quot;(.*[/\\.])?([^\\.]+)\\.xml&quot; &quot;\\2&quot; _basename ${_current_FILE})
+-        STRING(TOLOWER ${_basename} _basename)
+-  
+-        QT4_ADD_DBUS_INTERFACE(${_sources} ${_infile} ${_basename}interface)
++        _QT4_ADD_DBUS_INTERFACES(${_sources} ${_current_FILE})
+      ENDFOREACH (_current_FILE)
+   ENDMACRO(QT4_ADD_DBUS_INTERFACES)
++
++  MACRO(QT4_ADD_DBUS_INTERFACES_NO_NAMESPACE _sources)
++    FOREACH (_current_FILE ${ARGN})
++	SET_SOURCE_FILES_PROPERTIES(${_current_FILE} PROPERTIES NO_NAMESPACE TRUE)
++        _QT4_ADD_DBUS_INTERFACES(${_sources} ${_current_FILE})
++    ENDFOREACH (_current_FILE)
++  ENDMACRO(QT4_ADD_DBUS_INTERFACES_NO_NAMESPACE)
+   
+-  
+   MACRO(QT4_GENERATE_DBUS_INTERFACE _header) # _customName )
+     SET(_customName &quot;${ARGV1}&quot;)
+     GET_FILENAME_COMPONENT(_in_file ${_header} ABSOLUTE)
+@@ -1009,7 +1125,11 @@
+   IF( QT_LIBRARY_DIR AND QT_INCLUDE_DIR AND QT_MOC_EXECUTABLE AND QT_UIC_EXECUTABLE AND QT_RCC_EXECUTABLE)
+     SET( QT4_FOUND &quot;YES&quot; )
+     IF( NOT Qt4_FIND_QUIETLY)
+-      MESSAGE(STATUS &quot;Found Qt-Version ${QTVERSION}&quot;)
++      IF (WIN32)
++        MESSAGE(STATUS &quot;Found Qt-Version ${QTVERSION} with qmake at ${QT_QMAKE_EXECUTABLE}&quot;)
++      ELSE (WIN32)
++        MESSAGE(STATUS &quot;Found Qt-Version ${QTVERSION}&quot;)
++      ENDIF (WIN32)
+     ENDIF( NOT Qt4_FIND_QUIETLY)
+   ELSE( QT_LIBRARY_DIR AND QT_INCLUDE_DIR AND QT_MOC_EXECUTABLE AND QT_UIC_EXECUTABLE AND QT_RCC_EXECUTABLE)
+     SET( QT4_FOUND &quot;NO&quot;)
+@@ -1045,7 +1165,7 @@
+   IF(UNIX)
+     # on OS X X11 may not be required
+     IF (Q_WS_X11)
+-    FIND_PACKAGE(X11)
++      FIND_PACKAGE(X11 REQUIRED)
+     ENDIF (Q_WS_X11)
+     FIND_PACKAGE(Threads)
+     SET(QT_QTCORE_LIBRARY ${QT_QTCORE_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
+
+Modified: trunk/cmake/modules/FindQwt.cmake
+===================================================================
+--- trunk/cmake/modules/FindQwt.cmake	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/cmake/modules/FindQwt.cmake	2007-07-11 09:41:04 UTC (rev 352)
+@@ -30,7 +30,7 @@
+         PATHS /usr/local/qwt/lib /usr/local/lib /usr/lib
+     )
+ 
+-    IF (QWT_LIBRARY AND QWT_INCLUDE_DIR)
++    IF (QWT_LIBRARY)
+ 
+         SET(QWT_LIBRARIES ${QWT_LIBRARY})
+         SET(QWT_FOUND &quot;YES&quot;)
+@@ -43,17 +43,17 @@
+             ENDIF(BUILD_SHARED_LIBS)
+         ENDIF (CYGWIN)
+ 
+-    ENDIF (QWT_LIBRARY AND QWT_INCLUDE_DIR)
++    ENDIF (QWT_LIBRARY)
+ ENDIF(QT4_FOUND)
+ 
+ IF (QWT_FOUND)
+-  IF (NOT Qwt_FIND_QUIETLY)
++  IF (NOT QWT_FIND_QUIETLY)
+     MESSAGE(STATUS &quot;Found Qwt: ${QWT_LIBRARY}&quot;)
+-  ENDIF (NOT Qwt_FIND_QUIETLY)
++  ENDIF (NOT QWT_FIND_QUIETLY)
+ ELSE (QWT_FOUND)
+-  IF (Qwt_FIND_REQUIRED)
++  IF (QWT_FIND_REQUIRED)
+     MESSAGE(FATAL_ERROR &quot;Could not find Qwt library&quot;)
+-  ENDIF (Qwt_FIND_REQUIRED)
++  ENDIF (QWT_FIND_REQUIRED)
+ ENDIF (QWT_FOUND)
+ 
+ MARK_AS_ADVANCED(QWT_INCLUDE_DIR QWT_LIBRARY)
+
+Added: trunk/cmake/modules/FindQwt5.cmake
+===================================================================
+--- trunk/cmake/modules/FindQwt5.cmake	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/cmake/modules/FindQwt5.cmake	2007-07-11 09:41:04 UTC (rev 352)
+@@ -0,0 +1,104 @@
++# Find the Qwt 5.x includes and library, either the version linked to Qt3 or the version linked to Qt4
++#
++# On Windows it makes these assumptions:
++#    - the Qwt DLL is where the other DLLs for Qt are (QT_DIR\bin) or in the path
++#    - the Qwt .h files are in QT_DIR\include\Qwt or in the path
++#    - the Qwt .lib is where the other LIBs for Qt are (QT_DIR\lib) or in the path
++#
++# Qwt5_INCLUDE_DIR - where to find qwt.h if Qwt
++# Qwt5_Qt4_LIBRARY - The Qwt5 library linked against Qt4 (if it exists)
++# Qwt5_Qt3_LIBRARY - The Qwt5 library linked against Qt4 (if it exists)
++# Qwt5_Qt4_FOUND   - Qwt5 was found and uses Qt4
++# Qwt5_Qt3_FOUND   - Qwt5 was found and uses Qt3
++# Qwt5_FOUND - Set to TRUE if Qwt5 was found (linked either to Qt3 or Qt4)
++
++# Copyright (c) 2007, Pau Garcia i Quiles, &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">pgquiles at elpauer.org</A>&gt;
++#
++# Redistribution and use is allowed according to the terms of the BSD license.
++# For details see the accompanying COPYING-CMAKE-SCRIPTS file.
++
++# Condition is &quot;(A OR B) AND C&quot;, CMake does not support parentheses but it evaluates left to right
++IF(Qwt5_Qt4_LIBRARY OR Qwt5_Qt3_LIBRARY AND Qwt5_INCLUDE_DIR)
++    SET(Qwt5_FIND_QUIETLY TRUE)
++ENDIF(Qwt5_Qt4_LIBRARY OR Qwt5_Qt3_LIBRARY AND Qwt5_INCLUDE_DIR)
++
++IF(NOT QT4_FOUND)
++	FIND_PACKAGE( Qt4 REQUIRED QUIET )
++ENDIF(NOT QT4_FOUND)
++
++IF( QT4_FOUND )
++	# Is Qwt5 installed? Look for header files
++	FIND_PATH( Qwt5_INCLUDE_DIR qwt.h 
++               PATHS ${QT_INCLUDE_DIR} /usr/local/qwt/include /usr/local/include /usr/include/qwt /usr/include
++               PATH_SUFFIXES qwt qwt5 qwt-qt4 qwt5-qt4 qwt-qt3 qwt5-qt3 include qwt/include qwt5/include qwt-qt4/include qwt5-qt4/include qwt-qt3/include qwt5-qt3/include ENV PATH)
++	
++	# Find Qwt version
++	IF( Qwt5_INCLUDE_DIR )
++		FILE( READ ${Qwt5_INCLUDE_DIR}/qwt_global.h QWT_GLOBAL_H )
++		STRING( REGEX MATCH &quot;#define *QWT_VERSION *(0x05*)&quot; QWT_IS_VERSION_5 ${QWT_GLOBAL_H})
++		
++		IF( QWT_IS_VERSION_5 )
++		STRING(REGEX REPLACE &quot;.*#define[\\t\\ ]+QWT_VERSION_STR[\\t\\ ]+\&quot;([0-9]+\\.[0-9]+\\.[0-9]+)\&quot;.*&quot; &quot;\\1&quot; Qwt_VERSION &quot;${QWT_GLOBAL_H}&quot;)
++
++		# Find Qwt5 library linked to Qt4
++		FIND_LIBRARY( Qwt5_Qt4_TENTATIVE_LIBRARY NAMES qwt5-qt4 qwt-qt4 qwt5 qwt PATHS /usr/local/qwt/lib /usr/local/lib /usr/lib )
++		IF( UNIX AND NOT CYGWIN)
++			IF( Qwt5_Qt4_TENTATIVE_LIBRARY )
++				#MESSAGE(&quot;Qwt5_Qt4_TENTATIVE_LIBRARY = ${Qwt5_Qt4_TENTATIVE_LIBRARY}&quot;)
++				EXECUTE_PROCESS( COMMAND &quot;ldd&quot; ${Qwt5_Qt4_TENTATIVE_LIBRARY} OUTPUT_VARIABLE Qwt_Qt4_LIBRARIES_LINKED_TO )
++				STRING( REGEX MATCH &quot;QtCore&quot; Qwt5_IS_LINKED_TO_Qt4 ${Qwt_Qt4_LIBRARIES_LINKED_TO})
++				IF( Qwt5_IS_LINKED_TO_Qt4 )
++					SET( Qwt5_Qt4_LIBRARY ${Qwt5_Qt4_TENTATIVE_LIBRARY} )
++					SET( Qwt5_Qt4_FOUND TRUE )
++					IF (NOT Qwt5_FIND_QUIETLY)
++						MESSAGE( STATUS &quot;Found Qwt: ${Qwt5_Qt4_LIBRARY}&quot; )
++					ENDIF (NOT Qwt5_FIND_QUIETLY)
++				ENDIF( Qwt5_IS_LINKED_TO_Qt4 )
++			ENDIF( Qwt5_Qt4_TENTATIVE_LIBRARY )
++		ELSE( UNIX AND NOT CYGWIN)
++		# Assumes qwt.dll is in the Qt dir
++			SET( Qwt5_Qt4_LIBRARY ${Qwt5_Qt4_TENTATIVE_LIBRARY} )
++			SET( Qwt5_Qt4_FOUND TRUE )
++			IF (NOT Qwt5_FIND_QUIETLY)
++				MESSAGE( STATUS &quot;Found Qwt version ${Qwt_VERSION} linked to Qt4&quot; )
++			ENDIF (NOT Qwt5_FIND_QUIETLY)
++		ENDIF( UNIX AND NOT CYGWIN)
++		
++		
++		# Find Qwt5 library linked to Qt3
++		FIND_LIBRARY( Qwt5_Qt3_TENTATIVE_LIBRARY NAMES qwt-qt3 qwt qwt5-qt3 qwt5 )
++		IF( UNIX AND NOT CYGWIN)
++			IF( Qwt5_Qt3_TENTATIVE_LIBRARY )
++				#MESSAGE(&quot;Qwt5_Qt3_TENTATIVE_LIBRARY = ${Qwt5_Qt3_TENTATIVE_LIBRARY}&quot;)
++				EXECUTE_PROCESS( COMMAND &quot;ldd&quot; ${Qwt5_Qt3_TENTATIVE_LIBRARY} OUTPUT_VARIABLE Qwt-Qt3_LIBRARIES_LINKED_TO )
++				STRING( REGEX MATCH &quot;qt-mt&quot; Qwt5_IS_LINKED_TO_Qt3 ${Qwt-Qt3_LIBRARIES_LINKED_TO})
++				IF( Qwt5_IS_LINKED_TO_Qt3 )
++					SET( Qwt5_Qt3_LIBRARY ${Qwt5_Qt3_TENTATIVE_LIBRARY} )
++					SET( Qwt5_Qt3_FOUND TRUE )
++					IF (NOT Qwt5_FIND_QUIETLY)
++						MESSAGE( STATUS &quot;Found Qwt version ${Qwt_VERSION} linked to Qt3&quot; )
++					ENDIF (NOT Qwt5_FIND_QUIETLY)
++				ENDIF( Qwt5_IS_LINKED_TO_Qt3 )
++			ENDIF( Qwt5_Qt3_TENTATIVE_LIBRARY )
++		ELSE( UNIX AND NOT CYGWIN)
++			SET( Qwt5_Qt3_LIBRARY ${Qwt5_Qt3_TENTATIVE_LIBRARY} )
++			SET( Qwt5_Qt3_FOUND TRUE )
++			IF (NOT Qwt5_FIND_QUIETLY)
++				MESSAGE( STATUS &quot;Found Qwt: ${Qwt5_Qt3_LIBRARY}&quot; )
++			ENDIF (NOT Qwt5_FIND_QUIETLY)
++		ENDIF( UNIX AND NOT CYGWIN)
++		
++		ENDIF( QWT_IS_VERSION_5 )
++		
++		IF( Qwt5_Qt4_FOUND OR Qwt5_Qt3_FOUND )
++			SET( Qwt5_FOUND TRUE )
++		ENDIF( Qwt5_Qt4_FOUND OR Qwt5_Qt3_FOUND )
++		
++		MARK_AS_ADVANCED( Qwt5_INCLUDE_DIR Qwt5_Qt4_LIBRARY Qwt5_Qt3_LIBRARY )
++	ENDIF( Qwt5_INCLUDE_DIR )
++
++   	IF (NOT Qwt5_FOUND AND Qwt5_FIND_REQUIRED)
++      		MESSAGE(FATAL_ERROR &quot;Could not find Qwt 5.x&quot;)
++   	ENDIF (NOT Qwt5_FOUND AND Qwt5_FIND_REQUIRED)
++
++ENDIF( QT4_FOUND )
+\ No newline at end of file
+
+Added: trunk/cmake/modules/MacroPushRequiredVars.cmake
+===================================================================
+--- trunk/cmake/modules/MacroPushRequiredVars.cmake	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/cmake/modules/MacroPushRequiredVars.cmake	2007-07-11 09:41:04 UTC (rev 352)
+@@ -0,0 +1,47 @@
++# this module defines two macros:
++# MACRO_PUSH_REQUIRED_VARS()
++# and
++# MACRO_POP_REQUIRED_VARS()
++# use these if you call cmake macros which use
++# any of the CMAKE_REQUIRED_XXX variables
++#
++# Usage:
++# MACRO_PUSH_REQUIRED_VARS()
++# SET(CMAKE_REQUIRED_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS} -DSOME_MORE_DEF)
++# CHECK_FUNCTION_EXISTS(...)
++# MACRO_POP_REQUIRED_VARS()
++
++# Copyright (c) 2006, Alexander Neundorf, &lt;<A HREF="https://lists.berlios.de/mailman/listinfo/php-qt-svn">neundorf at kde.org</A>&gt;
++#
++# Redistribution and use is allowed according to the terms of the BSD license.
++# For details see the accompanying COPYING-CMAKE-SCRIPTS file.
++
++MACRO(MACRO_PUSH_REQUIRED_VARS)
++
++   IF(NOT DEFINED _PUSH_REQUIRED_VARS_COUNTER)
++      SET(_PUSH_REQUIRED_VARS_COUNTER 0)
++   ENDIF(NOT DEFINED _PUSH_REQUIRED_VARS_COUNTER)
++
++   MATH(EXPR _PUSH_REQUIRED_VARS_COUNTER &quot;${_PUSH_REQUIRED_VARS_COUNTER}+1&quot;)
++
++   SET(_CMAKE_REQUIRED_INCLUDES_SAVE_${_PUSH_REQUIRED_VARS_COUNTER}    ${CMAKE_REQUIRED_INCLUDES})
++   SET(_CMAKE_REQUIRED_DEFINITIONS_SAVE_${_PUSH_REQUIRED_VARS_COUNTER} ${CMAKE_REQUIRED_DEFINITIONS})
++   SET(_CMAKE_REQUIRED_LIBRARIES_SAVE_${_PUSH_REQUIRED_VARS_COUNTER}   ${CMAKE_REQUIRED_LIBRARIES})
++   SET(_CMAKE_REQUIRED_FLAGS_SAVE_${_PUSH_REQUIRED_VARS_COUNTER}       ${CMAKE_REQUIRED_FLAGS})
++ENDMACRO(MACRO_PUSH_REQUIRED_VARS)
++
++MACRO(MACRO_POP_REQUIRED_VARS)
++
++# don't pop more than we pushed
++   IF(&quot;${_PUSH_REQUIRED_VARS_COUNTER}&quot; GREATER &quot;0&quot;)
++
++      SET(CMAKE_REQUIRED_INCLUDES    ${_CMAKE_REQUIRED_INCLUDES_SAVE_${_PUSH_REQUIRED_VARS_COUNTER}})
++      SET(CMAKE_REQUIRED_DEFINITIONS ${_CMAKE_REQUIRED_DEFINITIONS_SAVE_${_PUSH_REQUIRED_VARS_COUNTER}})
++      SET(CMAKE_REQUIRED_LIBRARIES   ${_CMAKE_REQUIRED_LIBRARIES_SAVE_${_PUSH_REQUIRED_VARS_COUNTER}})
++      SET(CMAKE_REQUIRED_FLAGS       ${_CMAKE_REQUIRED_FLAGS_SAVE_${_PUSH_REQUIRED_VARS_COUNTER}})
++
++      MATH(EXPR _PUSH_REQUIRED_VARS_COUNTER &quot;${_PUSH_REQUIRED_VARS_COUNTER}-1&quot;)
++   ENDIF(&quot;${_PUSH_REQUIRED_VARS_COUNTER}&quot; GREATER &quot;0&quot;)
++
++ENDMACRO(MACRO_POP_REQUIRED_VARS)
++
+
+Modified: trunk/examples/calculator/calculator.php
+===================================================================
+--- trunk/examples/calculator/calculator.php	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/examples/calculator/calculator.php	2007-07-11 09:41:04 UTC (rev 352)
+@@ -65,7 +65,7 @@
+         function __construct()
+         {
+             parent::__construct();
+-check_qobject($this);
++
+             $this-&gt;pendingAdditiveOperator = new QString();
+             $this-&gt;pendingMultiplicativeOperator = new QString();
+ 
+@@ -170,7 +170,7 @@
+                     return true;
+                 }
+             }
+-	    return parent::eventFilter($target, $event);
++            return parent::eventFilter($target, $event);
+         }
+ 
+         function digitClicked()
+
+Modified: trunk/examples/calculator/main.php
+===================================================================
+--- trunk/examples/calculator/main.php	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/examples/calculator/main.php	2007-07-11 09:41:04 UTC (rev 352)
+@@ -19,7 +19,6 @@
+ 
+     $calc = new Calculator();
+     $calc-&gt;show();
+-
+     $app-&gt;exec();
+ 
+ ?&gt;
+\ No newline at end of file
+
+Modified: trunk/php_qt/CMakeLists.txt
+===================================================================
+--- trunk/php_qt/CMakeLists.txt	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/php_qt/CMakeLists.txt	2007-07-11 09:41:04 UTC (rev 352)
+@@ -25,12 +25,8 @@
+     )
+ 
+ add_library(php_qt SHARED ${phpqt_LIB_SRCS})
++
+ target_link_libraries(php_qt ${QT_QTCORE_LIBRARY} QtSvg QtGui QtNetwork QtSql QtOpenGL QtXml QtUiTools ${QTDBUS_LIBRARY} ${QSCINTILLA_LIBRARIES} ${QWT_LIBRARIES} smokeqt)
+ set_target_properties(php_qt PROPERTIES PREFIX &quot;&quot;)
+-install(TARGETS php_qt DESTINATION ${PHP5_EXTENSION_DIR}/ )
+ 
+-add_library(iquip SHARED ${phpqt_LIB_SRCS})
+-target_link_libraries(iquip ${QT_QTCORE_LIBRARY} QtSvg QtGui QtNetwork QtSql QtOpenGL QtXml QtUiTools ${QTDBUS_LIBRARY} ${QSCINTILLA_LIBRARIES} ${QWT_LIBRARIES} smokewebqt)
+-set_target_properties(iquip PROPERTIES PREFIX &quot;&quot;)
+-install(TARGETS iquip DESTINATION ${PHP5_EXTENSION_DIR}/ )
+-
++install(TARGETS php_qt DESTINATION ${PHP5_EXTENSION_DIR}/ )
+
+Modified: trunk/php_qt/functions.cpp
+===================================================================
+--- trunk/php_qt/functions.cpp	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/php_qt/functions.cpp	2007-07-11 09:41:04 UTC (rev 352)
+@@ -140,6 +140,7 @@
+ 	// see marshall_basetypes.h, marshall_to_php&lt;SmokeClassWrapper&gt;
+  	zval_ptr_dtor(return_value_ptr);
+  	*(return_value_ptr) = obj;
++    zval_add_ref(return_value_ptr);
+     return;
+ 
+ }
+
+Modified: trunk/php_qt/marshall.h
+===================================================================
+--- trunk/php_qt/marshall.h	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/php_qt/marshall.h	2007-07-11 09:41:04 UTC (rev 352)
+@@ -21,8 +21,10 @@
+     virtual Action action() = 0;
+     virtual Smoke::StackItem &amp;item() = 0;
+     virtual zval* var() = 0;
++	virtual zval* var(zval* zval_ptr) = 0;
+     virtual void unsupported() = 0;
+     virtual Smoke *smoke() = 0;
++    virtual bool doAlloc() { return false; }
+     /**
+      * For return-values, next() does nothing.
+      * For FromRV, next() calls the method and returns.
+@@ -48,14 +50,12 @@
+ 	 */
+ 	virtual zval** return_value_ptr() = 0;
+ 
+-	const char* identifier;
+-
+ };
+ 
+ class SmokeEnumWrapper {
+ public:
+ 	Marshall *m;
+-};	
++};
+ 
+ class SmokeClassWrapper {
+ public:
+
+Modified: trunk/php_qt/marshall_basetypes.h
+===================================================================
+--- trunk/php_qt/marshall_basetypes.h	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/php_qt/marshall_basetypes.h	2007-07-11 09:41:04 UTC (rev 352)
+@@ -51,6 +51,10 @@
+ template &lt;class T&gt;
+ static void marshall_to_php(Marshall *m)
+ {
++	if(m-&gt;doAlloc()){
++		zval* z = (zval*) emalloc(sizeof(zval*));
++		m-&gt;var(z);
++	}
+ 	*(m-&gt;var()) = *primitive_to_php&lt;T&gt;( *smoke_ptr&lt;T&gt;(m) , m-&gt;var());
+ }
+ 
+@@ -157,10 +161,7 @@
+ 			smokephp_object* o = PHPQt::createOriginal(m-&gt;var(), p);
+ 			// overwrite the old one:
+ 			*(m-&gt;return_value_ptr()) = const_cast&lt;zval*&gt;(o-&gt;zval_ptr());
+-
+-			if(!strcmp(m-&gt;identifier, &quot;VirtualMethodCall&quot;)){
+-				((VirtualMethodCall*)m)-&gt;var(*m-&gt;return_value_ptr());
+-			}
++			m-&gt;var(*m-&gt;return_value_ptr());
+ 		}
+ 		return;
+ 
+@@ -175,27 +176,25 @@
+ 	    if (Z_TYPE_P(m-&gt;var()) == IS_OBJECT)
+ 	    {
+ 	    	_ce = Z_OBJCE_P(m-&gt;var());
+-		// object has to be casted
+-	    } else if(!strcmp(__className, &quot;QObject&quot;)) { // classname == QObject
+-			// cast the Qt object: from, to
++		//! object has to be casted
++	    } else if(!strcmp(__className, &quot;QObject&quot;)) {
++			//! cast the Qt object: from, to
+ 			__p = m-&gt;smoke()-&gt;cast(__p, m-&gt;smoke()-&gt;idClass(&quot;QObject&quot;), m-&gt;type().classId());
+-			// cast the php one
++			//! cast the php one
+ 			_ce = zend_fetch_class((char*) __qo-&gt;metaObject()-&gt;className(), strlen(__qo-&gt;metaObject()-&gt;className()), ZEND_FETCH_CLASS_AUTO TSRMLS_DC);
+ 
+-	    // fallback, already with correct type
++	    //! fallback, already with correct type
+ 	    } else {
+ 			_ce = zend_fetch_class(__className, __strLenClassName, ZEND_FETCH_CLASS_AUTO TSRMLS_DC);
+ 	    }
+-		smokephp_object *o;
+-		if(!strcmp(m-&gt;identifier, &quot;VirtualMethodCall&quot;)){
+-			zval* z = (zval*) emalloc(sizeof(zval));
+-// 			zval* z = (zval*) alloca(sizeof(zval));
+-			((VirtualMethodCall*) m)-&gt;var(z);
+-			o = PHPQt::createObject(m-&gt;var(), __p, _ce, m-&gt;type().classId());
+-			m-&gt;var()-&gt;refcount--;
+-		} else
+-		/*smokephp_object **/o = PHPQt::createObject(m-&gt;var(), __p, _ce, m-&gt;type().classId());
+ 
++		if(m-&gt;doAlloc())
++		{
++ 			zval* z = (zval*) emalloc(sizeof(zval));
++			m-&gt;var(z);
++		}
++		smokephp_object *o = PHPQt::createObject(m-&gt;var(), __p, _ce, m-&gt;type().classId());
++
+ //	    if(m-&gt;type().isConst() &amp;&amp; m-&gt;type().isRef()) {
+ 	    if(m-&gt;type().isRef())
+ 	    {
+
+Modified: trunk/php_qt/marshall_primitives.h
+===================================================================
+--- trunk/php_qt/marshall_primitives.h	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/php_qt/marshall_primitives.h	2007-07-11 09:41:04 UTC (rev 352)
+@@ -97,8 +97,8 @@
+ template &lt;&gt;
+ static zval* primitive_to_php&lt;int&gt;(int sv, zval* return_value)
+ {
+-        RETVAL_LONG(sv);
+-	return return_value;
++    RETVAL_LONG(sv);
++  	return return_value;
+ }
+ 
+ template &lt;&gt;
+
+Modified: trunk/php_qt/marshall_types.cpp
+===================================================================
+--- trunk/php_qt/marshall_types.cpp	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/php_qt/marshall_types.cpp	2007-07-11 09:41:04 UTC (rev 352)
+@@ -26,6 +26,8 @@
+ #include &quot;marshall_types.h&quot;
+ #include &quot;phpqt_internals.h&quot;
+ 
++extern zval* activeScope;
++
+ void
+ smokeStackToQtStack(Smoke::Stack stack, void ** o, int items, MocArgument* args)
+ {
+@@ -211,7 +213,6 @@
+ MethodReturnValueBase::MethodReturnValueBase(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval** return_value_ptr) :
+ 	_smoke(smoke), _method(meth), _stack(stack), _return_value_ptr(return_value_ptr)
+ {
+-	identifier = &quot;MethodReturnValueBase&quot;;
+ 	_st.set(_smoke, method().ret);
+ }
+ 
+@@ -263,6 +264,14 @@
+ 	return _retval;
+ }
+ 
++zval*
++MethodReturnValueBase::var(zval* zval_ptr)
++{
++	_retval = zval_ptr;
++	return _retval;
++}
++
++
+ const char *
+ MethodReturnValueBase::classname()
+ {
+@@ -282,8 +291,6 @@
+ VirtualMethodReturnValue::VirtualMethodReturnValue(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval* retval) :
+ 	MethodReturnValueBase(smoke,meth,stack,NULL)
+ {
+-	identifier = &quot;VirtualMethodReturnValue&quot;;
+-
+ 	_retval = retval;
+ 	Marshall::HandlerFn fn = getMarshallFn(type());
+ 	(*fn)(this);
+@@ -302,7 +309,6 @@
+ MethodReturnValue::MethodReturnValue(Smoke *smoke, Smoke::Index meth, Smoke::Stack stack, zval* retval, zval** return_value_ptr) :
+ 	MethodReturnValueBase(smoke,meth,stack,return_value_ptr)/*, _return_value_ptr(return_value_ptr)*/
+ {
+-	identifier = &quot;MethodReturnValue&quot;;
+ 	_retval = retval;
+ 	Marshall::HandlerFn fn = getMarshallFn(type());
+ 	(*fn)(this);
+@@ -402,7 +408,6 @@
+ {
+ 	__sp = sp;
+   	_args = _smoke-&gt;argumentList + method().args;
+-  	 identifier = &quot;VirtualMethodCall&quot;;
+ }
+ 
+ VirtualMethodCall::~VirtualMethodCall()
+@@ -440,7 +445,7 @@
+ 	if (_called) return;
+ 	_called = true;
+ 
+-	zval* retval = PHPQt::callPHPMethod(_obj, (char*) _smoke-&gt;methodNames[method().name], items(), __sp);
++	zval* retval = PHPQt::callPHPMethod(_obj, _smoke-&gt;methodNames[method().name], items(), __sp);
+ 	VirtualMethodReturnValue r(_smoke, _method, _stack, retval);
+ }
+ 
+@@ -457,8 +462,6 @@
+ MethodCall::MethodCall(Smoke *smoke, Smoke::Index method, zval* target, zval ***sp, int items, zval *retval, zval** return_value_ptr) :
+  	MethodCallBase(smoke,method,return_value_ptr), _target(target), _current_object(0), _sp(sp), _items(items), _retval(retval)
+ {
+-
+-	identifier = &quot;MethodCall&quot;;
+     if(target != NULL)
+     {
+ 		if (PHPQt::SmokePHPObjectExists(_target))
+@@ -497,6 +500,12 @@
+ 	return (zval*) *_sp[_cur];
+ }
+ 
++zval*
++MethodCall::var(zval* zval_ptr)
++{
++	return var();
++}
++
+ void
+ MethodCall::callMethod() {
+ 	if(_called) return;
+@@ -549,7 +558,6 @@
+ 
+ SigSlotBase::SigSlotBase(zval*** sp) : _cur(-1), _called(false), _sp(sp)
+ {
+-	identifier = &quot;SigSlotBase&quot;;
+ 	_stack = new Smoke::StackItem[_items -1];
+ }
+ 
+@@ -663,6 +671,7 @@
+ 	}
+ 
+ 	zval** return_value_ptr(){};
++ 	zval* var(zval* zval_ptr) { return var(); }
+ 
+ };
+ 
+@@ -674,7 +683,6 @@
+ InvokeSlot::InvokeSlot(zval* obj, int slotname, zval*** args, void ** o) : SigSlotBase(args),
+     _obj(obj), _slotname(slotname), _o(o)
+ {
+-	identifier = &quot;InvokeSlot&quot;;
+ 	_sp = (zval ***) safe_emalloc(sizeof(zval), _items - 1, 0);
+ 	_sp = args;
+ 	copyArguments();
+@@ -733,7 +741,6 @@
+ EmitSignal::EmitSignal(QObject *obj, int id, int items, MocArgument *mocStack, zval ***sp, zval * result) :
+     _obj(obj), _id(id)
+ {
+-	identifier = &quot;EmitSignal&quot;;
+ 	_items = items + 1;
+ 	_args = mocStack;
+ 	_id = id;
+
+Modified: trunk/php_qt/marshall_types.h
+===================================================================
+--- trunk/php_qt/marshall_types.h	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/php_qt/marshall_types.h	2007-07-11 09:41:04 UTC (rev 352)
+@@ -50,6 +50,7 @@
+ 	bool cleanup();
+ 	void unsupported();
+ 	zval* var();
++	zval* var(zval* zval_ptr);
+ 	zval** return_value_ptr();
+ 
+ protected:
+@@ -135,6 +136,7 @@
+ 	int items();
+ 	void callMethod();
+ 	bool cleanup();
++	bool doAlloc() { return true; }
+ 
+ 	bool makeObject;
+ 
+@@ -154,6 +156,7 @@
+ 	~MethodCall();
+ 	Marshall::Action action();
+ 	zval* var();
++	zval* var(zval* zval_ptr);
+ 	void callMethod();
+ 	int items();
+ 	bool cleanup();
+@@ -213,6 +216,7 @@
+ 	void next();
+ 	SmokeType type();
+ 	zval* var();
++	zval* var(zval* zval_ptr) { return var(); }
+ 	void unsupported();
+ 	Smoke* smoke();
+ 	const MocArgument &amp;arg();
+
+Modified: trunk/php_qt/php_qt.cpp
+===================================================================
+--- trunk/php_qt/php_qt.cpp	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/php_qt/php_qt.cpp	2007-07-11 09:41:04 UTC (rev 352)
+@@ -150,6 +150,9 @@
+ };
+ 
+ ZEND_METHOD(php_qt_generic_class, emit){
++  smokephp_object* o = PHPQt::getSmokePHPObjectFromZval(const_cast&lt;const zval*&gt;(getThis()));
++  qDebug() &lt;&lt; o-&gt;meta();
++
+ }
+ 
+ ZEND_METHOD(php_qt_generic_class, __toString)
+@@ -160,11 +163,8 @@
+ ZEND_METHOD(php_qt_generic_class, __destruct)
+ {
+ 	if(PHPQt::SmokePHPObjectExists(getThis())) {
+-qDebug() &lt;&lt; &quot;destruct&quot; &lt;&lt; getThis();
+-
+  		smokephp_object *o = PHPQt::getSmokePHPObjectFromZval(getThis());
+-
+-//		its not a reference
++		//! its not a reference
+ 		if(!PZVAL_IS_REF(getThis()))
+ 		{
+ 			o-&gt;setAllocated(false);
+@@ -188,6 +188,7 @@
+ // 	    ce_parent = ce-&gt;parent;
+ 	    ce = ce-&gt;parent; // orig
+     }
++
+     activeCe = ce;
+ 
+     // get arguments
+@@ -276,6 +277,7 @@
+         } else {
+         	activeScope = getThis();
+         	ce = Z_OBJCE_P(getThis());
++        	activeCe = ce;
+         }
+     // static
+     } else {
+@@ -305,7 +307,7 @@
+ 	    if(getThis()){
+ 		smokephp_object* o = PHPQt::getSmokePHPObjectFromZval(getThis());
+ 		if(o-&gt;meta() != NULL){
+-		    QMetaObject* mo = (QMetaObject*) o-&gt;meta();
++		    QMetaObject* mo = static_cast&lt;QMetaObject*&gt;(o-&gt;meta());
+ 		    QByteArray signalname(methodNameStack.top()-&gt;constData());
+ 		    signalname.replace(&quot;$&quot;,&quot;&quot;);
+ 		    signalname.replace(&quot;#&quot;,&quot;&quot;);
+
+Modified: trunk/php_qt/php_qt.h
+===================================================================
+--- trunk/php_qt/php_qt.h	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/php_qt/php_qt.h	2007-07-11 09:41:04 UTC (rev 352)
+@@ -131,7 +131,8 @@
+ 			m_ce_ptr(ce),
+ 			m_parent_ce_ptr(ce),
+ 			m_zval_ptr(zval_ptr),
+-			m_allocated(true)
++			m_allocated(true),
++			m_meta(0)
+ 	{
+ 	}
+ 
+
+Modified: trunk/php_qt/phpqt_internals.cpp
+===================================================================
+--- trunk/php_qt/phpqt_internals.cpp	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/php_qt/phpqt_internals.cpp	2007-07-11 09:41:04 UTC (rev 352)
+@@ -48,7 +48,7 @@
+ 	int offset = d-&gt;methodCount();
+ 
+ #if MOC_DEBUG
+-	cout &lt;&lt; &quot;qt_metacall &quot; &lt;&lt; so-&gt;ce_ptr-&gt;name &lt;&lt; endl;
++	qDebug() &lt;&lt; &quot;qt_metacall &quot; &lt;&lt; so-&gt;ce_ptr()-&gt;name &lt;&lt; endl;
+ #endif
+ 
+ 	// call the C++ one
+@@ -58,7 +58,7 @@
+ 
+ 		// methodId
+ 		Smoke::Index nameId = so-&gt;smoke()-&gt;idMethodName(&quot;qt_metacall$$?&quot;);
+-		Smoke::Index method = so-&gt;smoke()-&gt;findMethod(so-&gt;classId(), nameId);
++ 		Smoke::Index method = so-&gt;smoke()-&gt;findMethod(so-&gt;classId(), nameId);
+ 
+ 		if(method &gt; 0){
+ 			Smoke::Method &amp;m = so-&gt;smoke()-&gt;methods[so-&gt;smoke()-&gt;methodMaps[method].method];
+@@ -176,7 +176,7 @@
+ 
+ 
+ zval*
+-PHPQt::callPHPMethod(const zval* this_ptr, char* methodName, zend_uint param_count, zval** args)
++PHPQt::callPHPMethod(const zval* this_ptr, const char* methodName, zend_uint param_count, zval** args)
+ {
+ 
+ 	if(this_ptr == NULL){
+@@ -185,7 +185,7 @@
+ 
+     zval *function_name;
+     MAKE_STD_ZVAL(function_name);
+-    ZVAL_STRING(function_name,methodName,1);
++    ZVAL_STRING(function_name,const_cast&lt;char*&gt;(methodName),1);
+ 
+     zval* retval;
+     MAKE_STD_ZVAL(retval);
+@@ -425,15 +425,8 @@
+ PHPQt::createOriginal(zval* zval_ptr, void* ptr)
+ {
+ 	smokephp_object* o = getSmokePHPObjectFromQt(ptr);
+-/* 		ZVAL_ZVAL(zval_ptr, o-&gt;zval_ptr, 1, 0);
+-// 		zval_ptr-&gt;is_ref = 1;
+-		Z_OBJ_HT_P(zval_ptr) = &amp;php_qt_handler;
+-		zval_x_smokephp.insert(zval_ptr, o);*/
+-	Z_OBJ_HT_P(zval_ptr) = &amp;php_qt_handler;
+  	zval_ptr = const_cast&lt;zval*&gt;(o-&gt;zval_ptr());
+-
+ 	zval_add_ref(&amp;zval_ptr);
+-
+ 	return o;
+ }
+ 
+
+Modified: trunk/php_qt/phpqt_internals.h
+===================================================================
+--- trunk/php_qt/phpqt_internals.h	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/php_qt/phpqt_internals.h	2007-07-11 09:41:04 UTC (rev 352)
+@@ -32,7 +32,7 @@
+ 
+ void 				destroyHashtable(zend_rsrc_list_entry *rsrc);
+ 
+-zval* 				callPHPMethod(const zval* zend_ptr, char* methodname, zend_uint param_count, zval** params);
++zval* 				callPHPMethod(const zval* zend_ptr, const char* methodname, zend_uint param_count, zval** params);
+ bool 				methodExists(const zend_class_entry* ce_ptr, const char* methodname);
+ bool 				getMocData(zval* this_ptr, char* classname, const QMetaObject* superdata, QMetaObject* metachar, QString* meta_stringdata, uint* signature);
+ int					metacall(smokephp_object* this_ptr, Smoke::StackItem* args, QMetaObject::Call _c, int _id, void **_a);
+
+Modified: trunk/php_qt/smokephp.cpp
+===================================================================
+--- trunk/php_qt/smokephp.cpp	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/php_qt/smokephp.cpp	2007-07-11 09:41:04 UTC (rev 352)
+@@ -51,7 +51,6 @@
+     PHPQtSmokeBinding(Smoke *s) : SmokeBinding(s) {}
+ 
+     virtual void deleted(Smoke::Index classId, void* ptr) {
+-qDebug(&quot;deleted&quot;);
+         if(PHPQt::SmokePHPObjectExists(ptr)){
+ 			smokephp_object *o = (smokephp_object*) PHPQt::getSmokePHPObjectFromQt(ptr);
+ 			if(!o-&gt;allocated()){
+@@ -87,11 +86,10 @@
+ 
+ 		if(PHPQt::methodExists(o-&gt;ce_ptr(), (char*) methodName)){
+ 			activeScope = const_cast&lt;zval*&gt;(o-&gt;zval_ptr());
+-			activeCe = Z_OBJCE_P(activeScope);
+-
++			activeCe = const_cast&lt;zend_class_entry*&gt;(o-&gt;ce_ptr());
+ 			zval* zmem = ALLOCA_N(zval, smoke-&gt;methods[method].numArgs);
+-// 			zval* zmem = (zval*) safe_emalloc(sizeof(zval), smoke-&gt;methods[method].numArgs,0);
+-		    VirtualMethodCall c(smoke, method, args, activeScope, &amp;zmem, &amp;activeScope);
++			zval* tmp = (zval*) emalloc(sizeof(zval));
++ 		    VirtualMethodCall c(smoke, method, args, activeScope, &amp;zmem, &amp;tmp);
+ 			c.next();
+  			return true;
+ 		}
+@@ -131,7 +129,7 @@
+ 	php_error(E_ERROR,&quot;could not initialize smoke (no class definitions)&quot;);
+     }
+ 
+-    PQ::smoke()-&gt;binding = new PHPQtSmokeBinding(PQ::smoke());
++	PQ::smoke()-&gt;binding = new PHPQtSmokeBinding(PQ::smoke());
+ 
+ }
+ 
+
+Added: trunk/prepare_svn.sh
+===================================================================
+--- trunk/prepare_svn.sh	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/prepare_svn.sh	2007-07-11 09:41:04 UTC (rev 352)
+@@ -0,0 +1,4 @@
++#!/bin/bash
++
++svn co <A HREF="svn://anonsvn.kde.org/home/kde/trunk/KDE/kdebindings/kalyptus">svn://anonsvn.kde.org/home/kde/trunk/KDE/kdebindings/kalyptus</A>
++svn co <A HREF="svn://anonsvn.kde.org/home/kde/trunk/KDE/kdebindings/smoke">svn://anonsvn.kde.org/home/kde/trunk/KDE/kdebindings/smoke</A>
+
+
+Property changes on: trunk/prepare_svn.sh
+___________________________________________________________________
+Name: svn:executable
+   + *
+
+Added: trunk/tests/QtApplicationTestCase.php
+===================================================================
+--- trunk/tests/QtApplicationTestCase.php	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/tests/QtApplicationTestCase.php	2007-07-11 09:41:04 UTC (rev 352)
+@@ -0,0 +1,111 @@
++&lt;?php
++
++    /**
++     */
++
++    require_once('PHPUnit/Framework/TestCase.php');
++    require_once('PHPUnit/Framework/TestSuite.php');
++
++    class MyApplication extends QApplication
++    {
++
++	private $slots = array(&quot;mySlot()&quot;);
++	private $signals = array(&quot;&quot;);
++    
++	public function __construct($argc, $argv)
++	{
++	    parent::__construct($argc, $argv);
++	}
++	
++	function mySlot()
++	{
++	    echo &quot; mySlot() &quot;;
++	}
++
++    }
++
++    class MyWidget extends QWidget
++    {
++	private $button;    
++
++	public function __construct()
++	{
++	    parent::__construct();
++	    $this-&gt;button = new QPushButton(tr(&quot;quit&quot;), $this);
++	    $this-&gt;connect($this-&gt;button, SIGNAL('clicked()'), QCoreApplication::instance(), SLOT('quit()'));
++	}
++    
++    }
++
++    class QtApplicationTestCase extends PHPUnit_Framework_TestCase {
++
++	public function __construct($name) {
++	    parent::__construct($name);
++	}
++
++	// try to get the same object
++	function testObjectBack() {
++	    echo &quot;\ntesting getting object back&quot;;
++	    $argc=1;
++	    $argv=array(&quot;argv&quot;);
++	    $app = new QApplication($argc,$argv);
++	    $this-&gt;assertEquals(is_object(QApplication::instance()), true, &quot;Could not fetch instance of QApplication!&quot;);
++	    // we need this, otherwise ZE would destroy $app too early
++	    QTimer::singleShot(100,$app,SLOT(&quot;quit()&quot;));
++	    echo &quot; passed&quot;;
++	}
++
++	// try to create and check a reference
++	function testReference() {
++	    echo &quot;\ntesting getting a reference&quot;;
++	    $argc=1;
++	    $argv=array(&quot;argv&quot;);
++	    $app = new QApplication($argc,$argv);
++
++	    // set the object name to 'original'
++	    $app-&gt;setObjectName(new QString(&quot;original&quot;));
++	    // create a reference
++	    $app_ref = &amp;$app;
++	    // set the reference's object name
++	    $app_ref-&gt;setObjectName(new QString(&quot;reference&quot;));
++	    // now we expect the reference name at the original
++	    $this-&gt;assertEquals($app-&gt;objectName()-&gt;__toString(), &quot;reference&quot;, &quot;Could not fetch instance of QApplication!&quot;);
++	    QTimer::singleShot(100,$app,SLOT(&quot;quit()&quot;));
++	    echo &quot; passed&quot;;
++	}
++
++	function testVirtualMethod() {
++	    echo &quot;\ntesting calling a virtual method&quot;;
++
++    	    $argc=1;
++	    $argv=array(&quot;argv&quot;);
++	    $app = new MyApplication($argc, $argv);
++
++	    $myWidget = new MyWidget();
++	    $myWidget-&gt;show();
++	    $app-&gt;exec();
++
++	    echo &quot; passed&quot;;
++
++
++	}
++
++	function testCallingSlot()
++	{
++#return;
++//            $clickedButton = qobject_cast($this-&gt;sender(), new QToolButton());
++
++    	    $argc=1;
++	    $argv=array(&quot;argv&quot;);
++	    $app = new MyApplication($argc, $argv);
++
++	    QTimer::singleShot(100,$app,SLOT(&quot;mySlot()&quot;));
++print &quot;OK&quot;;
++	    QTimer::singleShot(100,$app,SLOT(&quot;quit()&quot;));
++print &quot;OK&quot;;
++#	    $app-&gt;exec();
++	}
++
++    }
++
++?&gt;
+\ No newline at end of file
+
+Added: trunk/tests/QtStressTestCase.php
+===================================================================
+--- trunk/tests/QtStressTestCase.php	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/tests/QtStressTestCase.php	2007-07-11 09:41:04 UTC (rev 352)
+@@ -0,0 +1,32 @@
++&lt;?php
++
++    /**
++     *	This file tests if the module loads properly
++     */
++
++    require_once('PHPUnit/Framework/TestCase.php');
++    require_once('PHPUnit/Framework/TestSuite.php');
++
++
++    class QtStressTestCase extends PHPUnit_Framework_TestCase {
++    
++	public function __construct($name) {
++	    parent::__construct($name);
++	}
++    
++	function testCreatingObjects() {
++//	    for($i = 0; $i &lt; 8000; $i++){
++
++	    while(true){
++	    	    $b = new QObject();
++	    $b-&gt;setObjectName(&quot;hallo&quot;);
++		echo $i++.&quot;\n&quot;;
++		echo $b-&gt;objectName();
++			    $b-&gt;__destruct();
++	    }
++
++	}
++
++    }    
++    
++?&gt;
+\ No newline at end of file
+
+Added: trunk/tests/phpqt_from_scratch.sh
+===================================================================
+--- trunk/tests/phpqt_from_scratch.sh	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/tests/phpqt_from_scratch.sh	2007-07-11 09:41:04 UTC (rev 352)
+@@ -0,0 +1,281 @@
++#!/bin/bash
++
++#############################################################
++#
++# PHP-Qt - (C) 2007 Thomas Moenicke
++# please report bugs to tm at php-qt dot org
++#
++# this script builds and installs everything from scratch 
++# in a sandbox, also the latest PHP-Qt from svn
++# The goal is to get a clean environment for testing
++#
++# you will get: 
++#      libxml2
++#      dbus
++#      CMake
++#      Qt 
++#      PHP
++#      PHPUnit
++#      PHP-Qt (SVN)
++#
++# you need: bash, svn, wget, dbus (headers + binaries)
++# dev and libs:
++#  dbus (&gt;0.63) 
++#  libpng
++#  opengl
++#
++# usage: look at the following lines and comment out 
++# things you already have in your system
++#
++# * if you want to use your own Qt, make sure QTDIR and PATH
++#   are set correctly
++# * for your own PHP, make sure php-config is in PATH and
++#   take care for phpunit (comment it out too if you dont
++#   want it to be installed by this script)
++# * if you keep the downloads directory, the archive files 
++#   wont be downloaded again
++# * remove all other subdirs to get a clean environment
++#
++#############################################################
++
++# comment out here
++build_additionals=true
++build_cmake=true
++build_qt=true # takes a long time
++build_php=true
++build_phpunit=true
++build_phpqt=true
++
++#############################################################
++#
++# further configurations
++#
++
++mkdir -p build
++cd build
++
++cmake_version='cmake-2.4.6'
++cmake_url='<A HREF="http://www.cmake.org/files/v2.4/">http://www.cmake.org/files/v2.4/</A>'$cmake_version'.tar.gz'
++
++qt_version='qt-x11-opensource-src-4.3.0'
++# qt_url='<A HREF="ftp://ftp.fu-berlin.de/unix/X11/gui/Qt/source/">ftp://ftp.fu-berlin.de/unix/X11/gui/Qt/source/</A>'$qt_version'.tar.gz' # Berlin
++# qt_url='<A HREF="http://ftp.silug.org/mirrors/ftp.trolltech.com/qt/source/">http://ftp.silug.org/mirrors/ftp.trolltech.com/qt/source/</A>'$qt_version'.tar.gz' # Illinois
++qt_url='<A HREF="http://wftp.tu-chemnitz.de/pub/Qt/qt/source/">http://wftp.tu-chemnitz.de/pub/Qt/qt/source/</A>'$qt_version'.tar.gz' # Chemnitz
++
++php_version='php-5.2.3'
++# php_url='<A HREF="http://de3.php.net/get/">http://de3.php.net/get/</A>'$php_version'.tar.gz/from/us.php.net/mirror' # US
++php_url='<A HREF="http://de3.php.net/get/">http://de3.php.net/get/</A>'$php_version'.tar.gz/from/this/mirror' # EU
++php_configureoptions='--enable-cli --with-libxml-dir=$opt --with-pear' # not necessary
++
++phpunit_server='pear.phpunit.de'
++
++phpqt_url='<A HREF="svn://anonsvn.kde.org/home/kde/trunk/playground/bindings/phpqt">svn://anonsvn.kde.org/home/kde/trunk/playground/bindings/phpqt</A>'
++
++# variables
++timestamp=$(date +&quot;%Y%m%dT%H%M%SZ&quot;)
++echo &quot;using timestamp &quot;$timestamp
++
++workdir=$PWD
++downloads=$workdir/downloads
++opt=$workdir/opt
++workbench=$workdir/workbench
++log=$workdir/log/$timestamp
++errorlog=$workdir/log/$timestamp/error
++
++# prepare
++mkdir -p $downloads
++mkdir -p $opt
++mkdir -p $workbench
++mkdir -p log
++mkdir -p $log
++#mkdir $errorlog
++
++#############################################################
++#
++# create environment
++#
++
++echo &quot;
++#!/bin/bash
++
++export PATH=$opt/bin:$PATH
++export LD_LIBRARY_PATH=$opt/lib:$LD_LIBRARY_PATH
++# export CXX=icecc # icecream
++export PKG_CONFIG_PATH=$opt/lib/pkgconfig:$PKG_CONFIG_PATH
++&quot; &gt; $workdir/sourceme.sh
++
++source $workdir/sourceme.sh
++env &gt; $log/env.log
++
++#############################################################
++#
++# logging
++#
++module=''
++count=0
++function runCommand() {
++    count=$(($count+1))
++    print1=`echo $1 | sed 's/\.\///'`$count # for a usable name
++    $* &gt; $log/$module'_'$print1.log 2&gt; $log/$module'_'$print1'_error'.log
++}
++
++function buildSimple() {
++    module=$1
++    moduleVersion=$2
++    moduleUrl=$3
++    echo &quot;Getting &quot;$module $moduleVersion
++    cd $downloads;
++    if [ -r $downloads/$moduleVersion.tar.gz ]
++	then
++	echo &quot;already downloaded, reusing file&quot;
++	else
++	wget $moduleUrl
++	fi
++
++    echo &quot;Unpacking &quot;$module
++    cd $workbench
++    runCommand tar -xzvf $downloads/$moduleVersion.tar.gz
++
++    echo &quot;Building &quot;$module
++    cd $moduleVersion
++    runCommand ./configure --prefix=$opt
++    runCommand make
++    runCommand make install
++    cd $workdir    
++}
++
++#############################################################
++#
++# time to build that all, at first:
++#
++# name filename url
++
++if [ $build_additionals ]
++then
++    buildSimple libxml libxml2-2.6.29 <A HREF="ftp://xmlsoft.org/libxml2/libxml2-2.6.29.tar.gz">ftp://xmlsoft.org/libxml2/libxml2-2.6.29.tar.gz</A>          
++    buildSimple dbus dbus-1.0.2 <A HREF="http://dbus.freedesktop.org/releases/dbus/dbus-1.0.2.tar.gz">http://dbus.freedesktop.org/releases/dbus/dbus-1.0.2.tar.gz</A>
++fi
++
++# get and build cmake
++if [ $build_cmake ]
++then
++    module='CMake'
++    echo &quot;Getting cmake&quot;
++    cd $downloads;
++    if [ -r $downloads/$cmake_version.tar.gz ]
++	then
++	echo &quot;already downloaded, reusing file&quot;
++	else
++	wget $cmake_url
++	fi
++
++    echo &quot;Unpacking CMake&quot;
++    cd $workbench
++    runCommand tar -xzvf $downloads/$cmake_version'.tar.gz'
++
++    cd $cmake_version
++    echo &quot;Configuring CMake&quot;
++    runCommand ./configure
++
++    echo &quot;Building CMake&quot;
++    runCommand make
++
++    echo &quot;Installing CMake&quot;
++    runCommand make install
++    cd $workdir
++fi
++
++# get and build Qt
++# might take a longer time
++if [ $build_qt ]
++then
++    module='Qt'
++    echo &quot;Getting Qt&quot;
++    cd $downloads
++    if [ -r $downloads/$qt_version.tar.gz ]
++	then
++	echo &quot;already downloaded, reusing file&quot;
++	else
++	wget $qt_url
++	fi
++
++    echo &quot;Unpacking Qt&quot;
++    cd $workbench
++    runCommand tar -xzvf $downloads/$qt_version.tar.gz
++
++    echo &quot;Building Qt&quot;
++    cd $qt_version
++
++    runCommand ./configure -qt-gif -no-exceptions -debug -no-separate-debug-info -fast \
++   -system-libpng -system-libjpeg -system-zlib -qdbus -nomake examples \
++   -nomake demos -prefix $opt -confirm-license -opengl
++
++    runCommand make
++    runCommand make install
++    cd $workdir
++fi
++
++# Get and build php
++if [ $build_php ]
++then
++    module='PHP'
++    echo &quot;Getting PHP&quot;
++    cd $downloads
++    if [ -r $downloads/$php_version.tar.gz ]
++	then
++	echo &quot;already downloaded, reusing file&quot;
++	else
++	wget $php_url
++	fi
++
++    echo &quot;Unpacking PHP&quot;
++    cd $workbench
++    runCommand tar -xzvf $downloads/$php_version.tar.gz
++
++    echo &quot;Building PHP&quot;
++    cd $php_version/
++    runCommand ./configure --prefix=$opt $php_configureoptions
++    runCommand make
++    runCommand make install
++    runCommand make install-pear
++
++    cp php.ini-recommended $opt/lib/php.ini
++    echo 'extension_dir = '$workdir'/opt/lib/php/extensions/no-debug-non-zts-20060613/' &gt;&gt; $opt/lib/php.ini
++    echo 'qt.codec = Latin1' &gt;&gt; $opt/lib/php.ini
++    echo 'extension = php_qt.so' &gt;&gt; $opt/lib/php.ini
++    cd $workdir
++fi
++
++# get and build phpunit
++if [ $build_phpunit ]
++then
++    module='PEAR'
++    echo &quot;Getting and installing PEAR&quot;
++    runCommand pear channel-discover $phpunit_server
++    runCommand pear install phpunit/PHPUnit
++    cd $workdir
++fi
++
++# get and build phpqt
++if [ $build_phpqt ]
++then
++    module='PHPQt'
++    echo &quot;Getting PHP-Qt&quot;
++    cd $workbench
++    runCommand svn co $phpqt_url
++    mkdir -p build_phpqt
++    cd phpqt/
++    runCommand ./prepare_svn.sh
++    cd $workbench/build_phpqt
++    echo &quot;Building PHP-Qt&quot;
++    runCommand cmake -DCMAKE_INSTALL_PREFIX=$opt ../phpqt
++    runCommand make
++    runCommand make install
++    cd $workbench/phpqt/tests
++    runCommand phpunit QtLoadModuleTestCase.php
++    echo &quot;running Unittests&quot;
++    phpunit QtBasicTestCase.php
++#    phpunit QtApplicationTestCase.php
++#    phpunit QtStressTestCase.php
++    cd $workdir
++fi
+
+
+Property changes on: trunk/tests/phpqt_from_scratch.sh
+___________________________________________________________________
+Name: svn:executable
+   + *
+
+Added: trunk/tutorials/t8/cannonfield.php
+===================================================================
+--- trunk/tutorials/t8/cannonfield.php	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/tutorials/t8/cannonfield.php	2007-07-11 09:41:04 UTC (rev 352)
+@@ -0,0 +1,59 @@
++&lt;?php
++
++    /****************************************************************
++    **
++    ** Qt tutorial 8
++    **
++    ** original:
++    ** <A HREF="http://doc.trolltech.com/4.1/tutorial-t8.html">http://doc.trolltech.com/4.1/tutorial-t8.html</A>
++    **
++    ****************************************************************/
++
++    if(!extension_loaded('php_qt')) {
++        dl('php_qt.' . PHP_SHLIB_SUFFIX);
++    }
++
++    class CannonField extends QWidget
++    {
++
++        private $slots = array(&quot;setAngle(int)&quot;);
++        private $signals = array(&quot;angleChanged(int)&quot;);
++
++	private $currentAngle = 0;
++
++	public function __construct() 
++	{
++	    parent::__construct();
++
++	    $this-&gt;currentAngle = 45;
++
++	    $this-&gt;setPalette(new QPalette(new QColor(250, 250, 200)));
++	    $this-&gt;setAutoFillBackground(true);
++
++	}
++
++	public function angle() { return $this-&gt;currentAngle; }
++
++	public function setAngle($angle)
++	{
++	    if ($angle &lt; 5)
++                $angle = 5;
++	    if ($angle &gt; 70)
++		$angle = 70;
++	    if ($this-&gt;currentAngle == $angle)
++		return;
++	    $this-&gt;currentAngle = $angle;
++	    $this-&gt;update();
++	    $this-&gt;emit($this-&gt;angleChanged($this-&gt;currentAngle));
++
++	}
++
++	protected function paintEvent ($event) {
++	    $this-&gt;painter = new QPainter($this);
++            $this-&gt;painter-&gt;drawText(200, 200,
++	                        tr(&quot;Angle = &quot;) . QString::number($this-&gt;currentAngle));
++	}
++
++    }
++
++?&gt;
+\ No newline at end of file
+
+Added: trunk/tutorials/t8/lcdrange.php
+===================================================================
+--- trunk/tutorials/t8/lcdrange.php	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/tutorials/t8/lcdrange.php	2007-07-11 09:41:04 UTC (rev 352)
+@@ -0,0 +1,71 @@
++&lt;?php
++
++    /****************************************************************
++    **
++    ** Qt tutorial 8
++    **
++    ** original:
++    ** <A HREF="http://doc.trolltech.com/4.1/tutorial-t8.html">http://doc.trolltech.com/4.1/tutorial-t8.html</A>
++    **
++    ****************************************************************/
++
++    if(!extension_loaded('php_qt')) {
++        dl('php_qt.' . PHP_SHLIB_SUFFIX);
++    }
++
++    class LCDRange extends QWidget
++    {
++
++        private $slots = array(&quot;setValue(int)&quot;, &quot;setRange(int, int)&quot;);
++        private $signals = array(&quot;valueChanged(int)&quot;);
++
++	private $slider;
++
++	public function __construct() 
++	{
++	    parent::__construct();
++
++	    $this-&gt;lcd = new QLCDNumber(2);
++	    $this-&gt;lcd-&gt;setSegmentStyle(QLCDNumber::Filled);
++
++	    $this-&gt;slider = new QSlider(Qt::Horizontal);
++	    $this-&gt;slider-&gt;setRange(0, 99);
++	    $this-&gt;slider-&gt;setValue(0);
++
++	    $this-&gt;connect($this-&gt;slider, SIGNAL('valueChanged(int)'), $this-&gt;lcd, SLOT('display(int)'));
++	    $this-&gt;connect($this-&gt;slider, SIGNAL('valueChanged(int)'), $this, SIGNAL('valueChanged(int)'));
++
++	    $layout = new QVBoxLayout();
++	    $layout-&gt;addWidget($this-&gt;lcd);
++	    $layout-&gt;addWidget($this-&gt;slider);
++	    $this-&gt;setLayout($layout);
++
++	    $this-&gt;setFocusProxy($this-&gt;slider);
++	}
++
++	public function value()
++	{
++	    return $this-&gt;slider-&gt;value();
++	}
++	
++	public function setValue($value)
++	{
++	    $this-&gt;slider-&gt;setValue($value);
++	}
++		
++	public function setRange($minValue, $maxValue)
++	{
++	    if ($minValue &lt; 0 || $maxValue &gt; 99 || $minValue &gt; $maxValue) {
++/*		qWarning(&quot;LCDRange::setRange(%d, %d)\n&quot;
++		    &quot;\tRange must be 0..99\n&quot;
++		    &quot;\tand minValue must not be greater than maxValue&quot;,
++		    minValue, maxValue);
++*/
++		return;
++	    }
++	    $this-&gt;slider-&gt;setRange($minValue, $maxValue);
++	}
++
++    };
++
++?&gt;
+\ No newline at end of file
+
+Added: trunk/tutorials/t8/main.php
+===================================================================
+--- trunk/tutorials/t8/main.php	2007-06-20 09:32:29 UTC (rev 351)
++++ trunk/tutorials/t8/main.php	2007-07-11 09:41:04 UTC (rev 352)
+@@ -0,0 +1,57 @@
++&lt;?php
++
++    /****************************************************************
++    **
++    ** Qt tutorial 8
++    **
++    ** original:
++    ** <A HREF="http://doc.trolltech.com/4.1/tutorial-t8.html">http://doc.trolltech.com/4.1/tutorial-t8.html</A>
++    **
++    ****************************************************************/
++
++    if(!extension_loaded('php_qt')) {
++        dl('php_qt.' . PHP_SHLIB_SUFFIX);
++    }
++
++    require_once('cannonfield.php');
++    require_once('lcdrange.php');
++
++    class MyWidget extends QWidget {
++
++	public function __construct() {
++	    parent::__construct();
++
++	    $quit = new QPushButton(tr(&quot;Quit&quot;));
++    	    $quit-&gt;setFont(new QFont(&quot;Times&quot;, 18, QFont::Bold));
++
++//	    QObject::connect($quit, SIGNAL('clicked()'), qApp(), SLOT('quit()'));
++	    QObject::connect($quit, SIGNAL('clicked()'), QApplication::instance(), SLOT('quit()'));
++
++	    $angle = new LCDRange();
++	    $angle-&gt;setRange(5, 70);
++
++	    $cannonField = new CannonField();
++
++	    QObject::connect($angle, SIGNAL('valueChanged(int)'), $cannonField, SLOT('setAngle(int)'));
++	    QObject::connect($cannonField, SIGNAL('angleChanged(int)'), $angle, SLOT('setValue(int)'));
++
++	    $gridLayout = new QGridLayout();
++	    $gridLayout-&gt;addWidget($quit, 0, 0);
++	    $gridLayout-&gt;addWidget($angle, 1, 0);
++	    $gridLayout-&gt;addWidget($cannonField, 1, 1, 2, 1);
++	    $gridLayout-&gt;setColumnStretch(1, 10);
++	    $this-&gt;setLayout($gridLayout);
++
++	    $angle-&gt;setValue(60);
++	    $angle-&gt;setFocus();
++
++	}
++    }
++
++    $app = new QApplication($argc, $argv);
++    $widget = new MyWidget();
++    $widget-&gt;setGeometry(100, 100, 500, 355);
++    $widget-&gt;show();
++    $app-&gt;exec();
++
++?&gt;
+\ No newline at end of file
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	
+	<LI>Next message: <A HREF="000197.html">[Php-qt-svn] r353 - trunk
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#196">[ date ]</a>
+              <a href="thread.html#196">[ thread ]</a>
+              <a href="subject.html#196">[ subject ]</a>
+              <a href="author.html#196">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

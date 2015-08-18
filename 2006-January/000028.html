@@ -1,0 +1,121 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r179 - trunk/qt/classes
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2006-January/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r179%20-%20trunk/qt/classes&In-Reply-To=%3C200601141723.k0EHNV2A024392%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000027.html">
+   <LINK REL="Next"  HREF="000029.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r179 - trunk/qt/classes</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r179%20-%20trunk/qt/classes&In-Reply-To=%3C200601141723.k0EHNV2A024392%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r179 - trunk/qt/classes">tm243 at berlios.de
+       </A><BR>
+    <I>Sat Jan 14 18:23:31 CET 2006</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000027.html">[Php-qt-svn] r178 - in trunk/qt: . classes
+</A></li>
+        <LI>Next message: <A HREF="000029.html">[Php-qt-svn] r180 - trunk/qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#28">[ date ]</a>
+              <a href="thread.html#28">[ thread ]</a>
+              <a href="subject.html#28">[ subject ]</a>
+              <a href="author.html#28">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2006-01-14 18:23:31 +0100 (Sat, 14 Jan 2006)
+New Revision: 179
+
+Modified:
+   trunk/qt/classes/qgridlayout.cpp
+Log:
+tutorial 6 added.
+
+Modified: trunk/qt/classes/qgridlayout.cpp
+===================================================================
+--- trunk/qt/classes/qgridlayout.cpp	2006-01-14 16:14:55 UTC (rev 178)
++++ trunk/qt/classes/qgridlayout.cpp	2006-01-14 17:23:31 UTC (rev 179)
+@@ -102,8 +102,8 @@
+  */
+ ZEND_METHOD(QGridLayout, __construct){
+ 	if (ZEND_NUM_ARGS() == 0){
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+-//			obj-&gt;QGridLayout();
++			QGridLayout *QGridLayout_ptr = new QGridLayout();
++			PHP_QT_REGISTER(QGridLayout_ptr);
+ 			RETURN_NULL();
+ 	}
+ 
+@@ -113,15 +113,15 @@
+ 
+ 		/* QWidget* parent,  */
+ 		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;o&quot;, &amp;z_var_o_0) == SUCCESS) {
+-			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
++//			QGridLayout *obj = (QGridLayout*) PHP_QT_FETCH();
+ 			QObject* var_o_0 = (QObject*) php_qt_fetch(z_var_o_0);
+ 
+ 			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
+ 			
+-			if(tmp_o_0 == &quot;QWidget*&quot;) {
++			if(tmp_o_0 == &quot;QWidget&quot;) {
+ 				QGridLayout *QGridLayout_ptr = new QGridLayout((QWidget*) var_o_0);
+-			PHP_QT_REGISTER(QGridLayout_ptr);
+-			RETURN_NULL();
++				PHP_QT_REGISTER(QGridLayout_ptr);
++				RETURN_NULL();
+ 			}
+ 		}
+ 	}
+@@ -505,9 +505,12 @@
+ 
+ 			QString tmp_o_0(var_o_0-&gt;metaObject()-&gt;className());
+ 			
+-			if(tmp_o_0 == &quot;QWidget*&quot;) {
++			if(tmp_o_0 == &quot;QWidget&quot;) {
+ 				obj-&gt;addWidget((QWidget*) var_o_0);
+-			RETURN_NULL();
++			  php_error(E_WARNING,&quot;added&quot;);
++				RETURN_NULL();
++			} else {
++			  php_error(E_WARNING,&quot;error&quot;);
+ 			}
+ 		}
+ 	}
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000027.html">[Php-qt-svn] r178 - in trunk/qt: . classes
+</A></li>
+	<LI>Next message: <A HREF="000029.html">[Php-qt-svn] r180 - trunk/qt/classes
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#28">[ date ]</a>
+              <a href="thread.html#28">[ thread ]</a>
+              <a href="subject.html#28">[ subject ]</a>
+              <a href="author.html#28">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

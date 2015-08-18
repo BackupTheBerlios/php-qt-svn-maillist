@@ -1,0 +1,262 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r302 - trunk/php_qt
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-March/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r302%20-%20trunk/php_qt&In-Reply-To=%3C200703060747.l267lxn2007563%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000145.html">
+   <LINK REL="Next"  HREF="000147.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r302 - trunk/php_qt</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r302%20-%20trunk/php_qt&In-Reply-To=%3C200703060747.l267lxn2007563%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r302 - trunk/php_qt">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Tue Mar  6 08:47:59 CET 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000145.html">[Php-qt-svn] r301 - in trunk: . php_qt
+</A></li>
+        <LI>Next message: <A HREF="000147.html">[Php-qt-svn] r303 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#146">[ date ]</a>
+              <a href="thread.html#146">[ thread ]</a>
+              <a href="subject.html#146">[ subject ]</a>
+              <a href="author.html#146">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2007-03-06 08:47:58 +0100 (Tue, 06 Mar 2007)
+New Revision: 302
+
+Modified:
+   trunk/php_qt/php_qt.cpp
+   trunk/php_qt/php_qt.h
+   trunk/php_qt/qstring.cpp
+Log:
+* work on QString __construct(), toInt(), number()
+
+
+
+Modified: trunk/php_qt/php_qt.cpp
+===================================================================
+--- trunk/php_qt/php_qt.cpp	2007-03-05 14:54:06 UTC (rev 301)
++++ trunk/php_qt/php_qt.cpp	2007-03-06 07:47:58 UTC (rev 302)
+@@ -968,3 +968,25 @@
+ 	return (SmokeQtObjects.find(ptr) != SmokeQtObjects.end());
+ }
+ 
++void
++phpqt_createObject(zval* zval_ptr, void* ptr, zend_class_entry* ce){
++
++	if(!ce) {
++	    ce = Z_OBJCE_P(zval_ptr);
++	}
++
++	smokephp_object* o = (smokephp_object*) emalloc(sizeof(smokephp_object));
++	o-&gt;ptr = ptr;
++	o-&gt;zval_ptr = zval_ptr;
++	o-&gt;ce_ptr = ce;
++	o-&gt;classId = 0;	// QString is not in smoke
++	o-&gt;smoke = qt_Smoke;
++	phpqt_setSmokePHPObject(o);
++	// register all 
++	zend_rsrc_list_entry le;
++	le.ptr = o;
++	object_init_ex(zval_ptr, qstring_ce);
++	phpqt_register(o-&gt;zval_ptr,le);
++	phpqt_setZvalPtr(o, o-&gt;zval_ptr);
++
++}
+
+Modified: trunk/php_qt/php_qt.h
+===================================================================
+--- trunk/php_qt/php_qt.h	2007-03-05 14:54:06 UTC (rev 301)
++++ trunk/php_qt/php_qt.h	2007-03-06 07:47:58 UTC (rev 302)
+@@ -128,6 +128,7 @@
+ smokephp_object*		phpqt_getSmokePHPObjectFromQt(void* QtPtr);
+ void				phpqt_setSmokePHPObject(smokephp_object* o);
+ bool				phpqt_SmokePHPObjectExists(void* ptr);
++void				phpqt_createObject(zval* zval_ptr, void* ptr, zend_class_entry* ce = NULL);
+ 
+ extern int le_php_qt_hashtype;
+ extern HashTable php_qt_objptr_hash;
+
+Modified: trunk/php_qt/qstring.cpp
+===================================================================
+--- trunk/php_qt/qstring.cpp	2007-03-05 14:54:06 UTC (rev 301)
++++ trunk/php_qt/qstring.cpp	2007-03-06 07:47:58 UTC (rev 302)
+@@ -128,7 +128,6 @@
+ 
+ }
+ 
+-
+ ZEND_METHOD(QString,__toString){
+ 
+   QString *QString_ptr = (QString *) PHP_QT_FETCH();
+@@ -140,7 +139,6 @@
+   RETURN_STRING(c,l);
+ }
+ 
+-
+ /*		public enumSectionFlag:long {
+ 			SectionDefault = 0x00,
+ 			SectionSkipEmpty = 0x01,
+@@ -625,84 +623,50 @@
+  */
+ ZEND_METHOD(QString, __construct){
+ 
+-	smokephp_object* o = (smokephp_object*) emalloc(sizeof(smokephp_object));
+-//	o-&gt;ptr = ret_val-&gt;s_voidp;
+-	o-&gt;zval_ptr = getThis();
+-	o-&gt;ce_ptr = qstring_ce;
+-	o-&gt;classId = 0;	// QString is not in smoke
+-	o-&gt;smoke = qt_Smoke;
+-	phpqt_setSmokePHPObject(o);
+-	// register all 
+-	zend_rsrc_list_entry le;
+-	le.ptr = o;
+-	object_init_ex(return_value, qstring_ce);
+-	phpqt_register(o-&gt;zval_ptr,le);
+-	phpqt_setZvalPtr(o, o-&gt;zval_ptr);
+-
+ 	if (ZEND_NUM_ARGS() == 0){
+ 	    QString *QString_ptr = new QString();
+-	    o-&gt;ptr = (void*) QString_ptr;
+-//	    PHP_QT_REGISTER(QString_ptr);
++	    phpqt_createObject(getThis(), (void*) QString_ptr, qstring_ce);
+ 	    RETURN_NULL();
+ 	}
+ 
+ 	if (ZEND_NUM_ARGS() == 1){
+-		/* l public*/
+-
+-		/* char c,  */
+-		/* s public*/
+-
+-		/* const char* ch,  */
+-		/* o public*/
+-
+-		/* const QLatin1String&amp; latin1,  */
+ 		zval *z_0; // define ZVAL
+ 		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
+ 			if(Z_TYPE_P(z_0) == IS_LONG){
+-
+-
+-			QString *QString_ptr = new QString((char) Z_LVAL_P(z_0));
+-			o-&gt;ptr = (void*) QString_ptr;
+-//				PHP_QT_REGISTER(QString_ptr);
++				QString *QString_ptr = new QString((char) Z_LVAL_P(z_0));
++				phpqt_createObject(getThis(), (void*) QString_ptr, qstring_ce);
+ 				RETURN_NULL();
+ 			}
+ 			if(Z_TYPE_P(z_0) == IS_STRING){
+-
+-			QString *QString_ptr = new QString( (const char*) Z_STRVAL_P(z_0));
+-				o-&gt;ptr = (void*) QString_ptr;
+-//				PHP_QT_REGISTER(QString_ptr);
++				QString *QString_ptr = new QString( (const char*) Z_STRVAL_P(z_0));
++				phpqt_createObject(getThis(), (void*) QString_ptr, qstring_ce);
+ 				RETURN_NULL();
+ 			}
+ 			if(Z_TYPE_P(z_0) == IS_OBJECT){
+-			QObject* obj_z_0 = (QObject*) phpqt_getQtObjectFromZval(z_0);
+-
+-
++				smokephp_object *o = phpqt_getSmokePHPObjectFromZval(z_0);
++				if(o-&gt;ce_ptr == qstring_ce){
++				    QString *QString_ptr = new QString(*((QString*) o-&gt;ptr));
++				}
++				phpqt_createObject(getThis(), (void*) o-&gt;ptr, o-&gt;ce_ptr);
++				RETURN_NULL();
+ 			}
+ 		}
+ 	}
+ 
+ 	if (ZEND_NUM_ARGS() == 2){
+-		/* ol public*/
+-
+-		/* const QChar* unicode, int size,  */
+-		/* ll public*/
+-
+-		/* int size, char c,  */
+ 		zval *z_0; // define ZVAL
+ 		zval *z_1; // define ZVAL
+ 		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;zz&quot;, &amp;z_0, &amp;z_1) == SUCCESS) {
+ 			if(Z_TYPE_P(z_0) == IS_OBJECT &amp;&amp; Z_TYPE_P(z_1) == IS_LONG){
+-			QObject* obj_z_0 = (QObject*) phpqt_getQtObjectFromZval(z_0);
+-
+-
++			    smokephp_object* o = phpqt_getSmokePHPObjectFromZval(z_0);
++// TODO type checking
++    			    phpqt_createObject(getThis(), o-&gt;ptr, o-&gt;ce_ptr);
++			    RETURN_NULL();
+ 			}
+ 			if(Z_TYPE_P(z_0) == IS_LONG &amp;&amp; Z_TYPE_P(z_1) == IS_LONG){
+-
+-
+-			QString *QString_ptr = new QString((int) Z_LVAL_P(z_0) ,(char) Z_LVAL_P(z_1));
+-			o-&gt;ptr = (void*) QString_ptr;
+-//				PHP_QT_REGISTER(QString_ptr);
+-				RETURN_NULL();
++			    QString *QString_ptr = new QString((int) Z_LVAL_P(z_0) ,(char) Z_LVAL_P(z_1));
++			    phpqt_createObject(getThis(), QString_ptr, qstring_ce);
++			    RETURN_NULL();
+ 			}
+ 		}
+ 	}
+@@ -915,14 +879,11 @@
+ 		zval *z_0; // define ZVAL
+ 		if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,&quot;z&quot;, &amp;z_0) == SUCCESS) {
+ 			if(Z_TYPE_P(z_0) == IS_LONG){
+-				QString *obj = (QString*) PHP_QT_FETCH();
+-				QString return_object = (QString) obj-&gt;number((ulong) Z_LVAL_P(z_0));
+-				zend_class_entry *ce;
+-				object_init_ex(return_value, qstring_ce);     
+-				zend_rsrc_list_entry le;                            
+-				le.ptr = (void*) &amp;return_object;                                       
+-				phpqt_register(return_value,le);                   
+-				return;                                             
++				QString obj = (QString) QString::number((ulong) Z_LVAL_P(z_0));
++				QString *s1 = new QString(obj);
++				object_init_ex(return_value, qstring_ce);
++				phpqt_createObject(return_value, (void*) s1, qstring_ce);
++				return;
+ 			}
+ 		}
+ 	}
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000145.html">[Php-qt-svn] r301 - in trunk: . php_qt
+</A></li>
+	<LI>Next message: <A HREF="000147.html">[Php-qt-svn] r303 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#146">[ date ]</a>
+              <a href="thread.html#146">[ thread ]</a>
+              <a href="subject.html#146">[ subject ]</a>
+              <a href="author.html#146">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

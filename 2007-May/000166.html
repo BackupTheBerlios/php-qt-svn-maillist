@@ -1,0 +1,93 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r322 - trunk/php_qt
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-May/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r322%20-%20trunk/php_qt&In-Reply-To=%3C200705242216.l4OMGv2v014548%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000165.html">
+   <LINK REL="Next"  HREF="000167.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r322 - trunk/php_qt</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r322%20-%20trunk/php_qt&In-Reply-To=%3C200705242216.l4OMGv2v014548%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r322 - trunk/php_qt">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Fri May 25 00:16:57 CEST 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000165.html">[Php-qt-svn] r321 - trunk/php_qt
+</A></li>
+        <LI>Next message: <A HREF="000167.html">[Php-qt-svn] r323 - in trunk: php_qt tests
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#166">[ date ]</a>
+              <a href="thread.html#166">[ thread ]</a>
+              <a href="subject.html#166">[ subject ]</a>
+              <a href="author.html#166">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2007-05-25 00:16:57 +0200 (Fri, 25 May 2007)
+New Revision: 322
+
+Modified:
+   trunk/php_qt/marshall_primitives.h
+Log:
+* when for an argument an integer is expected, try to convert strings too since e.g. php::date() returns a string.
+
+
+
+Modified: trunk/php_qt/marshall_primitives.h
+===================================================================
+--- trunk/php_qt/marshall_primitives.h	2007-05-24 21:26:50 UTC (rev 321)
++++ trunk/php_qt/marshall_primitives.h	2007-05-24 22:16:57 UTC (rev 322)
+@@ -81,7 +81,14 @@
+ 	if (v-&gt;type == IS_OBJECT) {
+ 	    php_error(E_WARNING,&quot;An integer has been passed as an object&quot;);
+ 	} else {
+-	    return Z_LVAL_P(v);
++		if(v-&gt;type == IS_LONG) {
++	    	return Z_LVAL_P(v);
++		// e.g. date() gives a string, so we try to convert it
++		} else if (v-&gt;type == IS_STRING) {
++			return QString(Z_STRVAL_P(v)).toLong();
++		} else {
++			php_error(E_ERROR,&quot;wrong type, num expected&quot;);
++		}
+ 	}
+ }
+ 
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000165.html">[Php-qt-svn] r321 - trunk/php_qt
+</A></li>
+	<LI>Next message: <A HREF="000167.html">[Php-qt-svn] r323 - in trunk: php_qt tests
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#166">[ date ]</a>
+              <a href="thread.html#166">[ thread ]</a>
+              <a href="subject.html#166">[ subject ]</a>
+              <a href="author.html#166">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>

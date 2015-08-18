@@ -1,0 +1,125 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Php-qt-svn] r333 - trunk/php_qt
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/php-qt-svn/2007-June/index.html" >
+   <LINK REL="made" HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r333%20-%20trunk/php_qt&In-Reply-To=%3C200706062023.l56KNrT8031884%40sheep.berlios.de%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   <LINK REL="Previous"  HREF="000176.html">
+   <LINK REL="Next"  HREF="000178.html">
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Php-qt-svn] r333 - trunk/php_qt</H1>
+    <B>tm243 at BerliOS</B> 
+    <A HREF="mailto:php-qt-svn%40lists.berlios.de?Subject=Re%3A%20%5BPhp-qt-svn%5D%20r333%20-%20trunk/php_qt&In-Reply-To=%3C200706062023.l56KNrT8031884%40sheep.berlios.de%3E"
+       TITLE="[Php-qt-svn] r333 - trunk/php_qt">tm243 at mail.berlios.de
+       </A><BR>
+    <I>Wed Jun  6 22:23:53 CEST 2007</I>
+    <P><UL>
+        <LI>Previous message: <A HREF="000176.html">[Php-qt-svn] r332 - trunk/php_qt
+</A></li>
+        <LI>Next message: <A HREF="000178.html">[Php-qt-svn] r334 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#177">[ date ]</a>
+              <a href="thread.html#177">[ thread ]</a>
+              <a href="subject.html#177">[ subject ]</a>
+              <a href="author.html#177">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Author: tm243
+Date: 2007-06-06 22:23:52 +0200 (Wed, 06 Jun 2007)
+New Revision: 333
+
+Modified:
+   trunk/php_qt/php_qt.cpp
+   trunk/php_qt/zend_handlers.cpp
+Log:
+* linker symbols cleaned up
+
+
+
+Modified: trunk/php_qt/php_qt.cpp
+===================================================================
+--- trunk/php_qt/php_qt.cpp	2007-06-06 20:16:12 UTC (rev 332)
++++ trunk/php_qt/php_qt.cpp	2007-06-06 20:23:52 UTC (rev 333)
+@@ -48,18 +48,12 @@
+ HashTable php_qt_objptr_hash;
+ 
+ // object handler
+-zend_object_handlers php_qt_handler;
+-zend_object_handlers zend_orig_handler;
++extern zend_object_handlers php_qt_handler;
+ 
+ PHP_INI_BEGIN()
+     PHP_INI_ENTRY(&quot;qt.codec&quot;, &quot;UTF8&quot;, PHP_INI_ALL, NULL)
+ PHP_INI_END()
+ 
+-int (*originalConstantMethodHandler)(ZEND_OPCODE_HANDLER_ARGS);
+-
+-opcode_handler_t *phpqt_original_opcode_handlers;
+-opcode_handler_t phpqt_opcode_handlers[PHPQT_OPHANDLER_COUNT];
+-
+ /*! php_qt_functions[]
+  *
+  * Every user visible function must have an entry in php_qt_functions[].
+
+Modified: trunk/php_qt/zend_handlers.cpp
+===================================================================
+--- trunk/php_qt/zend_handlers.cpp	2007-06-06 20:16:12 UTC (rev 332)
++++ trunk/php_qt/zend_handlers.cpp	2007-06-06 20:23:52 UTC (rev 333)
+@@ -26,14 +26,16 @@
+ #include &quot;php_qt.h&quot;
+ #include &quot;ext/standard/php_string.h&quot;
+ 
+-extern zend_object_handlers php_qt_handler;
+-extern zend_object_handlers zend_orig_handler;
+ extern QStack&lt;QByteArray*&gt; methodNameStack;
+-extern opcode_handler_t *phpqt_original_opcode_handlers;
+-extern opcode_handler_t phpqt_opcode_handlers[PHPQT_OPHANDLER_COUNT];
+ extern zend_class_entry* activeCe;
+-extern int (*originalConstantMethodHandler)(ZEND_OPCODE_HANDLER_ARGS);
+ 
++zend_object_handlers php_qt_handler;
++zend_object_handlers zend_orig_handler;
++int (*originalConstantMethodHandler)(ZEND_OPCODE_HANDLER_ARGS);
++opcode_handler_t *phpqt_original_opcode_handlers;
++opcode_handler_t phpqt_opcode_handlers[PHPQT_OPHANDLER_COUNT];
++
++
+ /**
+  *	proxy handler
+  */
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	<LI>Previous message: <A HREF="000176.html">[Php-qt-svn] r332 - trunk/php_qt
+</A></li>
+	<LI>Next message: <A HREF="000178.html">[Php-qt-svn] r334 - trunk/php_qt
+</A></li>
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#177">[ date ]</a>
+              <a href="thread.html#177">[ thread ]</a>
+              <a href="subject.html#177">[ subject ]</a>
+              <a href="author.html#177">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/php-qt-svn">More information about the Php-qt-svn
+mailing list</a><br>
+</body></html>
